@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import React, { useEffect } from 'react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { AboutPage } from './pages/AboutPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 
 // BOM 
 function ScrollToTop() {
@@ -19,6 +21,10 @@ export default function App() {
         <ScrollToTop />
         <Header />
         <main style={{ minHeight: 'calc(100vh - 350px)' }}>
+          <Routes>
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+          </Routes>
         </main>
         <Footer />
         <style>{`
