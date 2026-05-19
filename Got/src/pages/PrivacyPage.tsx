@@ -5,7 +5,7 @@ export const PrivacyPage = () => {
       <div className="mx-auto" style={{ maxWidth: '800px' }}>
         <h1 className="display-4 fw-black italic uppercase tracking-tighter mb-5">Политика конфиденциальности</h1>
         <div className="text-secondary lh-lg">
-          <p className="fw-bold text-dark mb-5">Последнее обновление: 14 мая 2026 г.</p>
+          <p className="fw-bold text-dark mb-5">Последнее обновление: 18 мая 2026 г.</p>
           
           <section className="mb-5">
             <h2 className="h3 fw-bold text-dark mb-4">1. Сбор информации</h2>
