@@ -36,11 +36,11 @@ export const Footer = () => {
               <div className="col-12 col-sm-4 d-none d-sm-block">
                 <h4 className="fw-bold small text-muted text-uppercase tracking-widest mb-4">Соцсети</h4>
                 <div className="d-flex gap-3">
-                  <a href="https://t.me/ALEX_ALEXzh" target="_blank" rel="noopener noreferrer" className="d-flex align-items-center justify-content-center bg-light rounded-circle text-decoration-none text-dark fw-bold small transition-colors" style={{ width: '40px', height: '40px' }}>
-                    IG
+                  <a href="https://www.instagram.com/nadyamilanovich__?igsh=MXAza3pubnA0cGw2Yg==&utm_source=ig_contact_invite" target="_blank" rel="noopener noreferrer" className="d-flex align-items-center justify-content-center bg-light rounded-circle text-decoration-none text-dark fw-bold small transition-colors" style={{ width: '40px', height: '40px' }}>
+                    <img src="src/components/inst_logo.jpg" alt="Instagram" style={{ width: '20px', height: '20px' }}></img>
                   </a>
                   <a href="https://t.me/ALEX_ALEXzh" target="_blank" rel="noopener noreferrer" className="d-flex align-items-center justify-content-center bg-light rounded-circle text-decoration-none text-dark fw-bold small transition-colors" style={{ width: '40px', height: '40px' }}>
-                    TG
+                    <img src="src/components/tg_logo.png" alt="Telegram" style={{ width: '20px', height: '20px' }}></img>
                   </a>
                 </div>
               </div>
