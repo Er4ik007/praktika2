@@ -17,7 +17,7 @@ export const ContactPage = () => {
               </div>
               <div>
                 <h4 className="fw-bold text-dark text-uppercase small tracking-widest mb-1">Адрес офиса</h4>
-                <p className="text-secondary fw-medium mb-0">г. Минск, ул. Кальварийская, 21</p>
+                <p className="text-secondary fw-medium mb-0">г. Минск, ул. Петруся Бровки, 14</p>
               </div>
             </div>
             <div className="d-flex align-items-start gap-4">
@@ -26,7 +26,7 @@ export const ContactPage = () => {
               </div>
               <div>
                 <h4 className="fw-bold text-dark text-uppercase small tracking-widest mb-1">Телефон</h4>
-                <p className="text-secondary fw-medium mb-0">+375 (44) 123-45-67</p>
+                <p className="text-secondary fw-medium mb-0">+375 (29) 519-73-30</p>
               </div>
             </div>
             <div className="d-flex align-items-start gap-4">
@@ -35,7 +35,7 @@ export const ContactPage = () => {
               </div>
               <div>
                 <h4 className="fw-bold text-dark text-uppercase small tracking-widest mb-1">Email</h4>
-                <p className="text-secondary fw-medium mb-0">hello@minskgastro.by</p>
+                <p className="text-secondary fw-medium mb-0">asasin.leha@yandex.ru</p>
               </div>
             </div>
             <div className="d-flex align-items-start gap-4">
