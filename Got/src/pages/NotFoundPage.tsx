@@ -8,11 +8,11 @@ export const NotFoundPage = () => {
       <motion.div 
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="display-1 fw-black italic text-dark mb-3"
+        className="display-1 fw-black italic text-body-emphasis mb-3"
       >
         404
       </motion.div>
-      <h2 className="h2 fw-bold text-secondary mb-4">Страница не найдена</h2>
+      <h2 className="h2 fw-bold text-body-secondary mb-4">Страница не найдена</h2>
       <p className="text-muted mb-5 mw-md mx-auto">
         Кажется, вы забрели не туда. Возможно, заведение переехало, или ссылка устарела.
       </p>

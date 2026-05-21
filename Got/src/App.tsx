@@ -20,7 +20,8 @@ function ScrollToTop() {
 export default function App() {
   return (
     <Router>
-      <div className="min-vh-100 bg-white font-sans text-dark overflow-hidden selection-red">
+      {/* Заменили bg-white на bg-body, text-dark на text-body */}
+      <div className="min-vh-100 bg-body text-body d-flex flex-column selection-red">
         <ScrollToTop />
         <Header />
         <main style={{ minHeight: 'calc(100vh - 350px)' }}>

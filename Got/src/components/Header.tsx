@@ -1,10 +1,38 @@
-import React,{ useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Utensils, X, Menu as MenuIcon } from 'lucide-react';
+import { Utensils, X, Menu as MenuIcon, Moon, Sun } from 'lucide-react';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+  // Базовая установка темы при загрузке страницы
+  useEffect(() => {
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  // УМНАЯ ЛОГИКА ПЕРЕКЛЮЧЕНИЯ С АНИМАЦИЕЙ
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+
+    // Проверяем, поддерживает ли браузер новую технологию View Transitions
+    // @ts-ignore - игнорируем ошибку TS, так как API совсем новое
+    if (!document.startViewTransition) {
+      // Если браузер старый, просто меняем тему без анимации
+      setTheme(newTheme);
+      return;
+    }
+
+    // Запускаем красивую анимацию
+    // @ts-ignore
+    document.startViewTransition(() => {
+      // Это происходит мгновенно под капотом, а браузер сам рисует плавный круг
+      document.documentElement.setAttribute('data-bs-theme', newTheme);
+      setTheme(newTheme);
+    });
+  };
 
   const menuItems = [
     { name: 'Главная', path: '/' },
@@ -14,11 +42,11 @@ export const Header = () => {
   ];
 
   return (
-    <header className="fixed-top bg-white border-bottom py-2" style={{ backdropFilter: 'blur(10px)', backgroundColor: 'rgba(255, 255, 255, 0.8)' }}>
+    <header className="fixed-top header-glass border-bottom py-2" style={{ backdropFilter: 'blur(10px)', backgroundColor: 'rgba(var(--bs-body-bg-rgb), 0.8)' }}>
       <div className="container d-flex align-items-center justify-content-between h-100">
         <Link to="/" className="d-flex align-items-center text-decoration-none gap-2">
           <Utensils className="text-danger" size={32} />
-          <span className="fw-bold fs-4 text-dark text-uppercase tracking-tighter">МИНСК ГАСТРО</span>
+          <span className="fw-bold fs-4 text-body text-uppercase tracking-tighter">МИНСК ГАСТРО</span>
         </Link>
 
         <nav className="d-none d-md-block">
@@ -28,7 +56,7 @@ export const Header = () => {
                 <NavLink 
                   to={item.path}
                   className={({ isActive }) => 
-                    `nav-link px-0 py-1 fw-medium transition-colors ${isActive ? 'text-danger border-bottom border-danger' : 'text-secondary'}`
+                    `nav-link px-0 py-1 fw-medium transition-colors ${isActive ? 'text-danger border-bottom border-danger' : 'text-body opacity-75'}`
                   }
                   style={{ transition: 'all 0.3s ease' }}
                 >
@@ -39,10 +67,21 @@ export const Header = () => {
           </ul>
         </nav>
 
-        <div className="d-md-none">
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} id="mobile-menu-btn" className="btn btn-link text-dark p-2">
-            {isMenuOpen ? <X /> : <MenuIcon />}
+        <div className="d-flex align-items-center">
+          {/* Кнопка смены темы вызывает нашу новую функцию toggleTheme */}
+          <button 
+            onClick={toggleTheme} 
+            className="btn btn-link text-body p-2 me-md-0 me-2"
+            title="Сменить тему"
+          >
+            {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
           </button>
+
+          <div className="d-md-none">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="btn btn-link text-body p-2">
+              {isMenuOpen ? <X size={28} /> : <MenuIcon size={28} />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -52,7 +91,7 @@ export const Header = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="d-md-none bg-white border-bottom overflow-hidden shadow-sm"
+            className="d-md-none bg-body border-bottom overflow-hidden shadow-sm"
           >
             <ul className="nav flex-column p-4">
               {menuItems.map((item) => (
@@ -61,7 +100,7 @@ export const Header = () => {
                     to={item.path}
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) => 
-                      `nav-link p-3 rounded-3 fw-bold ${isActive ? 'bg-danger text-white' : 'text-secondary'}`
+                      `nav-link p-3 rounded-3 fw-bold ${isActive ? 'bg-danger text-white' : 'text-body'}`
                     }
                   >
                     {item.name}

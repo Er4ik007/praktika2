@@ -25,15 +25,15 @@ export const SupportPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="card border-0 rounded-4 shadow-lg p-4 p-md-5"
+            className="card bg-body-tertiary border-0 rounded-4 shadow-lg p-4 p-md-5"
           >
             <form onSubmit={handleSubmit} className="row g-4">
               <div className="col-md-6">
-                <label className="text-muted small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Ваше имя</label>
+              <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Ваше имя</label>
                 <input 
                   required 
                   type="text" 
-                  className="form-control rounded-3 bg-light border-0 py-3 px-4 shadow-none"
+                  className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none"
                   placeholder="Алексей"
                 />
               </div>
@@ -42,14 +42,14 @@ export const SupportPage = () => {
                 <input 
                   required 
                   type="email" 
-                  className="form-control rounded-3 bg-light border-0 py-3 px-4 shadow-none"
+                  className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none"
                   placeholder="mail@example.com"
                 />
               </div>
               
               <div className="col-12">
                 <label className="text-muted small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Категория вопроса</label>
-                <select className="form-select rounded-3 bg-light border-0 py-3 px-4 shadow-none fw-medium">
+                <select className="form-select rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium">
                   <option>Общий вопрос</option>
                   <option>Проблема с бронированием</option>
                   <option>Предложение по заведениям</option>
@@ -63,7 +63,7 @@ export const SupportPage = () => {
                 <textarea 
                   required 
                   rows={5}
-                  className="form-control rounded-3 bg-light border-0 py-3 px-4 shadow-none h-25"
+                  className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none h-25"
                   style={{ minHeight: '150px' }}
                   placeholder="Расскажите нам подробнее..."
                 ></textarea>
@@ -86,10 +86,10 @@ export const SupportPage = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-success bg-opacity-10 p-5 rounded-4 text-center border border-success border-opacity-25"
           >
-            <div className="bg-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4 shadow-sm text-success" style={{ width: '64px', height: '64px' }}>
+            <div className="bg-body rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4 shadow-sm text-success" style={{ width: '64px', height: '64px' }}>
               <MessageSquare size={32} />
             </div>
-            <h2 className="h3 fw-bold text-dark mb-2">Сообщение отправлено!</h2>
+            <h2 className="h3 fw-bold text-body mb-2">Сообщение отправлено!</h2>
             <p className="text-success fw-medium opacity-75 mb-4">Мы получили ваш запрос и свяжемся с вами в течение 24 часов.</p>
             <button 
               onClick={() => setSubmitted(false)}

@@ -1,11 +1,25 @@
-import React, { MapPin, Phone, Mail, Instagram } from 'lucide-react';
+import React, { useState, FormEvent } from 'react';
+import { MapPin, Phone, Mail, Instagram, Send } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export const ContactPage = () => {
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    setIsSubmitted(true);
+    setTimeout(() => {
+      setIsSubmitted(false);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+    }, 5000);
+  };
+
   return (
     <div className="container py-5 mt-5">
       <div className="row g-5 py-5">
         <div className="col-lg-6">
-          <h1 className="display-4 fw-black italic uppercase tracking-tighter mb-4">Контакты</h1>
+          <h1 className="display-4 fw-black italic uppercase tracking-tighter mb-4 text-body-emphasis">Контакты</h1>
           <p className="text-secondary fs-5 mb-5 mw-md">
             У вас есть предложение по сотрудничеству или вы нашли ошибку на сайте? Свяжитесь с нами любым удобным способом.
           </p>
@@ -16,7 +30,7 @@ export const ContactPage = () => {
                 <MapPin size={28} className="text-danger" />
               </div>
               <div>
-                <h4 className="fw-bold text-dark text-uppercase small tracking-widest mb-1">Адрес офиса</h4>
+                <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">Адрес офиса</h4>
                 <p className="text-secondary fw-medium mb-0">г. Минск, ул. Петруся Бровки, 14</p>
               </div>
             </div>
@@ -25,7 +39,7 @@ export const ContactPage = () => {
                 <Phone size={28} className="text-danger" />
               </div>
               <div>
-                <h4 className="fw-bold text-dark text-uppercase small tracking-widest mb-1">Телефон</h4>
+                <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">Телефон</h4>
                 <p className="text-secondary fw-medium mb-0">+375 (29) 519-73-30</p>
               </div>
             </div>
@@ -34,7 +48,7 @@ export const ContactPage = () => {
                 <Mail size={28} className="text-danger" />
               </div>
               <div>
-                <h4 className="fw-bold text-dark text-uppercase small tracking-widest mb-1">Email</h4>
+                <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">Email</h4>
                 <p className="text-secondary fw-medium mb-0">asasin.leha@yandex.ru</p>
               </div>
             </div>
@@ -43,37 +57,51 @@ export const ContactPage = () => {
                 <Instagram size={28} className="text-danger" />
               </div>
               <div>
-                <h4 className="fw-bold text-dark text-uppercase small tracking-widest mb-1">Инстаграм</h4>
+                <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">Инстаграм</h4>
                 <p className="text-secondary fw-medium mb-0">@minsk_gastro_guide</p>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div className="col-lg-6">
-          <div className="bg-light p-4 p-md-5 rounded-5 shadow-sm border h-100">
-            <h2 className="h2 fw-black mb-5 italic uppercase tracking-tighter">Напишите нам</h2>
-            <form className="row g-4">
-              <div className="col-md-6">
-                <label className="fw-black text-muted text-uppercase small tracking-widest mb-2 d-inline-block">Имя</label>
-                <input type="text" className="form-control rounded-4 border-0 py-3 px-4 shadow-sm" />
-              </div>
-              <div className="col-md-6">
-                <label className="fw-black text-muted text-uppercase small tracking-widest mb-2 d-inline-block">Email</label>
-                <input type="email" className="form-control rounded-4 border-0 py-3 px-4 shadow-sm" />
-              </div>
-              <div className="col-12">
-                <label className="fw-black text-muted text-uppercase small tracking-widest mb-2 d-inline-block">Тема</label>
-                <input type="text" className="form-control rounded-4 border-0 py-3 px-4 shadow-sm" />
-              </div>
-              <div className="col-12">
-                <label className="fw-black text-muted text-uppercase small tracking-widest mb-2 d-inline-block">Сообщение</label>
-                <textarea className="form-control rounded-4 border-0 py-3 px-4 shadow-sm h-25" style={{ minHeight: '120px' }} />
-              </div>
-              <div className="col-12 pt-3">
-                <button className="btn btn-primary-custom w-100 py-3 fs-5">Отправить сообщение</button>
-              </div>
-            </form>
+          {/* Изменили фон формы на адаптивный */}
+          <div className="bg-body-tertiary p-4 p-md-5 rounded-5 shadow-sm border h-100">
+            <h2 className="h2 fw-black mb-5 text-body-emphasis italic uppercase tracking-tighter">Напишите нам</h2>
+            
+            {isSubmitted ? (
+               <motion.div 
+                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                 className="bg-success bg-opacity-10 text-success p-5 rounded-4 text-center border border-success border-opacity-25"
+               >
+                 <Send className="w-12 h-12 mx-auto mb-4" size={48} />
+                 <h3 className="h4 fw-bold mb-2">Сообщение успешно отправлено!</h3>
+                 <p className="mb-0 opacity-75">Мы ответим вам на указанный email в течение суток.</p>
+               </motion.div>
+            ) : (
+              <form onSubmit={handleSubmit} className="row g-4">
+                <div className="col-md-6">
+                  <label className="fw-black text-secondary text-uppercase small tracking-widest mb-2 d-inline-block">Имя</label>
+                  {/* Убрали bg-white, чтобы Bootstrap сам управлял цветом инпута */}
+                  <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" />
+                </div>
+                <div className="col-md-6">
+                  <label className="fw-black text-secondary text-uppercase small tracking-widest mb-2 d-inline-block">Email</label>
+                  <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" />
+                </div>
+                <div className="col-12">
+                  <label className="fw-black text-secondary text-uppercase small tracking-widest mb-2 d-inline-block">Тема</label>
+                  <input required type="text" value={formData.subject} onChange={(e) => setFormData({...formData, subject: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" />
+                </div>
+                <div className="col-12">
+                  <label className="fw-black text-secondary text-uppercase small tracking-widest mb-2 d-inline-block">Сообщение</label>
+                  <textarea required value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm h-25" style={{ minHeight: '120px' }} />
+                </div>
+                <div className="col-12 pt-3">
+                  <button type="submit" className="btn btn-primary-custom w-100 py-3 fs-5">Отправить сообщение</button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
