@@ -83,11 +83,11 @@ export const ContactPage = () => {
                 <div className="col-md-6">
                   <label className="fw-black text-secondary text-uppercase small tracking-widest mb-2 d-inline-block">Имя</label>
                   {/* Убрали bg-white, чтобы Bootstrap сам управлял цветом инпута */}
-                  <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" />
+                  <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" placeholder="Надежда" />
                 </div>
                 <div className="col-md-6">
                   <label className="fw-black text-secondary text-uppercase small tracking-widest mb-2 d-inline-block">Email</label>
-                  <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" />
+                  <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" placeholder="email@example.by" />
                 </div>
                 <div className="col-12">
                   <label className="fw-black text-secondary text-uppercase small tracking-widest mb-2 d-inline-block">Тема</label>
