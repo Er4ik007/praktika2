@@ -43,7 +43,7 @@ export const SupportPage = () => {
                   required 
                   type="email" 
                   className="form-control rounded-3 bg-light border-0 py-3 px-4 shadow-none"
-                  placeholder="alex@example.com"
+                  placeholder="mail@example.com"
                 />
               </div>
               
@@ -54,6 +54,7 @@ export const SupportPage = () => {
                   <option>Проблема с бронированием</option>
                   <option>Предложение по заведениям</option>
                   <option>Техническая ошибка</option>
+                  <option>Другое</option>
                 </select>
               </div>
 
