@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Star, MapPin, Utensils, Coffee, ChevronRight } from 'lucide-react';
+import { Star, MapPin, Utensils, Coffee, Wine, ChevronRight } from 'lucide-react'; 
 import { Link } from 'react-router-dom';
 import { Venue } from '../data';
 
@@ -17,7 +17,6 @@ export const VenueCard = ({ venue, isFavorite, onToggleFavorite }: VenueCardProp
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      /* bg-body - карточка адаптируется под тему */
       className="card border-0 rounded-4 overflow-hidden shadow-sm hover-shadow-lg transition-all h-100 bg-body"
     >
       <div className="position-relative overflow-hidden" style={{ height: '240px' }}>
@@ -37,11 +36,13 @@ export const VenueCard = ({ venue, isFavorite, onToggleFavorite }: VenueCardProp
         <div className="d-flex align-items-center gap-2 small fw-bold text-danger text-uppercase tracking-widest mb-2">
           {venue.type === 'restaurant' && <Utensils size={14} />}
           {venue.type === 'coffee' && <Coffee size={14} />}
-          {venue.type === 'restaurant' ? 'Ресторан' : 'Кофейня'}
+          {venue.type === 'bar' && <Wine size={14} />} {/* Иконка для бара */}
+          {venue.type === 'cafe' && <MapPin size={14} />}
+          
+          {/* Надпись для бара */}
+          {venue.type === 'restaurant' ? 'Ресторан' : venue.type === 'coffee' ? 'Кофейня' : venue.type === 'bar' ? 'Бар' : 'Кафе'}
         </div>
-        {/* text-body-emphasis - контрастный текст */}
         <h3 className="h4 fw-bold mb-3 text-body-emphasis text-truncate">{venue.name}</h3>
-        {/* text-body-secondary - серый текст */}
         <p className="card-text text-body-secondary small mb-4 line-clamp-3">
           {venue.description}
         </p>

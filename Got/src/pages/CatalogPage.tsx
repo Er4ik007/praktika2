@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
-import { Search, Filter, Utensils, Coffee } from 'lucide-react';
+import { Search, Filter, Wine ,Utensils, Coffee } from 'lucide-react';
 import { venues, Venue } from '../data';
 import { VenueCard } from '../components/VenueCard';
 
 export const CatalogPage = () => {
-  const [filter, setFilter] = useState<'all' | 'restaurant' | 'coffee'>('all');
+  const [filter, setFilter] = useState<'all' | 'restaurant' | 'coffee' | 'bar'>('all');
   const [search, setSearch] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
 
@@ -50,7 +50,8 @@ export const CatalogPage = () => {
               {[
                 { id: 'all', label: 'Все', icon: Filter },
                 { id: 'restaurant', label: 'Рестораны', icon: Utensils },
-                { id: 'coffee', label: 'Кофе', icon: Coffee }
+                { id: 'coffee', label: 'Кофе', icon: Coffee },
+                { id: 'bar', label: 'Бары', icon: Wine }
               ].map((item) => (
                 <button
                   key={item.id}
