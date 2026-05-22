@@ -37,10 +37,10 @@ export const Footer = () => {
                 <h4 className="fw-bold small text-body-secondary text-uppercase tracking-widest mb-4">Соцсети</h4>
                 <div className="d-flex gap-3">
                   <a href="https://www.instagram.com/nadyamilanovich__?igsh=MXAza3pubnA0cGw2Yg==&utm_source=ig_contact_invite" target="_blank" rel="noopener noreferrer" className="d-flex align-items-center justify-content-center bg-body rounded-circle text-decoration-none text-body fw-bold small transition-colors shadow-sm" style={{ width: '40px', height: '40px' }}>
-                  <img src="src/components/inst_logo.png" alt="Instagram" style={{ width: '30px', height: '30px' }}></img>
+                  <img src="src/images/inst_logo.png" alt="Instagram" style={{ width: '30px', height: '30px' }}></img>
                   </a>
                   <a href="https://t.me/ALEX_ALEXzh" target="_blank" rel="noopener noreferrer" className="d-flex align-items-center justify-content-center bg-body rounded-circle text-decoration-none text-body fw-bold small transition-colors shadow-sm" style={{ width: '40px', height: '40px' }}>
-                  <img src="src/components/tg_logo.png" alt="Telegram" style={{ width: '30px', height: '30px' }}></img>
+                  <img src="src/images/tg_logo.png" alt="Telegram" style={{ width: '30px', height: '30px' }}></img>
                   </a>
                 </div>
               </div>
