@@ -12,6 +12,7 @@ const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ defaul
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const SupportPage = lazy(() => import('./pages/SupportPage').then(m => ({ default: m.SupportPage })));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const VenueDetailPage = lazy(() => import('./pages/VenueDetailPage').then(m => ({ default: m.VenueDetailPage })));
 
 // BOM 
 function ScrollToTop() {
@@ -32,6 +33,7 @@ export default function App() {
         <main style={{ minHeight: 'calc(100vh - 350px)' }}>
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/venue/:id" element={<VenueDetailPage />} />
             <Route path="/contacts" element={<ContactPage />} />
             <Route path="/catalog" element={<CatalogPage />} />
             <Route path="/about" element={<AboutPage />} />
