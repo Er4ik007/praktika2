@@ -26,7 +26,6 @@ function ScrollToTop() {
 export default function App() {
   return (
     <Router>
-      {/* Заменили bg-white на bg-body, text-dark на text-body */}
       <div className="min-vh-100 bg-body text-body d-flex flex-column selection-red">
         <ScrollToTop />
         <Header />

@@ -58,25 +58,25 @@ body {
   font-style: italic;
 }
 
-/* --- АНИМАЦИЯ СМЕНЫ ТЕМЫ (VIEW TRANSITIONS API) --- */
+/* --- АНИМАЦИЯ СМЕНЫ ТЕМЫ  --- */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
 
-/* Старая тема остается на заднем фоне */
+
 ::view-transition-old(root) {
   z-index: 1;
 }
 
-/* Новая тема появляется поверх старой с помощью круговой маски */
+
 ::view-transition-new(root) {
   z-index: 9999;
   animation: circle-reveal 0.7s ease-in-out forwards;
 }
 
-/* Сама анимация: круг от 0% до 150% (чтобы перекрыть углы экрана) из центра (50% 50%) */
+
 @keyframes circle-reveal {
   from {
     clip-path: circle(0% at 50% 50%);
