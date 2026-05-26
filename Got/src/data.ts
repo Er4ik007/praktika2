@@ -7,6 +7,7 @@ export interface Venue {
     allAddresses?: string[];
     rating: number;
     image: string;
+    gallery: string[];
     priceLevel: 1 | 2 | 3 | 4;
     instagramUrl: string;
   }
@@ -20,9 +21,10 @@ export interface Venue {
       address: 'пр-т Победителей 102',
       allAddresses: ['пр-т Победителей 102'],
       rating: 4.6,
-      image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/contrast1.png',
+      gallery: ['/photo/contrast2.jpg', '/photo/contrast3.jpg'],
       priceLevel: 2,
-      instagramUrl: 'https://www.instagram.com/contrast_minsk'
+      instagramUrl: 'https://www.instagram.com/contrast_minsk?igsh=emRyMW5lb3BtMWdl'
     },
     {
       id: 'le-pigeon',
@@ -32,9 +34,10 @@ export interface Venue {
       address: 'пр-т Независимости, 37',
       allAddresses: ['пр-т Независимости, 37'],
       rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/pizhon1.jpg',
+      gallery: ['/photo/pizhon2.jpg', '/photo/pizhon3.webp'],
       priceLevel: 3,
-      instagramUrl: 'https://www.instagram.com/lepigeon.by'
+      instagramUrl: 'https://www.instagram.com/pigeon.minsk?igsh=d24ydGhjOHpsM29h'
     },
     {
       id: 'ember',
@@ -44,9 +47,10 @@ export interface Venue {
       address: 'пр-т Победителей, 9',
       allAddresses: ['пр-т Победителей, 9'],
       rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/ember1.png',
+      gallery: ['/photo/ember2.jpg', '/photo/ember3.avif'],
       priceLevel: 4,
-      instagramUrl: 'https://www.instagram.com/ember_minsk'
+      instagramUrl: 'https://www.instagram.com/ember_minsk?igsh=amNscHY3MWU0ZmRn'
     },
     {
       id: 'lidbeer',
@@ -56,9 +60,10 @@ export interface Venue {
       address: 'ул. Зыбицкая, 9',
       allAddresses: ['пр-т Независимости, 58 ','ул. Якуба Коласа, 37','К. Маркса, 20','ул. Свердлова, 2','ул. Интернациональная, 33','ул. Комсомольская, 18 ',],
       rating: 4.5,
-      image: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/lidbeer1.jpg',
+      gallery: ['/photo/lidbeer2.jpeg', '/photo/lidbeer3.jpg'],
       priceLevel: 2,
-      instagramUrl: 'https://www.instagram.com/lidbeer_bar'
+      instagramUrl: 'https://www.instagram.com/Lidbeerbar/'
     },
     {
       id: 'leone',
@@ -68,9 +73,10 @@ export interface Venue {
       address: 'ул. Зыбицкая, 4',
       allAddresses: ['ул. Зыбицкая, 4'],
       rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/leone1.jpg',
+      gallery: ['/photo/leone2.jpg', '/photo/leone3.jpg'],
       priceLevel: 3,
-      instagramUrl: 'https://www.instagram.com/leone.minsk'
+      instagramUrl: 'https://www.instagram.com/leone_msq/?hl=pt'
     },
     {
       id: 'the-odi',
@@ -80,9 +86,10 @@ export interface Venue {
       address: 'пр-т Независимости, 12',
       allAddresses: ['пр-т Независимости, 12','ул. Ратомская, 7'],
       rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/odi1.jpg',
+      gallery: ['/photo/odi2.jpg', '/photo/odi3.webp'],
       priceLevel: 3,
-      instagramUrl: 'https://www.instagram.com/odi.minsk'
+      instagramUrl: 'https://www.instagram.com/odi.minsk?igsh=MTZ1ODRlOHFrcXpneQ=='
     },
     {
       id: 'pellegrino',
@@ -92,9 +99,10 @@ export interface Venue {
       address: 'ул. Интернациональная, 9',
       allAddresses: ['ул. Интернациональная, 9'],
       rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1498654896293-37aacf113fd9?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/pellegrino1.jpg',
+      gallery: ['/photo/pellegrino2.jpg', '/photo/pellegrino3.jpg'],
       priceLevel: 3,
-      instagramUrl: 'https://www.instagram.com/pellegrino.restaurant'
+      instagramUrl: 'https://www.instagram.com/pellegrino.restaurant?igsh=MXFmNTY0cGVvMzVzeQ=='
     },
     {
       id: 'lovemyrr',
@@ -104,9 +112,10 @@ export interface Venue {
       address: 'ул. Ленина, 15',
       allAddresses: ['ул. Ленина, 15'],
       rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/lovemyrr1.jpeg',
+      gallery: ['/photo/lovemyrr2.jpeg', '/photo/lovemyrr3.jpeg'],
       priceLevel: 2,
-      instagramUrl: 'https://www.instagram.com/lovemyrr'
+      instagramUrl: 'https://www.instagram.com/lovemyrr?igsh=bmZvN3RqM3F3cjBr'
     },
     {
       id: 'malevich',
@@ -116,9 +125,10 @@ export interface Venue {
       address: 'ул. Карла Маркса, 24',
       allAddresses: ['ул. Карла Маркса, 24'],
       rating: 4.6,
-      image: 'https://images.unsplash.com/photo-1525648199074-cee30ba79a4a?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/malevich1.jpg',
+      gallery: ['/photo/malevich2.jpg', '/photo/malevich3.jpg'],
       priceLevel: 2,
-      instagramUrl: 'https://www.instagram.com/malevich_minsk'
+      instagramUrl: 'https://www.instagram.com/malevich_minsk?igsh=ZTIzZHN1cGYxbzYw'
     },
     {
       id: 'mesto-pro-edu',
@@ -128,9 +138,10 @@ export interface Venue {
       address: 'ул. Октябрьская, 5А',
       allAddresses: ['ул. Октябрьская, 5А'],
       rating: 4.7,
-      image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/mestoproedy1.jpg',
+      gallery: ['/photo/mestoproedy2.jpg', '/photo/mestoproedy3.jpg'],
       priceLevel: 3,
-      instagramUrl: 'https://www.instagram.com/mesto_pro_edu'
+      instagramUrl: 'https://www.instagram.com/mesto_pro_edu?igsh=NWRsa2l6NWJlNmZ0'
     },
     {
       id: 'roast',
@@ -144,9 +155,10 @@ export interface Venue {
     'пер. Софьи Ковалевской, 46',
     'ул. Независимости 95'],
       rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/roast1.jfif',
+      gallery: ['/photo/roast2.jpg', '/photo/roast3.webp'],
       priceLevel: 2,
-      instagramUrl: 'https://www.instagram.com/roast.by'
+      instagramUrl: 'https://www.instagram.com/roast.by?igsh=MTN4aWgwOHpyNmFhOQ=='
     },
     {
       id: 'vasilki',
@@ -170,9 +182,10 @@ export interface Venue {
         'ул. Тимирязева, 74А',
       ],
       rating: 4.8,
-      image: 'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/vasilki1.jpg',
+      gallery: ['/photo/vasilki2.jpg', '/photo/vasilki3.webp'],
       priceLevel: 2,
-      instagramUrl: 'https://www.instagram.com/restoran.vasilki'
+      instagramUrl: 'https://www.instagram.com/restoran.vasilki?igsh=bmIwM3Fta25mdnEz'
     },
     {
       id: 'zerno',
@@ -182,9 +195,10 @@ export interface Venue {
       address: 'пр-т Независимости, 46',
       allAddresses: ['📍 пр-т Независимости, 46', 'ул. Козлова, 6','ул. Интернациональная, 27Б.'],
       rating: 4.9,
-      image: 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/zerno1.jpg',
+      gallery: ['/photo/zerno2.jpg', '/photo/zerno2.jpeg'],
       priceLevel: 2,
-      instagramUrl: 'https://www.instagram.com/cafezerno'
+      instagramUrl: 'https://www.instagram.com/cafezerno?igsh=bnRlMGx5cWt3ODhv'
     },
     {
       id: 'varka',
@@ -194,9 +208,10 @@ export interface Venue {
       address: 'пр-т Независимости, 91',
       allAddresses: ['ул. Романовская Слобода, 5 (р-н Немиги)', 'ул. Октябрьская, 16, корп. 24','пр-т Независимости, 91','бул. Шевченко, 1','ул. Яна Чечота, 7','Логойский тракт, 15/2'],
       rating: 4.5,
-      image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/varka1.jfif',
+      gallery: ['/photo/varka2.png', '/photo/varka3.jpg'],
       priceLevel: 2,
-      instagramUrl: 'https://www.instagram.com/varkacoffee.official'
+      instagramUrl: 'https://www.instagram.com/varkacoffee.official?igsh=MXZ0ZzVrMHk4ZGlzbg=='
     },
     {
       id: 'zavod',
@@ -206,8 +221,9 @@ export interface Venue {
       address: 'пр-т Машерова, 19',
       allAddresses: ['пр-т Машерова, 19'],
       rating: 4.6,
-      image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+      image: '/photo/zavod1.jpg',
+      gallery: ['/photo/zavod2.jpg', '/photo/zavod3.jfif'],
       priceLevel: 3,
-      instagramUrl: 'https://www.instagram.com/zavod_gastro'
+      instagramUrl: 'https://www.instagram.com/zavodpub/'
     }
   ];

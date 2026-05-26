@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, MapPin, ChevronLeft, CreditCard, Clock, Instagram, Send } from 'lucide-react';
+import React from 'react';
+import { Star, MapPin, ChevronLeft, CreditCard, Clock, Instagram, Send, X } from 'lucide-react';
 import { venues } from '../data';
 import { BookingForm } from '../components/BookingForm';
+import { useState, useEffect } from 'react';
 
-// Моковые начальные отзывы
 const initialReviews = [
   { id: 1, author: 'Анна С.', rating: 5, text: 'Потрясающее место! Обязательно придем еще раз.', date: 'Вчера' },
   { id: 2, author: 'Максим', rating: 4, text: 'Вкусная еда, но в пятницу вечером пришлось подождать столик.', date: '3 дня назад' }
@@ -16,11 +16,29 @@ export const VenueDetailPage = () => {
   const navigate = useNavigate();
   const venue = venues.find(v => v.id === id);
 
-  // Состояния для отзывов
   const [reviews, setReviews] = useState(initialReviews);
   const [newReviewText, setNewReviewText] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
+
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeImage) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [activeImage]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setActiveImage(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   if (!venue) return <div className="container py-5 my-5 text-center"><h1 className="display-4 fw-bold">Не найдено</h1></div>;
 
@@ -30,7 +48,7 @@ export const VenueDetailPage = () => {
 
     const newReview = {
       id: Date.now(),
-      author: 'Вы', // Имя гостя
+      author: 'Вы',
       rating: newReviewRating,
       text: newReviewText,
       date: 'Только что'
@@ -65,7 +83,7 @@ export const VenueDetailPage = () => {
               <h1 className="display-4 fw-black mb-4 text-body-emphasis tracking-tighter">{venue.name}</h1>
               <div className="d-flex flex-wrap gap-3">
                 <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill">
-                  <Star size={18} className="text-warning fill-warning" style={{ fill: '#ffc107' }}/>
+                  <Star size={18} className="text-warning fill-warning" />
                   <span className="fw-black text-body-emphasis">{venue.rating}</span>
                 </div>
                 <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill fw-bold">
@@ -84,7 +102,6 @@ export const VenueDetailPage = () => {
               <h3 className="h4 fw-bold mb-4 italic text-decoration-underline text-danger underline-offset-8 text-body-emphasis">Описание</h3>
               <p className="text-body-secondary fs-5 lh-lg mb-5">{venue.description}</p>
               
-              {/* ВЫВОД ВСЕХ АДРЕСОВ ИЗ БАЗЫ */}
               <div className="row g-4 py-4 border-top border-bottom border-light">
                 <div className="col-12 d-flex align-items-start gap-3">
                   <div className="bg-danger bg-opacity-10 p-3 rounded-4 flex-shrink-0">
@@ -117,10 +134,11 @@ export const VenueDetailPage = () => {
               </div>
             </div>
             
+            {/* Боковая панель */}
             <div className="col-lg-4">
               <div className="bg-body-tertiary rounded-4 p-4 h-100">
                 <h3 className="fw-black italic text-uppercase h5 mb-4 text-body-emphasis">Особенности</h3>
-                <ul className="list-unstyled mb-5">
+                <ul className="list-unstyled mb-4">
                   {['Wifi', 'Оплата картой', 'Летняя терраса'].map((item) => (
                     <li key={item} className="d-flex align-items-center gap-3 mb-3 fw-bold text-body-secondary small">
                       <div className="bg-danger rounded-circle" style={{ width: '6px', height: '6px' }} />
@@ -128,28 +146,69 @@ export const VenueDetailPage = () => {
                     </li>
                   ))}
                 </ul>
-                <a href={venue.instagramUrl} target="_blank" rel="noopener noreferrer" className="card p-3 border-0 rounded-4 d-flex flex-row align-items-center justify-content-between text-decoration-none bg-body shadow-sm">
+                
+                {/* Ссылка на Инстаграм */}
+                <a href={venue.instagramUrl} target="_blank" rel="noopener noreferrer" className="card p-3 border-0 rounded-4 d-flex flex-row align-items-center justify-content-between text-decoration-none bg-body shadow-sm mb-4">
                   <div className="small fw-bold text-uppercase tracking-widest text-body-secondary">Instagram</div>
                   <Instagram size={18} className="text-danger" />
                 </a>
+
+                {/* ИНТЕРАКТИВНАЯ ГАЛЕРЕЯ */}
+                <div className="pt-3 border-top">
+                  <h4 className="fw-black italic text-uppercase h6 mb-3 text-body-emphasis">Интерьер</h4>
+                  <div className="row g-2">
+                    
+                    {/* Первая мини-картинка */}
+                    {venue.gallery && venue.gallery[0] && (
+                      <div className="col-6">
+                        <div 
+                          onClick={() => setActiveImage(venue.gallery[0])}
+                          className="ratio ratio-4x3 overflow-hidden rounded-3 border cursor-zoom-in"
+                        >
+                          <img 
+                            src={venue.gallery[0]} 
+                            alt="Интерьер заведения" 
+                            className="object-fit-cover gallery-thumb"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Вторая мини-картинка */}
+                    {venue.gallery && venue.gallery[1] && (
+                      <div className="col-6">
+                        <div 
+                          onClick={() => setActiveImage(venue.gallery[1])}
+                          className="ratio ratio-4x3 overflow-hidden rounded-3 border cursor-zoom-in"
+                        >
+                          <img 
+                            src={venue.gallery[1]} 
+                            alt="Атмосфера заведения" 
+                            className="object-fit-cover gallery-thumb"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Блок бронирования */}
+      {/* Бронирование */}
       <section id="booking" className="container pb-5" style={{ maxWidth: '1000px' }}>
         <BookingForm venueName={venue.name} />
       </section>
 
-      {/* БЛОК ОТЗЫВОВ */}
+      {/* Отзывы */}
       <section className="container pb-5 mb-5" style={{ maxWidth: '1000px' }}>
         <div className="card bg-body-tertiary border-0 rounded-4 p-4 p-md-5">
           <h3 className="display-6 fw-black italic text-uppercase tracking-tighter mb-5 text-body-emphasis">Отзывы гостей</h3>
-          
           <div className="row g-5">
-            {/* Форма написания отзыва */}
             <div className="col-md-5">
               <div className="bg-body p-4 rounded-4 shadow-sm">
                 <h4 className="h5 fw-bold mb-4 text-body-emphasis">Оставить отзыв</h4>
@@ -164,22 +223,14 @@ export const VenueDetailPage = () => {
                       <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Оценка</label>
                       <div className="d-flex gap-2">
                         {[1, 2, 3, 4, 5].map((star) => (
-                          <button 
-                            key={star} type="button"
-                            onClick={() => setNewReviewRating(star)}
-                            className="btn btn-link p-0 border-0 text-decoration-none"
-                          >
+                          <button key={star} type="button" onClick={() => setNewReviewRating(star)} className="btn btn-link p-0 border-0 text-decoration-none">
                             <Star size={24} className={star <= newReviewRating ? 'text-warning fill-warning' : 'text-secondary'} style={{ fill: star <= newReviewRating ? '#ffc107' : 'none' }} />
                           </button>
                         ))}
                       </div>
                     </div>
                     <div className="mb-4">
-                      <textarea 
-                        required value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)}
-                        placeholder="Поделитесь впечатлениями..."
-                        className="form-control rounded-3 bg-body-tertiary text-body border-0 shadow-none" rows={4}
-                      />
+                      <textarea required value={newReviewText} onChange={(e) => setNewReviewText(e.target.value)} placeholder="Поделитесь впечатлениями..." className="form-control rounded-3 bg-body-tertiary text-body border-0 shadow-none" rows={4} />
                     </div>
                     <button type="submit" className="btn btn-primary-custom w-100 py-2">Отправить</button>
                   </form>
@@ -187,17 +238,11 @@ export const VenueDetailPage = () => {
               </div>
             </div>
 
-            {/* Список отзывов */}
             <div className="col-md-7">
               <div className="d-grid gap-4">
                 <AnimatePresence>
                   {reviews.map((review) => (
-                    <motion.div 
-                      key={review.id}
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-body p-4 rounded-4 shadow-sm"
-                    >
+                    <motion.div key={review.id} initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="bg-body p-4 rounded-4 shadow-sm">
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <div>
                           <span className="fw-bold text-body-emphasis d-block">{review.author}</span>
@@ -218,6 +263,34 @@ export const VenueDetailPage = () => {
           </div>
         </div>
       </section>
+
+      {/* LIGHTBOX */}
+      <AnimatePresence>
+        {activeImage && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setActiveImage(null)}
+            className="lightbox-overlay"
+          >
+            <button className="lightbox-close-btn">
+              <X size={32} className="text-white" />
+            </button>
+
+            <motion.img 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              src={activeImage} 
+              alt="Увеличенное изображение" 
+              className="lightbox-image"
+              onClick={(e) => e.stopPropagation()} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       <style>{`
         .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
@@ -225,6 +298,53 @@ export const VenueDetailPage = () => {
         .z-2 { z-index: 2; }
         .fw-black { font-weight: 900; }
         .underline-offset-8 { text-underline-offset: 8px; }
+        
+        .cursor-zoom-in { cursor: zoom-in; }
+        .gallery-thumb {
+          width: 100%;
+          height: 100%;
+          transition: transform 0.3s ease, filter 0.3s ease;
+        }
+        .gallery-thumb:hover {
+          transform: scale(1.08);
+          filter: brightness(0.9);
+        }
+
+        .lightbox-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(0, 0, 0, 0.9);
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: zoom-out;
+          backdrop-filter: blur(5px);
+        }
+        .lightbox-image {
+          max-width: 90%;
+          max-height: 85vh;
+          object-fit: contain;
+          border-radius: 1rem;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+          cursor: default;
+        }
+        .lightbox-close-btn {
+          position: absolute;
+          top: 20px;
+          right: 20px;
+          background: transparent;
+          border: 0;
+          padding: 10px;
+          cursor: pointer;
+          transition: transform 0.2s ease;
+        }
+        .lightbox-close-btn:hover {
+          transform: scale(1.1);
+        }
       `}</style>
     </div>
   );

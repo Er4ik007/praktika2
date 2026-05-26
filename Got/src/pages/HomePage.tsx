@@ -66,18 +66,56 @@ export const HomePage = () => {
       {/* Адаптивный блок: светло-серый днем, темно-серый ночью */}
       <section className="py-5 bg-body-tertiary overflow-hidden position-relative mt-5">
         <div className="container position-relative z-1 py-5">
-          <div className="row align-items-center g-5">
+          <div className="row align-items-center justify-content-between g-5">
+            
+            {/* Левая часть: Текст и Статистика */}
             <div className="col-lg-6">
               <h2 className="display-4 fw-black mb-4 italic text-uppercase lh-1 tracking-tighter text-body-emphasis">
                 Минск — это про еду и атмосферу
               </h2>
-              <div className="row g-4 mt-3">
+              <p className="text-body-secondary fs-5 mb-5 lh-lg" style={{ maxWidth: '500px' }}>
+                Мы лично проверяем каждое заведение, прежде чем добавить его в каталог. Честные отзывы, актуальные меню и бронирование в пару кликов.
+              </p>
+              
+              {/* Сетка статистики: 2 колонки на мобилках, 2 колонки на ПК */}
+              <div className="row g-4 mt-2">
                 <div className="col-6">
                   <div className="display-5 fw-black text-danger mb-1">150+</div>
                   <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">Проверенных мест</div>
                 </div>
+                <div className="col-6">
+                  <div className="display-5 fw-black text-danger mb-1">12k</div>
+                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">Довольных гостей</div>
+                </div>
+                <div className="col-6">
+                  <div className="display-5 fw-black text-danger mb-1">500+</div>
+                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">Честных отзывов</div>
+                </div>
+                <div className="col-6">
+                  <div className="display-5 fw-black text-danger mb-1">24/7</div>
+                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">Поддержка</div>
+                </div>
               </div>
             </div>
+
+            {/* Правая часть: Вращающаяся картинка */}
+            <div className="col-lg-5">
+              <div className="position-relative w-100 d-flex justify-content-center align-items-center" style={{ minHeight: '450px' }}>
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+                  className="position-absolute border border-secondary border-opacity-25 rounded-circle"
+                  style={{ width: '100%', paddingBottom: '100%', maxWidth: '450px' }}
+                />
+                <img 
+                  src="https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?auto=format&fit=crop&w=800&q=80" 
+                  className="position-absolute rounded-circle shadow-lg grayscale hover-color transition-all duration-700" 
+                  style={{ width: '75%', height: '75%', maxWidth: '340px', maxHeight: '340px', objectFit: 'cover' }}
+                  alt="Атмосфера Минска"
+                />
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
