@@ -7,9 +7,39 @@ import { VenueCard } from '../components/VenueCard';
 
 export const HomePage = () => {
   const [current, setCurrent] = useState(0);
+  
+  // ОБНОВЛЕННЫЕ СЛАЙДЫ СО ССЫЛКАМИ НА ФИЛЬТРЫ
   const slides = [
-    { title: "Гастрономический Минск", subtitle: "Откройте для себя лучшие вкусы столицы", image: "src/images/rest.jpg" },
-    { title: "Белорусская Кухня", subtitle: "Традиции в современном исполнении", image: "src/images/dran.jpg" }
+    { 
+      title: "Гастрономический Минск", 
+      subtitle: "Откройте для себя лучшие вкусы столицы", 
+      image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80",
+      link: "/catalog"
+    },
+    { 
+      title: "Белорусская Кухня", 
+      subtitle: "Традиции, драники и мачанка в лучшем исполнении", 
+      image: "src/images/dran.jpg",
+      link: "/catalog?filter=belarusian"
+    },
+    { 
+      title: "Рестораны", 
+      subtitle: "Идеальные места для идеального ужина", 
+      image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1920&q=80",
+      link: "/catalog?filter=restaurant"
+    },
+    { 
+      title: "Культура Кофе", 
+      subtitle: "Лучшие спешелти кофейни в центре города", 
+      image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1920&q=80",
+      link: "/catalog?filter=coffee"
+    },
+    { 
+      title: "Атмосферные Бары", 
+      subtitle: "Авторские коктейли, крафт и живая музыка", 
+      image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1920&q=80",
+      link: "/catalog?filter=bar"
+    }
   ];
 
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -25,7 +55,7 @@ export const HomePage = () => {
   };
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent((p) => (p + 1) % slides.length), 5000);
+    const timer = setInterval(() => setCurrent((p) => (p + 1) % slides.length), 6000); // Сделал 6 сек, чтобы успели прочитать
     return () => clearInterval(timer);
   }, [slides.length]);
 
@@ -38,10 +68,32 @@ export const HomePage = () => {
             <div className="position-absolute inset-0 w-100 h-100 bg-black opacity-50" />
             <div className="position-relative h-100 z-1 d-flex flex-column justify-content-center align-items-center text-center px-3 text-white">
               <motion.h1 initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="display-2 fw-black mb-3 tracking-tighter text-white">{slides[current].title}</motion.h1>
-              <Link to="/catalog" className="btn btn-primary-custom mt-4">Смотреть каталог</Link>
+              <motion.p initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="fs-3 fw-light opacity-75 max-w-2xl">{slides[current].subtitle}</motion.p>
+              
+              {/* КНОПКА С ДИНАМИЧЕСКОЙ ССЫЛКОЙ ИЗ СЛАЙДА */}
+              <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4 }} className="mt-4">
+                <Link to={slides[current].link} className="btn btn-primary-custom">Перейти</Link>
+              </motion.div>
+
             </div>
           </motion.div>
         </AnimatePresence>
+
+        <div className="position-absolute bottom-0 start-50 translate-middle-x mb-4 z-2 d-flex gap-2">
+          {slides.map((_, i) => (
+            <button 
+              key={i}
+              onClick={() => setCurrent(i)}
+              className="border-0 rounded-pill p-0 transition-all"
+              style={{ 
+                width: i === current ? '40px' : '10px', 
+                height: '10px', 
+                backgroundColor: i === current ? '#ef4444' : 'rgba(255,255,255,0.5)',
+                transition: 'all 0.3s ease'
+              }}
+            />
+          ))}
+        </div>
       </section>
 
       <section className="py-5 container">
@@ -63,12 +115,9 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* Адаптивный блок: светло-серый днем, темно-серый ночью */}
       <section className="py-5 bg-body-tertiary overflow-hidden position-relative mt-5">
         <div className="container position-relative z-1 py-5">
           <div className="row align-items-center justify-content-between g-5">
-            
-            {/* Левая часть: Текст и Статистика */}
             <div className="col-lg-6">
               <h2 className="display-4 fw-black mb-4 italic text-uppercase lh-1 tracking-tighter text-body-emphasis">
                 Минск — это про еду и атмосферу
@@ -76,8 +125,6 @@ export const HomePage = () => {
               <p className="text-body-secondary fs-5 mb-5 lh-lg" style={{ maxWidth: '500px' }}>
                 Мы лично проверяем каждое заведение, прежде чем добавить его в каталог. Честные отзывы, актуальные меню и бронирование в пару кликов.
               </p>
-              
-              {/* Сетка статистики: 2 колонки на мобилках, 2 колонки на ПК */}
               <div className="row g-4 mt-2">
                 <div className="col-6">
                   <div className="display-5 fw-black text-danger mb-1">150+</div>
@@ -98,24 +145,12 @@ export const HomePage = () => {
               </div>
             </div>
 
-            {/* Правая часть: Вращающаяся картинка */}
             <div className="col-lg-5">
               <div className="position-relative w-100 d-flex justify-content-center align-items-center" style={{ minHeight: '450px' }}>
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                  className="position-absolute border border-secondary border-opacity-25 rounded-circle"
-                  style={{ width: '100%', paddingBottom: '100%', maxWidth: '450px' }}
-                />
-                <img 
-                  src="https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?auto=format&fit=crop&w=800&q=80" 
-                  className="position-absolute rounded-circle shadow-lg grayscale hover-color transition-all duration-700" 
-                  style={{ width: '75%', height: '75%', maxWidth: '340px', maxHeight: '340px', objectFit: 'cover' }}
-                  alt="Атмосфера Минска"
-                />
+                <motion.div animate={{ rotate: 360 }} transition={{ duration: 25, repeat: Infinity, ease: "linear" }} className="position-absolute border border-secondary border-opacity-25 rounded-circle" style={{ width: '100%', paddingBottom: '100%', maxWidth: '450px' }} />
+                <img src="https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?auto=format&fit=crop&w=800&q=80" className="position-absolute rounded-circle shadow-lg grayscale hover-color transition-all duration-700" style={{ width: '75%', height: '75%', maxWidth: '340px', maxHeight: '340px', objectFit: 'cover' }} alt="Атмосфера Минска" />
               </div>
             </div>
-
           </div>
         </div>
       </section>
@@ -124,6 +159,8 @@ export const HomePage = () => {
         .z-1 { z-index: 1; }
         .fw-black { font-weight: 900; }
         .hover-move-x:hover { transform: translateX(8px); }
+        .grayscale { filter: grayscale(100%); }
+        .hover-color:hover { filter: grayscale(0%); }
       `}</style>
     </div>
   );
