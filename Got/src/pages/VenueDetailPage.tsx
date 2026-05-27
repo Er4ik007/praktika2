@@ -23,12 +23,6 @@ export const VenueDetailPage = () => {
   const [activeImage, setActiveImage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (venue) {
-      document.title = `${venue.name} — Minsk Gastro Guide`;
-    }
-  }, [venue]);
-
-  useEffect(() => {
     if (activeImage) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = 'unset';
     return () => { document.body.style.overflow = 'unset'; };
