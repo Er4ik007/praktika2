@@ -58,30 +58,30 @@ body {
   font-style: italic;
 }
 
-/* --- АНИМАЦИЯ СМЕНЫ ТЕМЫ  --- */
+/* --- КРАСИВАЯ АНИМАЦИЯ СМЕНЫ ТЕМЫ ОТ КНОПКИ --- */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
 
-
 ::view-transition-old(root) {
   z-index: 1;
 }
 
-
 ::view-transition-new(root) {
   z-index: 9999;
-  animation: circle-reveal 0.7s ease-in-out forwards;
+  /* Плавное раскрытие круга из координат var(--x) и var(--y) */
+  animation: reveal-from-button 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-
-@keyframes circle-reveal {
+@keyframes reveal-from-button {
   from {
-    clip-path: circle(0% at 50% 50%);
+    /* Начинаем с точки клика */
+    clip-path: circle(0% at var(--x) var(--y));
   }
   to {
-    clip-path: circle(150% at 50% 50%);
+    /* Растягиваем до 150%, чтобы гарантированно закрыть углы монитора */
+    clip-path: circle(150% at var(--x) var(--y));
   }
 }

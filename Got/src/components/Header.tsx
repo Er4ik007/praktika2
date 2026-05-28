@@ -7,30 +7,37 @@ export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
-  // Базовая установка темы при загрузке страницы
+  // Установка темы при первой загрузке
   useEffect(() => {
     document.documentElement.setAttribute('data-bs-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // УМНАЯ ЛОГИКА ПЕРЕКЛЮЧЕНИЯ С АНИМАЦИЕЙ
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+  // УМНАЯ АНИМАЦИЯ ВОЛНЫ ИЗ ТОЧКИ КЛИКА
+  const toggleTheme = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
 
-    // Проверяем, поддерживает ли браузер новую технологию View Transitions
-    // @ts-ignore - игнорируем ошибку TS, так как API совсем новое
+    // Защита: если браузер не поддерживает современное View Transitions API
+    // @ts-ignore
     if (!document.startViewTransition) {
-      // Если браузер старый, просто меняем тему без анимации
-      setTheme(newTheme);
+      setTheme(nextTheme);
       return;
     }
 
-    // Запускаем красивую анимацию
+    // 1. Получаем координаты клика мыши
+    const x = event.clientX;
+    const y = event.clientY;
+
+    // 2. Передаем эти координаты в CSS как глобальные переменные
+    document.documentElement.style.setProperty('--x', `${x}px`);
+    document.documentElement.style.setProperty('--y', `${y}px`);
+
+    // 3. Запускаем анимацию перехода
     // @ts-ignore
     document.startViewTransition(() => {
-      // Это происходит мгновенно под капотом, а браузер сам рисует плавный круг
-      document.documentElement.setAttribute('data-bs-theme', newTheme);
-      setTheme(newTheme);
+      document.documentElement.setAttribute('data-bs-theme', nextTheme);
+      setTheme(nextTheme);
+      localStorage.setItem('theme', nextTheme);
     });
   };
 
@@ -68,9 +75,9 @@ export const Header = () => {
         </nav>
 
         <div className="d-flex align-items-center">
-          {/* Кнопка смены темы вызывает нашу новую функцию toggleTheme */}
+          {/* Передаем событие клика (event) в функцию toggleTheme */}
           <button 
-            onClick={toggleTheme} 
+            onClick={(e) => toggleTheme(e)} 
             className="btn btn-link text-body p-2 me-md-0 me-2"
             title="Сменить тему"
           >
