@@ -53,7 +53,6 @@ export const CatalogPage = () => {
   useEffect(() => {
     const saved = localStorage.getItem('favorites');
     if (saved) setFavorites(JSON.parse(saved));
-    document.title = "Каталог заведений — Minsk Gastro Guide";
   }, []);
 
   useEffect(() => {
