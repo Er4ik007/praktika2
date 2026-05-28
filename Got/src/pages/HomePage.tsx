@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { venues, Venue } from '../data';
 import { VenueCard } from '../components/VenueCard';
+import { Minsk3DWidget } from '../components/Minsk3DWidget';
 
 export const HomePage = () => {
   const [current, setCurrent] = useState(0);
@@ -145,11 +146,9 @@ export const HomePage = () => {
               </div>
             </div>
 
+            {/* Правая часть: Наш инновационный 3D-виджет! */}
             <div className="col-lg-5">
-              <div className="position-relative w-100 d-flex justify-content-center align-items-center" style={{ minHeight: '450px' }}>
-                <motion.div animate={{ rotate: 360 }} transition={{ duration: 25, repeat: Infinity, ease: "linear" }} className="position-absolute border border-secondary border-opacity-25 rounded-circle" style={{ width: '100%', paddingBottom: '100%', maxWidth: '450px' }} />
-                <img src="https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?auto=format&fit=crop&w=800&q=80" className="position-absolute rounded-circle shadow-lg grayscale hover-color transition-all duration-700" style={{ width: '75%', height: '75%', maxWidth: '340px', maxHeight: '340px', objectFit: 'cover' }} alt="Атмосфера Минска" />
-              </div>
+              <Minsk3DWidget />
             </div>
           </div>
         </div>
