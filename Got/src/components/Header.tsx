@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Utensils, X, Menu as MenuIcon, Moon, Sun, User } from 'lucide-react'; // Добавили User
 
 export const Header = () => {

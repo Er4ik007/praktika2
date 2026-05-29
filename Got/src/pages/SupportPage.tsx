@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Send, MessageSquare, LifeBuoy } from 'lucide-react';
 
 export const SupportPage = () => {

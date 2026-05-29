@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Star, MapPin, ChevronLeft, CreditCard, Clock, Instagram, Send, X, ExternalLink } from 'lucide-react';
 import { venues } from '../data';
 import { BookingForm } from '../components/BookingForm';

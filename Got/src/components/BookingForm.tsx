@@ -1,5 +1,5 @@
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Send, MapPin, Star, ChevronRight, ChevronDown } from 'lucide-react';
 
 const COUNTRY_CODES = [
