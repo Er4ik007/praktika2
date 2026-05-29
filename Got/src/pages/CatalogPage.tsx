@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Utensils, Coffee, Wine, ChefHat } from 'lucide-react';
 import { venues, Venue } from '../data';
 import { VenueCard } from '../components/VenueCard';

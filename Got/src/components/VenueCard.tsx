@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
+import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Star, MapPin, Utensils, Coffee, Wine, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Venue } from '../data';

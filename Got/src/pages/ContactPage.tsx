@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { MapPin, Phone, Mail, Instagram, Send } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 export const ContactPage = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
