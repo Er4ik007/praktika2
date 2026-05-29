@@ -146,9 +146,54 @@ export const HomePage = () => {
               </div>
             </div>
 
-            {/* Правая часть: Наш инновационный 3D-виджет! */}
-            <div className="col-lg-5">
-              <Minsk3DWidget />
+            {/* Правая часть:3D-виджет */}
+            <div className="col-lg-5 position-relative">
+              
+              {/* ФОНОВОЕ СВЕЧЕНИЕ (Нижний слой: z-index 0) */}
+              <div className="position-absolute inset-0 d-flex justify-content-center align-items-center" style={{ zIndex: 0, pointerEvents: 'none' }}>
+                {/* Первое пятно: Красное, пульсирует и крутится */}
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.2, 1],
+                    rotate: [0, 90, 0],
+                    opacity: [0.3, 0.5, 0.3]
+                  }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                  style={{
+                    width: '350px',
+                    height: '350px',
+                    background: 'linear-gradient(45deg, #ef4444, #f87171)',
+                    filter: 'blur(80px)', // Экстремальное размытие делает из квадрата мягкий свет
+                    borderRadius: '50%',
+                    position: 'absolute'
+                  }}
+                />
+                {/* Второе пятно: Тепло-желтое, двигается в противофазе */}
+                <motion.div
+                  animate={{ 
+                    scale: [1.2, 1, 1.2],
+                    rotate: [360, 180, 360],
+                    opacity: [0.2, 0.4, 0.2]
+                  }}
+                  transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                  style={{
+                    width: '400px',
+                    height: '400px',
+                    background: 'linear-gradient(45deg, #fbbf24, #ef4444)',
+                    filter: 'blur(100px)',
+                    borderRadius: '50%',
+                    position: 'absolute',
+                    marginLeft: '100px',
+                    marginTop: '100px'
+                  }}
+                />
+              </div>
+
+              {/* САМ 3D ВИДЖЕТ (Верхний слой: z-index 1) */}
+              <div className="position-relative" style={{ zIndex: 1, minHeight: '550px' }}>
+                <Minsk3DWidget />
+              </div>
+              
             </div>
           </div>
         </div>
