@@ -6,7 +6,6 @@ import { CheckCircle } from 'lucide-react';
 export const RegisterPage = () => {
   const [submitted, setSubmitted] = useState(false);
 
-  useEffect(() => { document.title = "Регистрация — Minsk Gastro Guide"; }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

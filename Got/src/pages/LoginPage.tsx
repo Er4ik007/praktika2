@@ -4,7 +4,6 @@ import { motion } from 'motion/react';
 import { Utensils } from 'lucide-react';
 
 export const LoginPage = () => {
-  useEffect(() => { document.title = "Вход — Minsk Gastro Guide"; }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
