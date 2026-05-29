@@ -25,16 +25,13 @@ export const CatalogPage = () => {
 
   // Инициализация jQuery UI
   useEffect(() => {
-    // Ждем, пока jQuery загрузится
     if ($ && sliderRef.current) {
-      // Создаем виджет Slider из jQuery UI
       $(sliderRef.current).slider({
         range: "min",
         value: maxPrice,
         min: 1,
         max: 4,
         step: 1,
-        // Событие jQuery: когда ползунок двигается, обновляем состояние React!
         slide: function (_event: any, ui: any) {
           setMaxPrice(ui.value);
         }
