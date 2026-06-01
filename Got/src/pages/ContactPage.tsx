@@ -40,7 +40,7 @@ export const ContactPage = () => {
               </div>
               <div>
                 <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">Телефон</h4>
-                <p className="text-secondary fw-medium mb-0">+375 (29) 519-73-30</p>
+                <p className="text-secondary fw-medium mb-0">+375 (29) 519-73-31</p>
               </div>
             </div>
             <div className="d-flex align-items-start gap-4">
@@ -65,7 +65,6 @@ export const ContactPage = () => {
         </div>
 
         <div className="col-lg-6">
-          {/* Изменили фон формы на адаптивный */}
           <div className="bg-body-tertiary p-4 p-md-5 rounded-5 shadow-sm border h-100">
             <h2 className="h2 fw-black mb-5 text-body-emphasis italic uppercase tracking-tighter">Напишите нам</h2>
             
@@ -82,12 +81,20 @@ export const ContactPage = () => {
               <form onSubmit={handleSubmit} className="row g-4">
                 <div className="col-md-6">
                   <label className="fw-black text-secondary text-uppercase small tracking-widest mb-2 d-inline-block">Имя</label>
-                  {/* Убрали bg-white, чтобы Bootstrap сам управлял цветом инпута */}
-                  <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" placeholder="Надежда" />
+                  <input required type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" />
                 </div>
                 <div className="col-md-6">
                   <label className="fw-black text-secondary text-uppercase small tracking-widest mb-2 d-inline-block">Email</label>
-                  <input required type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" placeholder="email@example.by" />
+                  {/* === ДОБАВЛЕН PATTERN И TITLE === */}
+                  <input 
+                    required 
+                    type="email" 
+                    pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+                    title="Email должен содержать доменную зону (например: .com, .by, .ru)"
+                    value={formData.email} 
+                    onChange={(e) => setFormData({...formData, email: e.target.value})} 
+                    className="form-control bg-body rounded-4 border-0 py-3 px-4 shadow-sm" 
+                  />
                 </div>
                 <div className="col-12">
                   <label className="fw-black text-secondary text-uppercase small tracking-widest mb-2 d-inline-block">Тема</label>
@@ -113,3 +120,4 @@ export const ContactPage = () => {
     </div>
   );
 };
+

@@ -17,8 +17,8 @@ export const SupportPage = () => {
           <div className="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 rounded-4 mb-4" style={{ width: '64px', height: '64px' }}>
             <LifeBuoy size={32} className="text-danger" />
           </div>
-          <h1 className="display-4 fw-black italic text-uppercase tracking-tighter mb-3">Служба поддержки</h1>
-          <p className="text-secondary fw-medium fs-5 px-md-5">Есть вопросы или предложения? Напишите нам, и мы ответим в ближайшее время.</p>
+          <h1 className="display-4 fw-black italic text-uppercase tracking-tighter mb-3 text-body-emphasis">Служба поддержки</h1>
+          <p className="text-body-secondary fw-medium fs-5 px-md-5">Есть вопросы или предложения? Напишите нам, и мы ответим в ближайшее время.</p>
         </div>
 
         {!submitted ? (
@@ -29,7 +29,7 @@ export const SupportPage = () => {
           >
             <form onSubmit={handleSubmit} className="row g-4">
               <div className="col-md-6">
-              <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Ваше имя</label>
+                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Ваше имя</label>
                 <input 
                   required 
                   type="text" 
@@ -38,17 +38,20 @@ export const SupportPage = () => {
                 />
               </div>
               <div className="col-md-6">
-                <label className="text-muted small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Email для связи</label>
+                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Email для связи</label>
+                {/* === ДОБАВЛЕН PATTERN И TITLE === */}
                 <input 
                   required 
                   type="email" 
+                  pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+                  title="Email должен содержать доменную зону (например: .com, .by, .ru)"
                   className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none"
-                  placeholder="mail@example.com"
+                  placeholder="alex@example.com"
                 />
               </div>
               
               <div className="col-12">
-                <label className="text-muted small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Категория вопроса</label>
+                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Категория вопроса</label>
                 <select className="form-select rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium">
                   <option>Общий вопрос</option>
                   <option>Проблема с бронированием</option>
@@ -59,7 +62,7 @@ export const SupportPage = () => {
               </div>
 
               <div className="col-12">
-                <label className="text-muted small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Сообщение</label>
+                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">Сообщение</label>
                 <textarea 
                   required 
                   rows={5}
@@ -89,7 +92,7 @@ export const SupportPage = () => {
             <div className="bg-body rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4 shadow-sm text-success" style={{ width: '64px', height: '64px' }}>
               <MessageSquare size={32} />
             </div>
-            <h2 className="h3 fw-bold text-body mb-2">Сообщение отправлено!</h2>
+            <h2 className="h3 fw-bold text-body-emphasis mb-2">Сообщение отправлено!</h2>
             <p className="text-success fw-medium opacity-75 mb-4">Мы получили ваш запрос и свяжемся с вами в течение 24 часов.</p>
             <button 
               onClick={() => setSubmitted(false)}

@@ -6,10 +6,11 @@ import { CheckCircle } from 'lucide-react';
 export const RegisterPage = () => {
   const [submitted, setSubmitted] = useState(false);
 
+  useEffect(() => { document.title = "Регистрация — Minsk Gastro Guide"; }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true); // Показываем сообщение об успехе
+    setSubmitted(true);
   };
 
   return (
@@ -41,7 +42,15 @@ export const RegisterPage = () => {
               </div>
               <div>
                 <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Email</label>
-                <input required type="email" className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" placeholder="mail@example.com" />
+                {/* === ДОБАВЛЕН PATTERN И TITLE === */}
+                <input 
+                  required 
+                  type="email" 
+                  pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+                  title="Email должен содержать доменную зону (например: .com, .by, .ru)"
+                  className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" 
+                  placeholder="mail@example.com" 
+                />
               </div>
               <div>
                 <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Пароль</label>

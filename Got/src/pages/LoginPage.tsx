@@ -4,10 +4,10 @@ import { motion } from 'motion/react';
 import { Utensils } from 'lucide-react';
 
 export const LoginPage = () => {
+  useEffect(() => { document.title = "Вход — Minsk Gastro Guide"; }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Имитация входа (так как нет бэкенда)
     alert("Тестовый вход выполнен!");
   };
 
@@ -26,7 +26,15 @@ export const LoginPage = () => {
         <form onSubmit={handleSubmit} className="d-grid gap-3">
           <div>
             <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Email</label>
-            <input required type="email" className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" placeholder="mail@example.com" />
+            {/* === ДОБАВЛЕН PATTERN И TITLE === */}
+            <input 
+              required 
+              type="email" 
+              pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+              title="Email должен содержать доменную зону (например: .com, .by, .ru)"
+              className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" 
+              placeholder="mail@example.com" 
+            />
           </div>
           <div>
             <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Пароль</label>
