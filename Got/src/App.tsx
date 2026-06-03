@@ -16,7 +16,7 @@ const VenueDetailPage = lazy(() => import('./pages/VenueDetailPage').then(m => (
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 
-// BOM 
+// BOM 123
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
