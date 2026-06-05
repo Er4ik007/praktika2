@@ -16,7 +16,6 @@ const TEAM_MEMBERS = [
     role: 'Заместитель директора',
     description: 'Отвечает за стратегическое развитие, партнерства с ресторанами и безупречную техническую работу платформы.',
     image: './photo/leha.jpg',
-    // === ПАСХАЛКА: Фото во весь рост для обратной стороны ===
     backImage: './photo/shrek.jpg', 
     telegram: 'https://t.me/ALEX_ALEXzh'
   }
@@ -67,7 +66,7 @@ export const AboutPage = () => {
                   3D-Обертка для карточки. 
                   Если есть backImage, добавляем класс .is-flippable, который разрешает 3D-поворот 
                 */}
-                <div className={`flip-card-container h-100 ${member.backImage ? 'is-flippable' : 'group-hover-lift'}`}>
+                <div className={`flip-card-container h-100 $`}>
                   <div className="flip-card-inner">
                     
                     {/* === ЛИЦЕВАЯ СТОРОНА (FRONT) === */}
