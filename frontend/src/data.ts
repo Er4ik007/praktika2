@@ -26,14 +26,14 @@ export const venues: Venue[] = [
     description: 'Контраст атмосферы спокойствия с бешеными ритмами города чутко улавливается уже с порога. Интерьер ресторана Contrast (Контраст) окутывает уютом, где гостям удобно провести деловую встречу, заглянуть на семейный завтрак или запланировать свидание на вечер. Все это приправлено главными ценностями заведения: простой понятной едой, безупречным сервисом и честностью в отношениях с клиентами во всем.',
     rating: 4.6,
     image: '/photo/contrast1.png',
-    priceLevel: 2,
+    priceLevel: 3,
     instagramUrl: 'https://www.instagram.com/contrast_minsk?igsh=emRyMW5lb3BtMWdl',
     branches: [
       {
         id: 'contrast-1',
         address: 'пр-т Победителей 102',
-        workingHours: 'Ежедневно: 09:00 — 23:00',
-        features: ['Wifi', 'Оплата картой', 'Завтраки'],
+        workingHours: 'Воскресенье - Четверг: 08:00 - 21:00\nПятница - Суббота: 09:00 - 23:00',
+        features: ['Wifi', 'Оплата картой', 'Завтраки', 'Вегетарианские блюда', 'Терасса'],
         gallery: ['/photo/contrast2.jpg', '/photo/contrast3.jpg']
       }
     ]
@@ -52,7 +52,7 @@ export const venues: Venue[] = [
         id: 'pigeon-1',
         address: 'пр-т Независимости, 37',
         workingHours: 'Ежедневно: 10:00 — 22:00',
-        features: ['Завтраки весь день', 'Альтернативный кофе', 'Десерты'],
+        features: ['Завтраки весь день', 'Альтернативный кофе', 'Десерты', 'Обеденное меню', 'Доставка'],
         gallery: ['/photo/pizhon2.jpg', '/photo/pizhon3.webp']
       }
     ]
@@ -71,7 +71,7 @@ export const venues: Venue[] = [
         id: 'ember-1',
         address: 'пр-т Победителей, 9',
         workingHours: 'Ежедневно: 12:00 — 00:00',
-        features: ['Панорамный вид', 'Винная карта', 'Премиум сервис'],
+        features: ['Панорамный вид', 'Винная карта', 'Премиум сервис', 'Терасса', 'Вегетарианские блюда'],
         gallery: ['/photo/ember2.jpg', '/photo/ember3.avif']
       }
     ]
@@ -89,43 +89,43 @@ export const venues: Venue[] = [
       {
         id: 'lidbeer-1',
         address: 'ул. Интернациональная, 33',
-        workingHours: 'Пн-Чт: 17:00-02:00, Пт-Сб: 17:00-05:00',
-        features: ['Живая музыка', 'Танцпол', 'Оплата картой'],
+        workingHours: 'Круглосуточно',
+        features: ['Живая музыка', 'Танцпол', 'Детское меню', 'Оплата картой'],
         gallery: ['/photo/lidbeer2.jpeg', '/photo/lidbeer3.jpg']
       },
       {
         id: 'lidbeer-2',
         address: 'пр-т Независимости, 58',
-        workingHours: 'Ежедневно: 12:00 — 23:00',
-        features: ['Спорт-трансляции', 'Парковка', 'Летняя терраса'],
+        workingHours: 'Круглосуточно',
+        features: ['Спорт-трансляции', 'Живая музыка', 'Летняя терраса'],
         gallery: ['/photo/lidbeer2.jpeg', '/photo/lidbeer3.jpg']
       },
       {
         id: 'lidbeer-3',
         address: 'ул. Якуба Коласа, 37',
-        workingHours: 'Ежедневно: 16:00 — 02:00',
-        features: ['Настольные игры', 'Шумно'],
+        workingHours: 'Понедельник - Четверг, Воскресенье: 16:00 — 02:00\nПятница - Суббота: 16:00 — 05:00',
+        features: ['Настольные игры', 'Живая музыка'],
         gallery: ['/photo/lidbeer2.jpeg', '/photo/lidbeer3.jpg']
       },
       {
         id: 'lidbeer-4',
         address: 'ул. Комсомольская, 18',
-        workingHours: 'Ежедневно: 16:00 — 04:00',
-        features: ['Кальян', 'Коктейли'],
+        workingHours: 'Воскресенье - Четверг: 12:00 — 02:00\n Пятница - Суббота: 12:00 — 04:00',
+        features: ['Винная карта', 'Обеденное меню', 'Коктейли'],
         gallery: ['/photo/lidbeer2.jpeg', '/photo/lidbeer3.jpg']
       },
       {
         id: 'lidbeer-5',
         address: 'К. Маркса, 20',
-        workingHours: 'Ежедневно: 16:00 — 04:00',
+        workingHours: 'Воскресенье - Четверг: 12:00 — 02:00\n Пятница - Суббота: 12:00 — 04:00',
         features: ['Кальян', 'Коктейли'],
         gallery: ['/photo/lidbeer2.jpeg', '/photo/lidbeer3.jpg']
       },
       {
         id: 'lidbeer-6',
         address: 'ул. Свердлова, 2',
-        workingHours: 'Ежедневно: 16:00 — 04:00',
-        features: ['Кальян', 'Коктейли'],
+        workingHours: 'Воскресенье  - Четверг: 12:00 — 02:00\n Пятница  - Суббота: 12:00 — 06:00',
+        features: ['Кальян', 'Коктейли'],         
         gallery: ['/photo/lidbeer2.jpeg', '/photo/lidbeer3.jpg']
       }
 
@@ -144,7 +144,7 @@ export const venues: Venue[] = [
       {
         id: 'leone-1',
         address: 'ул. Зыбицкая, 4',
-        workingHours: 'Ср-Вс: 18:00 — 04:00',
+        workingHours: 'Понедельник - Четверг: 18:00 — 02:00\nПятница - Воскресенье: 17:00 — 04:00',
         features: ['Коктейльная карта', 'DJ сеты', 'Летняя терраса'],
         gallery: ['/photo/leone2.jpg', '/photo/leone3.jpg']
       }
@@ -163,15 +163,15 @@ export const venues: Venue[] = [
       {
         id: 'odi-1',
         address: 'пр-т Независимости, 12',
-        workingHours: 'Ежедневно: 09:00 — 23:00',
-        features: ['Завтраки', 'Wifi', 'Десерты'],
+        workingHours: 'Ежедневно: 09:00 — 22:00',
+        features: ['Завтраки', 'Обеденное меню', 'Десерты'],
         gallery: ['/photo/odi2.jpg', '/photo/odi3.webp']
       },
       {
         id: 'odi-2',
         address: 'ул. Ратомская, 7',
-        workingHours: 'Ежедневно: 10:00 — 22:00',
-        features: ['Детское меню', 'Парковка'],
+        workingHours: 'Ежедневно: 09:00 — 22:00',
+        features: ['Можно с животными', 'Обеденное меню', 'Завтраки'],
         gallery: ['/photo/odi2.jpg', '/photo/odi3.webp']
       }
     ]
@@ -189,7 +189,7 @@ export const venues: Venue[] = [
       {
         id: 'pellegrino-1',
         address: 'ул. Интернациональная, 9',
-        workingHours: 'Ежедневно: 12:00 — 00:00',
+        workingHours: 'Воскресенье - Четверг: 11:00 — 00:00\nПятница: 11:00 — 01:00',
         features: ['Итальянская кухня', 'Винная карта', 'Живая музыка'],
         gallery: ['/photo/pellegrino2.jpg', '/photo/pellegrino3.jpg']
       }
@@ -208,8 +208,8 @@ export const venues: Venue[] = [
       {
         id: 'lovemyrr-1',
         address: 'ул. Ленина, 15',
-        workingHours: 'Ежедневно: 09:00 — 21:00',
-        features: ['Дог-френдли', 'Цветочный шоп', 'Веган десерты'],
+        workingHours: 'Ежедневно: 10:00 — 22:00',
+        features: ['Можно с животными', 'Цветочный шоп', 'Веган десерты'],
         gallery: ['/photo/lovemyrr2.jpeg', '/photo/lovemyrr3.jpeg']
       }
     ]
@@ -221,14 +221,14 @@ export const venues: Venue[] = [
     description: 'Стильный ресторан авторской кухни. Заведение названо в честь знаменитого художника-авангардиста и предлагает гостям утонченную атмосферу, смелые фьюжн-решения от шеф-поваров и блюда из свежих морепродуктов.',
     rating: 4.6,
     image: '/photo/malevich1.jpg',
-    priceLevel: 2,
+    priceLevel: 3,
     instagramUrl: 'https://www.instagram.com/malevich_minsk?igsh=ZTIzZHN1cGYxbzYw',
     branches: [
       {
         id: 'malevich-1',
         address: 'ул. Карла Маркса, 24',
-        workingHours: 'Ежедневно: 11:00 — 23:00',
-        features: ['Арт-пространство', 'Тихо', 'Wifi'],
+        workingHours: 'Воскресенье - Четверг: 12:00 — 23:00\nПятница - Суббота: 12:00 — 00:00',
+        features: ['Арт-пространство', 'Обеденное менню', 'Wifi', 'Бранчи'],
         gallery: ['/photo/malevich2.jpg', '/photo/malevich3.jpg']
       }
     ]
@@ -246,8 +246,8 @@ export const venues: Venue[] = [
       {
         id: 'mesto-1',
         address: 'ул. Октябрьская, 5А',
-        workingHours: 'Ежедневно: 11:00 — 23:00',
-        features: ['Локальные продукты', 'Банкеты', 'Летняя терраса'],
+        workingHours: 'Понедельник - Пятница: 09:00 — 00:00\nСуббота - Воскресенье: 12:00 — 00:00',
+        features: ['Европейская кухня', 'Банкеты', 'Летняя терраса'],
         gallery: ['/photo/mestoproedy2.jpg', '/photo/mestoproedy3.jpg']
       }
     ]
@@ -265,35 +265,28 @@ export const venues: Venue[] = [
       {
         id: 'roast-1',
         address: 'ул. Белинского 23',
-        workingHours: 'Ежедневно: 08:00 — 22:00',
+        workingHours: 'Понедельник - Пятница: 08:00 — 20:00\nСуббота - Воскресенье: 09:00 — 21:00',
         features: ['Собственная обжарка', 'Дог-френдли', 'Wifi'],
         gallery: ['/photo/roast2.jpg', '/photo/roast3.webp']
       },
       {
         id: 'roast-2',
         address: 'ул. Тимирязева 28',
-        workingHours: 'Ежедневно: 09:00 — 21:00',
+        workingHours: 'Понедельник - Пятница: 08:00 — 20:00\nСуббота - Воскресенье: 09:00 — 21:00',
         features: ['Кофе с собой', 'Для работы'],
         gallery: ['/photo/roast2.jpg', '/photo/roast3.webp']
       },
       {
         id: 'roast-3',
-        address: 'ул. Нововиленская 31',
-        workingHours: 'Ежедневно: 08:30 — 22:00',
-        features: ['Спокойно', 'Свежая выпечка'],
-        gallery: ['/photo/roast2.jpg', '/photo/roast3.webp']
-      },
-      {
-        id: 'roast-4',
         address: 'пер. Софьи Ковалевской, 46',
-        workingHours: 'Ежедневно: 09:00 — 23:00',
+        workingHours: 'Понедельник - Суббота: 09:00 — 20:00\nВоскресенье: выходной',
         features: ['Wifi', 'Уютно'],
         gallery: ['/photo/roast2.jpg', '/photo/roast3.webp']
       },
       {
         id: 'roast-4',
         address: 'ул. Независимости 95',
-        workingHours: 'Ежедневно: 09:00 — 23:00',
+        workingHours: 'Понедельник - Пятница: 08:00 — 23:00\nСуббота - Воскресенье: 09:00 — 23:00',
         features: ['Wifi', 'Уютно'],
         gallery: ['/photo/roast2.jpg', '/photo/roast3.webp']
       }
@@ -502,7 +495,7 @@ export const venues: Venue[] = [
       {
         id: 'zavod-1',
         address: 'пр-т Машерова, 19',
-        workingHours: 'Пн-Чт: 12:00-02:00, Пт-Сб: 12:00-05:00',
+        workingHours: 'Ежедневно: 17:00 — 06:00',
         features: ['Караоке', 'Настольные игры', 'Спорт-трансляции'],
         gallery: ['/photo/zavod2.jpg', '/photo/zavod3.jfif']
       }
