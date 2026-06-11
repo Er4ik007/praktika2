@@ -57,3 +57,11 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
         "token_type": "bearer",
         "user_name": db_user.name
     }
+    
+    # === НОВЫЙ МАРШРУТ: ПОЛУЧЕНИЕ ПРОФИЛЯ ===
+# Обрати внимание на Depends(auth.get_current_user) - сюда нельзя без токена!
+@app.get("/api/users/me", response_model=schemas.UserResponse)
+def get_user_profile(current_user: models.User = Depends(auth.get_current_user)):
+    # Если функция дошла сюда, значит охранник пропустил нас. 
+    # В current_user уже лежат данные того, чей токен мы прислали.
+    return current_user

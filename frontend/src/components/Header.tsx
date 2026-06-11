@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Utensils, X, Menu as MenuIcon, Moon, Sun, User } from 'lucide-react'; // Добавили User
+import { Utensils, X, Menu as MenuIcon, Moon, Sun, User } from 'lucide-react';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const navigate = useNavigate();
+
+  // Достаем имя пользователя из памяти браузера (сохранено при логине)
+  const userName = localStorage.getItem('userName');
 
   useEffect(() => {
     document.documentElement.setAttribute('data-bs-theme', theme);
@@ -68,13 +71,24 @@ export const Header = () => {
 
         <div className="d-flex align-items-center gap-2">
           
-          {/* НОВАЯ КНОПКА ВОЙТИ */}
-          <button 
-            onClick={() => navigate('/login')}
-            className="btn btn-sm btn-outline-danger rounded-pill fw-bold px-3 d-none d-sm-flex align-items-center gap-2"
-          >
-            <User size={16} /> Войти
-          </button>
+          {/* === УМНАЯ КНОПКА АВТОРИЗАЦИИ ДЛЯ ПК === */}
+          {userName ? (
+            // Пользователь вошел: Кнопка Профиля
+            <Link 
+              to="/profile"
+              className="btn btn-sm btn-danger rounded-pill fw-bold px-3 d-none d-sm-flex align-items-center gap-2"
+            >
+              <User size={16} /> {userName}
+            </Link>
+          ) : (
+            // Пользователь НЕ вошел: Кнопка Войти
+            <button 
+              onClick={() => navigate('/login')}
+              className="btn btn-sm btn-outline-danger rounded-pill fw-bold px-3 d-none d-sm-flex align-items-center gap-2"
+            >
+              <User size={16} /> Войти
+            </button>
+          )}
 
           <button onClick={(e) => toggleTheme(e)} className="btn btn-link text-body p-2" title="Сменить тему">
             {theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
@@ -99,12 +113,27 @@ export const Header = () => {
                   </NavLink>
                 </li>
               ))}
-              {/* Мобильная кнопка войти */}
+              
+              {/* === УМНАЯ КНОПКА АВТОРИЗАЦИИ ДЛЯ МОБИЛОК === */}
               <li className="nav-item mt-3 pt-3 border-top">
-                <button onClick={() => { setIsMenuOpen(false); navigate('/login'); }} className="btn btn-danger w-100 rounded-3 py-2 fw-bold d-flex justify-content-center align-items-center gap-2">
-                  <User size={18} /> Войти в аккаунт
-                </button>
+                {userName ? (
+                  <Link 
+                    to="/profile" 
+                    onClick={() => setIsMenuOpen(false)} 
+                    className="btn btn-danger w-100 rounded-3 py-2 fw-bold d-flex justify-content-center align-items-center gap-2"
+                  >
+                    <User size={18} /> Мой профиль ({userName})
+                  </Link>
+                ) : (
+                  <button 
+                    onClick={() => { setIsMenuOpen(false); navigate('/login'); }} 
+                    className="btn btn-outline-danger w-100 rounded-3 py-2 fw-bold d-flex justify-content-center align-items-center gap-2"
+                  >
+                    <User size={18} /> Войти в аккаунт
+                  </button>
+                )}
               </li>
+
             </ul>
           </motion.div>
         )}

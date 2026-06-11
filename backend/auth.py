@@ -1,34 +1,57 @@
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+import models
+from database import get_db
 
 # СЕКРЕТНЫЙ КЛЮЧ
 SECRET_KEY = "super_secret_minsk_gastro_key_12345"
 ALGORITHM = "HS256"
 
-# 1. Функция: Превращает пароль в "кашу"
+# Указываем FastAPI, где находится URL для получения токена
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/login")
+
 def hash_password(password: str) -> str:
-    # bcrypt работает только с байтами, поэтому кодируем строку
     pwd_bytes = password.encode('utf-8')
-    # Генерируем уникальную "соль" (случайные символы) для усложнения хеша
     salt = bcrypt.gensalt()
-    # Шифруем
     hashed_password = bcrypt.hashpw(pwd_bytes, salt)
-    # Возвращаем обычную строку, чтобы сохранить в БД
     return hashed_password.decode('utf-8')
 
-# 2. Функция: Проверяет пароль
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     password_bytes = plain_password.encode('utf-8')
     hashed_password_bytes = hashed_password.encode('utf-8')
-    # Функция checkpw сама понимает "соль" и сравнивает пароли
     return bcrypt.checkpw(password_bytes, hashed_password_bytes)
 
-# 3. Функция: Создает JWT Токен
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=7)
     to_encode.update({"exp": expire})
-    
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+# === НОВАЯ ФУНКЦИЯ (ОХРАННИК) ===
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Не удалось проверить учетные данные (Токен недействителен)",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        # Пытаемся расшифровать токен нашим секретным ключом
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+    
+    # Ищем пользователя в базе по расшифрованному ID
+    user = db.query(models.User).filter(models.User.id == int(user_id)).first()
+    if user is None:
+        raise credentials_exception
+        
+    return user # Возвращаем объект пользователя (со всеми его данными)
