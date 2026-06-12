@@ -28,7 +28,7 @@ export const VenueDetailPage = () => {
   useEffect(() => {
     if (venue && venue.branches.length > 0) {
       setActiveBranchId(venue.branches[0].id);
-      document.title = `${venue.name} — Minsk Gastro Guide`;
+      document.title = `${venue.name}`;
     }
   }, [venue]);
 

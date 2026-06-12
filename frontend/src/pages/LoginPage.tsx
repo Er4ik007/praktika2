@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Добавили useNavigate для редиректа
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Utensils } from 'lucide-react';
+import { Utensils, Eye, EyeOff } from 'lucide-react'; // Добавили иконки глаза
 
 export const LoginPage = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // === НОВОЕ СОСТОЯНИЕ ДЛЯ ГЛАЗКА ===
+  const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => { document.title = "Вход — Minsk Gastro Guide"; }, []);
+  useEffect(() => { document.title = "Вход"; }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,7 +20,6 @@ export const LoginPage = () => {
     setError('');
 
     try {
-      // Отправляем запрос на логин
       const response = await fetch('http://localhost:8000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -30,13 +32,10 @@ export const LoginPage = () => {
         throw new Error(data.detail || 'Неверный email или пароль');
       }
 
-      // МАГИЯ BOM: Сохраняем токен и имя в локальную память браузера!
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('userName', data.user_name);
 
-      // Перенаправляем пользователя на главную страницу (позже переделаем на личный кабинет)
       navigate('/');
-      // Перезагружаем страницу, чтобы шапка "поняла", что мы вошли
       window.location.reload();
 
     } catch (err: any) {
@@ -58,7 +57,6 @@ export const LoginPage = () => {
           <p className="text-body-secondary small">Войдите, чтобы сохранять любимые места</p>
         </div>
 
-        {/* ВЫВОД ОШИБКИ */}
         {error && (
           <div className="alert alert-danger small fw-bold text-center border-0 rounded-3 mb-4">
             {error}
@@ -70,18 +68,34 @@ export const LoginPage = () => {
             <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Email</label>
             <input 
               required type="email" 
+              pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
+              title="Email должен содержать доменную зону (например: .com, .by, .ru)"
               value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
-              className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" placeholder="mail@example.com" 
+              className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium" placeholder="mail@example.com" 
             />
           </div>
+          
           <div>
             <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Пароль</label>
-            <input 
-              required type="password" 
-              value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})}
-              className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" placeholder="••••••••" 
-            />
+            {/* === ИНПУТ С ГЛАЗКОМ === */}
+            <div className="position-relative">
+              <input 
+                required 
+                type={showPassword ? "text" : "password"} // Динамическая смена типа
+                value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})}
+                className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium" 
+                placeholder="••••••••" 
+              />
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="btn border-0 position-absolute top-50 end-0 translate-middle-y px-3 text-secondary hover-text-danger"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
+
           <button type="submit" disabled={isLoading} className="btn btn-primary-custom w-100 py-3 mt-2 d-flex justify-content-center align-items-center gap-2">
             {isLoading ? <span className="spinner-border spinner-border-sm"></span> : 'Войти'}
           </button>
@@ -92,7 +106,11 @@ export const LoginPage = () => {
           <Link to="/register" className="text-danger fw-bold small text-decoration-none hover-underline">Зарегистрироваться</Link>
         </div>
       </motion.div>
-      <style>{`.fw-black { font-weight: 900; } .hover-underline:hover { text-decoration: underline !important; }`}</style>
+      <style>{`
+        .fw-black { font-weight: 900; } 
+        .hover-underline:hover { text-decoration: underline !important; }
+        .hover-text-danger:hover { color: #ef4444 !important; }
+      `}</style>
     </div>
   );
 };

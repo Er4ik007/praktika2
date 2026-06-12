@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 
 export const NotFoundPage = () => {
+  useEffect(() => {
+    document.title = "404";
+  }, []);
   return (
     <div className="container d-flex flex-column align-items-center justify-content-center text-center" style={{ minHeight: '70vh' }}>
       <motion.div 

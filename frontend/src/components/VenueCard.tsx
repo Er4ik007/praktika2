@@ -8,6 +8,7 @@ interface VenueCardProps {
   venue: Venue;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
+  index: number;
 }
 
 export const VenueCard = ({ venue, isFavorite, onToggleFavorite }: VenueCardProps) => {
@@ -117,7 +118,7 @@ export const VenueCard = ({ venue, isFavorite, onToggleFavorite }: VenueCardProp
           <div className="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center gap-1 text-body-secondary small text-truncate pe-2">
               <MapPin size={14} />
-              <span className="text-truncate">{venue.address}</span>
+              <span className="text-truncate">{venue.branches[0].address}</span>
             </div>
             <Link to={`/venue/${venue.id}`} className="text-danger fw-bold text-decoration-none small d-flex align-items-center gap-1 transition-transform flex-shrink-0 hover-move-x">
               Подробнее <ChevronRight size={14} />

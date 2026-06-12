@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export const PrivacyPage = () => {
+  useEffect(() => {
+    document.title = "Политика конфиденциальности";
+  }, []);
   return (
     <div className="container py-5 mt-5">
       <div className="mx-auto" style={{ maxWidth: '800px' }}>

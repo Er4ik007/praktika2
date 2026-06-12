@@ -1,10 +1,14 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect } from 'react';
 import { MapPin, Phone, Mail, Instagram, Send } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export const ContactPage = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    document.title = "Контакты";
+  }, []);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();

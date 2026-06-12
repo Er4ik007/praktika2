@@ -65,3 +65,41 @@ def get_user_profile(current_user: models.User = Depends(auth.get_current_user))
     # Если функция дошла сюда, значит охранник пропустил нас. 
     # В current_user уже лежат данные того, чей токен мы прислали.
     return current_user
+
+@app.post("/api/favorites/toggle", response_model=schemas.FavoriteResponse)
+def toggle_favorite(
+    favorite: schemas.FavoriteCreate, 
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user) # Защита: только для авторизованных
+):
+    # Ищем, есть ли уже такой лайк от этого юзера на это заведение
+    existing_fav = db.query(models.Favorite).filter(
+        models.Favorite.user_id == current_user.id,
+        models.Favorite.venue_id == favorite.venue_id
+    ).first()
+
+    if existing_fav:
+        # Если лайк найден — удаляем его (Toggle OFF)
+        db.delete(existing_fav)
+        db.commit()
+        return {"venue_id": favorite.venue_id, "message": "Удалено из избранного"}
+    else:
+        # Если лайка нет — создаем новый (Toggle ON)
+        new_fav = models.Favorite(user_id=current_user.id, venue_id=favorite.venue_id)
+        db.add(new_fav)
+        db.commit()
+        return {"venue_id": favorite.venue_id, "message": "Добавлено в избранное"}
+
+
+@app.get("/api/favorites")
+def get_user_favorites(
+    db: Session = Depends(get_db), 
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    # Находим все лайки этого пользователя
+    favorites = db.query(models.Favorite).filter(models.Favorite.user_id == current_user.id).all()
+    
+    # Извлекаем из объектов БД только список строк (ID заведений)
+    # Получится массив вроде: ['zerno', 'lidbeer']
+    venue_ids = [fav.venue_id for fav in favorites]
+    return venue_ids

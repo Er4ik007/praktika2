@@ -22,6 +22,10 @@ const TEAM_MEMBERS = [
 ];
 
 export const AboutPage = () => {
+  useEffect(() => {
+    document.title = "О нас";
+  }, []);
+
   return (
     <div className="container py-5 mt-5">
       <div className="mx-auto" style={{ maxWidth: '900px' }}>

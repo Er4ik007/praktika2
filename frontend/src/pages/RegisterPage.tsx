@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Eye, EyeOff } from 'lucide-react'; // Добавили иконки глаза
 
 export const RegisterPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Состояние формы
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  
+  // === НОВОЕ СОСТОЯНИЕ ДЛЯ ГЛАЗКА ===
+  const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => { document.title = "Регистрация — Minsk Gastro Guide"; }, []);
+  useEffect(() => { document.title = "Регистрация"; }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,7 +21,6 @@ export const RegisterPage = () => {
     setError('');
 
     try {
-      // Отправляем реальный запрос на наш Python сервер
       const response = await fetch('http://localhost:8000/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -29,11 +30,9 @@ export const RegisterPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        // Если сервер ответил ошибкой (например, email занят), показываем её
         throw new Error(data.detail || 'Ошибка при регистрации');
       }
 
-      // Если всё ок — показываем окно успеха
       setSubmitted(true);
       
     } catch (err: any) {
@@ -65,7 +64,6 @@ export const RegisterPage = () => {
               <p className="text-body-secondary small">Присоединяйтесь к гастро-комьюнити</p>
             </div>
 
-            {/* ВЫВОД ОШИБКИ С СЕРВЕРА */}
             {error && (
               <div className="alert alert-danger small fw-bold text-center border-0 rounded-3 mb-4">
                 {error}
@@ -78,7 +76,7 @@ export const RegisterPage = () => {
                 <input 
                   required type="text" 
                   value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" placeholder="Алексей" 
+                  className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium" placeholder="Алексей" 
                 />
               </div>
               <div>
@@ -87,17 +85,30 @@ export const RegisterPage = () => {
                   required type="email" 
                   pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" title="Email должен содержать доменную зону"
                   value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" placeholder="mail@example.com" 
+                  className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium" placeholder="mail@example.com" 
                 />
               </div>
               <div>
                 <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Пароль</label>
-                <input 
-                  required type="password" minLength={6}
-                  value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" placeholder="Минимум 6 символов" 
-                />
+                {/* === ИНПУТ С ГЛАЗКОМ === */}
+                <div className="position-relative">
+                  <input 
+                    required minLength={6}
+                    type={showPassword ? "text" : "password"} 
+                    value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium" 
+                    placeholder="Минимум 6 символов" 
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="btn border-0 position-absolute top-50 end-0 translate-middle-y px-3 text-secondary hover-text-danger"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
+              
               <button type="submit" disabled={isLoading} className="btn btn-primary-custom w-100 py-3 mt-2 d-flex justify-content-center align-items-center gap-2">
                 {isLoading ? <span className="spinner-border spinner-border-sm"></span> : 'Создать аккаунт'}
               </button>
@@ -110,7 +121,11 @@ export const RegisterPage = () => {
           </>
         )}
       </motion.div>
-      <style>{`.fw-black { font-weight: 900; } .hover-underline:hover { text-decoration: underline !important; }`}</style>
+      <style>{`
+        .fw-black { font-weight: 900; } 
+        .hover-underline:hover { text-decoration: underline !important; }
+        .hover-text-danger:hover { color: #ef4444 !important; }
+      `}</style>
     </div>
   );
 };

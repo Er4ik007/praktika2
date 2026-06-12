@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Добавили useNavigate
 import { ChevronRight } from 'lucide-react';
 import { venues, Venue } from '../data';
 import { VenueCard } from '../components/VenueCard';
@@ -8,8 +8,12 @@ import { Minsk3DWidget } from '../components/Minsk3DWidget';
 
 export const HomePage = () => {
   const [current, setCurrent] = useState(0);
+  const navigate = useNavigate(); // Для редиректа на логин
   
-  // ОБНОВЛЕННЫЕ СЛАЙДЫ СО ССЫЛКАМИ НА ФИЛЬТРЫ
+  useEffect(() => {
+    document.title = "Главная";
+  }, []);
+
   const slides = [
     { 
       title: "Гастрономический Минск", 
@@ -43,22 +47,71 @@ export const HomePage = () => {
     }
   ];
 
+  // === НОВАЯ ЛОГИКА ИЗБРАННОГО (СИНХРОНИЗАЦИЯ С БД) ===
   const [favorites, setFavorites] = useState<string[]>([]);
+  
   useEffect(() => {
-    const saved = localStorage.getItem('favorites');
-    if (saved) setFavorites(JSON.parse(saved));
+    // Загружаем лайки с сервера при открытии Главной страницы
+    const fetchFavorites = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const res = await fetch('http://localhost:8000/api/favorites', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setFavorites(data);
+        }
+      } catch (err) {
+        console.error("Ошибка загрузки избранного", err);
+      }
+    };
+    fetchFavorites();
   }, []);
 
-  const toggleFavorite = (id: string) => {
-    const newFavs = favorites.includes(id) ? favorites.filter(fid => fid !== id) : [...favorites, id];
-    setFavorites(newFavs);
-    localStorage.setItem('favorites', JSON.stringify(newFavs));
+  const toggleFavorite = async (id: string) => {
+    const token = localStorage.getItem('token');
+    
+    // Если не вошел в аккаунт — отправляем на страницу логина
+    if (!token) {
+      alert("Пожалуйста, войдите в аккаунт, чтобы сохранять заведения в избранное.");
+      navigate('/login');
+      return;
+    }
+
+    // Оптимистичный UI
+    const isNowFavorite = !favorites.includes(id);
+    setFavorites(prev => isNowFavorite ? [...prev, id] : prev.filter(fid => fid !== id));
+
+    try {
+      const res = await fetch('http://localhost:8000/api/favorites/toggle', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ venue_id: id })
+      });
+      
+      if (!res.ok) {
+        // Откат, если ошибка
+        setFavorites(prev => !isNowFavorite ? [...prev, id] : prev.filter(fid => fid !== id));
+        alert("Ошибка при сохранении");
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
+  // === КОНЕЦ НОВОЙ ЛОГИКИ ===
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent((p) => (p + 1) % slides.length), 6000); // Сделал 6 сек, чтобы успели прочитать
+    const timer = setInterval(() => setCurrent((p) => (p + 1) % slides.length), 6000); 
     return () => clearInterval(timer);
   }, [slides.length]);
+
+  const featuredVenues = venues.slice(0, 3);
 
   return (
     <div>
@@ -71,11 +124,9 @@ export const HomePage = () => {
               <motion.h1 initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="display-2 fw-black mb-3 tracking-tighter text-white">{slides[current].title}</motion.h1>
               <motion.p initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="fs-3 fw-light opacity-75 max-w-2xl">{slides[current].subtitle}</motion.p>
               
-              {/* КНОПКА С ДИНАМИЧЕСКОЙ ССЫЛКОЙ ИЗ СЛАЙДА */}
               <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4 }} className="mt-4">
                 <Link to={slides[current].link} className="btn btn-primary-custom">Перейти</Link>
               </motion.div>
-
             </div>
           </motion.div>
         </AnimatePresence>
@@ -107,10 +158,16 @@ export const HomePage = () => {
           </Link>
         </div>
 
+        {/* ПЕРЕДАЕМ ИНДЕКС И НОВУЮ ФУНКЦИЮ TOGGLE В КАРТОЧКИ */}
         <div className="row g-4">
-          {venues.slice(0, 3).map((venue: Venue) => (
+          {featuredVenues.map((venue: Venue, index: number) => (
             <div key={venue.id} className="col-md-4">
-              <VenueCard venue={venue} isFavorite={favorites.includes(venue.id)} onToggleFavorite={toggleFavorite} />
+              <VenueCard 
+                venue={venue} 
+                isFavorite={favorites.includes(venue.id)} 
+                onToggleFavorite={toggleFavorite} 
+                index={index}
+              />
             </div>
           ))}
         </div>
@@ -119,7 +176,7 @@ export const HomePage = () => {
       <section className="py-5 bg-body-tertiary overflow-hidden position-relative mt-5">
         <div className="container position-relative z-1 py-5">
           <div className="row align-items-center justify-content-between g-5">
-            <div className="col-lg-6">
+            <div className="col-lg-5">
               <h2 className="display-4 fw-black mb-4 italic text-uppercase lh-1 tracking-tighter text-body-emphasis">
                 Минск — это про еду и атмосферу
               </h2>
@@ -146,54 +203,32 @@ export const HomePage = () => {
               </div>
             </div>
 
-            {/* Правая часть:3D-виджет */}
-            <div className="col-lg-5 position-relative">
-              
-              {/* ФОНОВОЕ СВЕЧЕНИЕ (Нижний слой: z-index 0) */}
+            <div className="col-lg-7 position-relative ms-auto">
               <div className="position-absolute inset-0 d-flex justify-content-center align-items-center" style={{ zIndex: 0, pointerEvents: 'none' }}>
-                {/* Первое пятно: Красное, пульсирует и крутится */}
                 <motion.div
-                  animate={{ 
-                    scale: [1, 1.2, 1],
-                    rotate: [0, 90, 0],
-                    opacity: [0.3, 0.5, 0.3]
-                  }}
+                  animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0], opacity: [0.3, 0.5, 0.3] }}
                   transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
                   style={{
-                    width: '350px',
-                    height: '350px',
+                    width: '350px', height: '350px',
                     background: 'linear-gradient(45deg, #ef4444, #f87171)',
-                    filter: 'blur(80px)', // Экстремальное размытие делает из квадрата мягкий свет
-                    borderRadius: '50%',
-                    position: 'absolute'
+                    filter: 'blur(80px)', borderRadius: '50%', position: 'absolute'
                   }}
                 />
-                {/* Второе пятно: Тепло-желтое, двигается в противофазе */}
                 <motion.div
-                  animate={{ 
-                    scale: [1.2, 1, 1.2],
-                    rotate: [360, 180, 360],
-                    opacity: [0.2, 0.4, 0.2]
-                  }}
+                  animate={{ scale: [1.2, 1, 1.2], rotate: [360, 180, 360], opacity: [0.2, 0.4, 0.2] }}
                   transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
                   style={{
-                    width: '400px',
-                    height: '400px',
+                    width: '400px', height: '400px',
                     background: 'linear-gradient(45deg, #fbbf24, #ef4444)',
-                    filter: 'blur(100px)',
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    marginLeft: '100px',
-                    marginTop: '100px'
+                    filter: 'blur(100px)', borderRadius: '50%', position: 'absolute',
+                    marginLeft: '100px', marginTop: '100px'
                   }}
                 />
               </div>
 
-              {/* САМ 3D ВИДЖЕТ (Верхний слой: z-index 1) */}
               <div className="position-relative" style={{ zIndex: 1, minHeight: '550px' }}>
                 <Minsk3DWidget />
               </div>
-              
             </div>
           </div>
         </div>

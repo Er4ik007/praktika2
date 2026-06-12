@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Send, MessageSquare, LifeBuoy } from 'lucide-react';
 
 export const SupportPage = () => {
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    document.title = "Поддержка";
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

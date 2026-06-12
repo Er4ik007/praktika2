@@ -19,3 +19,13 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True  # Позволяет Pydantic читать данные из базы SQLAlchemy
+        
+
+# Что мы ждем от React (только ID заведения, например: {"venue_id": "zerno"})
+class FavoriteCreate(BaseModel):
+    venue_id: str
+
+# Что мы отвечаем React
+class FavoriteResponse(BaseModel):
+    venue_id: str
+    message: str # Например: "Добавлено" или "Удалено"
