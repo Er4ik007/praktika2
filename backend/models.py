@@ -13,12 +13,16 @@ class User(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
+    phone = Column(String(50), nullable=True) 
+    
+    # НОВЫЕ ПОЛЯ ДЛЯ ВОССТАНОВЛЕНИЯ ПАРОЛЯ
+    reset_code = Column(String(10), nullable=True)
+    reset_code_expires = Column(DateTime(timezone=True), nullable=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Связи (Relationship)
     reviews = relationship("Review", back_populates="user")
     bookings = relationship("Booking", back_populates="user")
-    # Добавили связь с избранным
     favorites = relationship("Favorite", back_populates="user")
 
 # ==========================================
@@ -71,3 +75,4 @@ class Booking(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="bookings")
+    

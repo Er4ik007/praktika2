@@ -1,41 +1,69 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { User, LogOut, Settings, Heart, CalendarClock } from 'lucide-react';
-import { venues, Venue } from '../data'; // Подтянули данные
-import { VenueCard } from '../components/VenueCard'; // Подтянули карточку
+import { motion, AnimatePresence } from 'motion/react';
+import { User, LogOut, Settings, Heart, CalendarClock, AlertTriangle, Save, Trash2, ChevronDown } from 'lucide-react';
+import { venues } from '../data'; 
+import { VenueCard } from '../components/VenueCard'; 
+
+const COUNTRY_CODES = [
+  { code: '+375', countryCode: 'by', label: 'Беларусь', mask: '(XX) XXX-XX-XX', regex: /^\(\d{2}\) \d{3}-\d{2}-\d{2}$/ },
+  { code: '+7',   countryCode: 'ru', label: 'Россия',   mask: '(XXX) XXX-XX-XX', regex: /^\(\d{3}\) \d{3}-\d{2}-\d{2}$/ },
+  { code: '+7',   countryCode: 'kz', label: 'Казахстан', mask: '(XXX) XXX-XX-XX', regex: /^\(\d{3}\) \d{3}-\d{2}-\d{2}$/ },
+  { code: '+48',  countryCode: 'pl', label: 'Польша',   mask: 'XXX-XXX-XXX',     regex: /^\d{3}-\d{3}-\d{3}$/ },
+  { code: '+370', countryCode: 'lt', label: 'Литва',    mask: '(XXX) XX-XXX',    regex: /^\(\d{3}\) \d{2}-\d{3}$/ },
+  { code: '+371', countryCode: 'lv', label: 'Латвия',    mask: 'XX-XXX-XXX',      regex: /^\d{2}-\d{3}-\d{3}$/ },
+  { code: '+995', countryCode: 'ge', label: 'Грузия',   mask: '(XXX) XX-XX-XX',  regex: /^\(\d{3}\) \d{2}-\d{2}-\d{2}$/ },
+  { code: '+971', countryCode: 'ae', label: 'ОАЭ',      mask: '(XX) XXX-XXXX',   regex: /^\(\d{2}\) \d{3}-\d{4}$/ }
+];
 
 export const ProfilePage = () => {
   const navigate = useNavigate();
-  const [userData, setUserData] = useState<{name: string, email: string} | null>(null);
+  const [userData, setUserData] = useState<{name: string, email: string, phone: string | null} | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('favorites'); // Сделали избранное активной вкладкой по умолчанию
-
-  // Стейт для избранного
+  const [activeTab, setActiveTab] = useState('favorites'); 
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
-  
+
+  // Состояния редактирования имени
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState('');
+
+  // Состояния редактирования телефона (УМНЫЕ)
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
+  const [rawPhone, setRawPhone] = useState(''); 
+  const [phoneError, setPhoneError] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   useEffect(() => {
     document.title = "Личный кабинет";
     const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+    if (!token) { navigate('/login'); return; }
 
-    // 1. Грузим профиль
     fetch('http://localhost:8000/api/users/me', { headers: { 'Authorization': `Bearer ${token}` } })
-    .then(res => {
-      if (!res.ok) throw new Error('Ошибка авторизации');
-      return res.json();
-    })
+    .then(res => { if (!res.ok) throw new Error('Auth Error'); return res.json(); })
     .then(data => {
       setUserData(data);
-      // 2. СРАЗУ ПОСЛЕ ПРОФИЛЯ грузим избранное
+      setEditName(data.name);
       return fetch('http://localhost:8000/api/favorites', { headers: { 'Authorization': `Bearer ${token}` } });
     })
     .then(res => res.json())
     .then(favData => {
-      setFavoriteIds(favData); // Сохраняем ID любимых заведений
+      setFavoriteIds(favData);
       setIsLoading(false);
     })
     .catch(() => {
@@ -52,54 +80,129 @@ export const ProfilePage = () => {
     window.location.reload();
   };
 
-  // Функция для удаления карточки прямо из профиля
+  const formatPhoneNumber = (value: string, mask: string) => {
+    const numbers = value.replace(/\D/g, '');
+    let formatted = '';
+    let numberIndex = 0;
+    for (let i = 0; i < mask.length; i++) {
+      if (numberIndex >= numbers.length) break;
+      if (mask[i] === 'X') {
+        formatted += numbers[numberIndex];
+        numberIndex++;
+      } else {
+        formatted += mask[i];
+      }
+    }
+    return formatted;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRawPhone(formatPhoneNumber(e.target.value, selectedCountry.mask));
+    if (phoneError) setPhoneError('');
+  };
+
+  // СОХРАНЕНИЕ ИМЕНИ
+  const handleSaveName = async () => {
+    if (editName.length < 2 || editName.length > 20) {
+      setSaveMessage('Имя должно быть от 2 до 20 символов');
+      return;
+    }
+    setIsSaving(true);
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch('http://localhost:8000/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ name: editName })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setUserData(updated);
+        localStorage.setItem('userName', updated.name);
+        setIsEditingName(false);
+        setSaveMessage('Имя успешно изменено!');
+        setTimeout(() => setSaveMessage(''), 3000);
+      }
+    } catch (err) { console.error(err); }
+    finally { setIsSaving(false); }
+  };
+
+  // СОХРАНЕНИЕ ТЕЛЕФОНА (Склеиваем код и номер)
+  const handleSavePhone = async () => {
+    if (rawPhone.length > 0 && !selectedCountry.regex.test(rawPhone)) {
+      setPhoneError('Номер введен не полностью');
+      return;
+    }
+    setIsSaving(true);
+    const token = localStorage.getItem('token');
+    const finalPhone = rawPhone.length > 0 ? `${selectedCountry.code} ${rawPhone}` : null;
+
+    try {
+      const res = await fetch('http://localhost:8000/api/users/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ phone: finalPhone })
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setUserData(updated);
+        setIsEditingPhone(false);
+        setRawPhone('');
+        setSaveMessage('Телефон успешно изменен!');
+        setTimeout(() => setSaveMessage(''), 3000);
+      }
+    } catch (err) { console.error(err); }
+    finally { setIsSaving(false); }
+  };
+
+  const handleDeleteAccount = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      await fetch('http://localhost:8000/api/users/me', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      handleLogout();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const removeFavorite = async (id: string) => {
     const token = localStorage.getItem('token');
     if (!token) return;
-
-    // Оптимистично убираем с экрана
     setFavoriteIds(prev => prev.filter(fid => fid !== id));
-
     try {
       await fetch('http://localhost:8000/api/favorites/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ venue_id: id })
       });
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
-  // Фильтруем общую базу заведений, оставляя только те, чьи ID пришли с бэкенда
   const favoriteVenues = venues.filter(v => favoriteIds.includes(v.id));
 
-  if (isLoading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '70vh' }}>
-        <div className="spinner-border text-danger" role="status"></div>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="d-flex justify-content-center align-items-center" style={{ height: '70vh' }}><div className="spinner-border text-danger"></div></div>;
 
   return (
     <div className="container py-5 mt-5">
       <div className="row g-5">
         
-        {/* ЛЕВАЯ КОЛОНКА: МЕНЮ */}
+        {/* ЛЕВАЯ КОЛОНКА */}
         <div className="col-lg-4">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="card bg-body-tertiary border-0 rounded-4 shadow-sm p-4">
             <div className="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
-              <div className="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center fw-bold fs-4" style={{ width: '60px', height: '60px' }}>
+              <div className="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center fw-bold fs-4 flex-shrink-0" style={{ width: '60px', height: '60px' }}>
                 {userData?.name.charAt(0).toUpperCase()}
               </div>
-              <div>
-                <h3 className="h5 fw-bold text-body-emphasis mb-1">{userData?.name}</h3>
-                <p className="text-body-secondary small mb-0">{userData?.email}</p>
+              <div className="overflow-hidden">
+                <h3 className="h5 fw-bold text-body-emphasis mb-1 text-truncate">{userData?.name}</h3>
+                <p className="text-body-secondary small mb-0 text-truncate">{userData?.email}</p>
               </div>
             </div>
 
-            <div className="d-flex flex-column gap-2">
+            <div className="d-flex flex-column gap-2 h-100">
               <button onClick={() => setActiveTab('favorites')} className={`btn text-start fw-bold p-3 rounded-3 ${activeTab === 'favorites' ? 'btn-danger text-white' : 'btn-light bg-body text-body-secondary hover-bg-light'}`}>
                 <Heart size={18} className="me-2" /> Мое Избранное
               </button>
@@ -117,15 +220,120 @@ export const ProfilePage = () => {
           </motion.div>
         </div>
 
-        {/* ПРАВАЯ КОЛОНКА: КОНТЕНТ ВКАЛДКИ */}
+        {/* ПРАВАЯ КОЛОНКА */}
         <div className="col-lg-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card bg-body-tertiary border-0 rounded-4 shadow-sm p-4 p-md-5 h-100">
             
-            {/* === ВКЛАДКА: ИЗБРАННОЕ === */}
+            {/* === ВКЛАДКА: НАСТРОЙКИ ПРОФИЛЯ === */}
+            {activeTab === 'info' && (
+              <div className="d-grid gap-4">
+                <div className="d-flex align-items-center gap-3 mb-2">
+                  <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-0 text-body-emphasis">Личные данные</h2>
+                  {saveMessage && <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-2 px-3 fw-bold">{saveMessage}</span>}
+                </div>
+                
+                <div className="row g-4">
+                  <div className="col-12 border-bottom pb-4">
+                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block">Email (Логин)</label>
+                    <div className="fs-5 fw-bold text-body-secondary ps-2">{userData?.email}</div>
+                  </div>
+                  
+                  {/* ИМЯ */}
+                  <div className="col-12 border-bottom pb-4">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">Имя</label>
+                      {isEditingName ? (
+                        <div className="d-flex gap-2">
+                          <button type="button" onClick={handleSaveName} disabled={isSaving} className="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold">Сохранить</button>
+                          <button type="button" onClick={() => { setEditName(userData?.name || ''); setIsEditingName(false); }} className="btn btn-sm btn-light rounded-pill px-3 py-1 fw-bold">Отмена</button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => setIsEditingName(true)} className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold">Изменить</button>
+                      )}
+                    </div>
+                    {isEditingName ? (
+                      <input required type="text" maxLength={20} className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium" value={editName} onChange={e => setEditName(e.target.value)} />
+                    ) : (
+                      <div className="fs-5 fw-bold text-body-emphasis ps-2">{userData?.name}</div>
+                    )}
+                  </div>
+
+                  {/* ТЕЛЕФОН */}
+                  <div className="col-12 border-bottom pb-4">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">Телефон</label>
+                      {isEditingPhone ? (
+                        <div className="d-flex gap-2">
+                          <button type="button" onClick={handleSavePhone} disabled={isSaving} className="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold">Сохранить</button>
+                          <button type="button" onClick={() => { setRawPhone(''); setIsEditingPhone(false); setPhoneError(''); }} className="btn btn-sm btn-light rounded-pill px-3 py-1 fw-bold">Отмена</button>
+                        </div>
+                      ) : (
+                        <button type="button" onClick={() => setIsEditingPhone(true)} className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold">Изменить</button>
+                      )}
+                    </div>
+                    {isEditingPhone ? (
+                      /* ПРИ РЕДАКТИРОВАНИИ ВЫЕЗЖАЕТ УМНЫЙ СЕЛЕКТОР */
+                      <div className={`d-flex rounded-3 position-relative bg-body ${phoneError ? 'border border-danger' : 'border-0'}`}>
+                        <div ref={dropdownRef} className="position-relative">
+                          <button type="button" onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="btn border-0 h-100 d-flex align-items-center gap-2 px-3 text-body" style={{ borderRight: '1px solid var(--bs-border-color)' }}>
+                            <img src={`https://flagcdn.com/24x18/${selectedCountry.countryCode}.png`} alt={selectedCountry.label} className="rounded-1 shadow-sm" style={{ width: '24px', height: '18px', objectFit: 'cover' }} />
+                            <span className="fw-bold">{selectedCountry.code}</span>
+                            <ChevronDown size={14} className={`text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                          </button>
+
+                          <AnimatePresence>
+                            {isDropdownOpen && (
+                              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="position-absolute top-100 start-0 mt-2 bg-body border rounded-3 shadow-lg z-3 custom-scrollbar" style={{ minWidth: '240px', maxHeight: '250px', overflowY: 'auto' }}>
+                                <ul className="list-unstyled mb-0 m-0 p-0">
+                                  {COUNTRY_CODES.map((country) => (
+                                    <li key={country.label}>
+                                      <button type="button" className="btn btn-link w-100 text-start text-decoration-none text-body px-3 py-2 d-flex align-items-center gap-3 hover-bg-light" onClick={() => { setSelectedCountry(country); setRawPhone(''); setPhoneError(''); setIsDropdownOpen(false); }}>
+                                        <img src={`https://flagcdn.com/24x18/${country.countryCode}.png`} alt={country.label} className="rounded-1 shadow-sm" style={{ width: '24px', height: '18px', objectFit: 'cover' }} />
+                                        <span className="fw-bold" style={{ minWidth: '60px' }}>{country.code}</span>
+                                        <span className="text-body-secondary small ms-auto">{country.label}</span>
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                        <input value={rawPhone} onChange={handlePhoneChange} type="tel" className="form-control bg-transparent text-body border-0 py-3 shadow-none fw-medium flex-grow-1" placeholder={selectedCountry.mask} />
+                      </div>
+                    ) : (
+                      <div className="fs-5 fw-bold text-body-emphasis ps-2">{userData?.phone || 'Не указан'}</div>
+                    )}
+                    {phoneError && <div className="text-danger small mt-2 fw-bold">{phoneError}</div>}
+                  </div>
+                </div>
+
+                <div className="border-top pt-5 mt-4">
+                  <h4 className="text-danger fw-bold mb-3 d-flex align-items-center gap-2"><AlertTriangle size={20}/> Опасная зона</h4>
+                  <p className="text-body-secondary small mb-4">Удаление аккаунта приведет к безвозвратной потере всех ваших данных, включая бронирования и избранное. Это действие нельзя отменить.</p>
+                  
+                  {showDeleteConfirm ? (
+                    <div className="bg-danger bg-opacity-10 p-4 rounded-3 border border-danger border-opacity-25 animate-fade-in">
+                      <p className="fw-bold text-danger mb-3">Вы уверены, что хотите удалить аккаунт?</p>
+                      <div className="d-flex gap-3">
+                        <button onClick={handleDeleteAccount} className="btn btn-danger fw-bold px-4">Да, удалить навсегда</button>
+                        <button onClick={() => setShowDeleteConfirm(false)} className="btn btn-light fw-bold px-4">Отмена</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-outline-danger fw-bold px-4 d-flex align-items-center gap-2">
+                      <Trash2 size={18} /> Удалить аккаунт
+                    </button>
+                  )}
+                </div>
+
+              </div>
+            )}
+
+            {/* ВКЛАДКА: ИЗБРАННОЕ */}
             {activeTab === 'favorites' && (
               <div>
                 <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-4 text-body-emphasis">Сохраненные места</h2>
-                
                 {favoriteVenues.length === 0 ? (
                   <div className="text-center py-5">
                     <Heart size={64} className="text-secondary opacity-25 mb-4 mx-auto" />
@@ -136,12 +344,7 @@ export const ProfilePage = () => {
                   <div className="row g-4">
                     {favoriteVenues.map((venue, index) => (
                       <div key={venue.id} className="col-md-6">
-                        <VenueCard 
-                          venue={venue} 
-                          isFavorite={true} 
-                          onToggleFavorite={removeFavorite} 
-                          index={index} 
-                        />
+                        <VenueCard venue={venue} isFavorite={true} onToggleFavorite={removeFavorite} index={index} />
                       </div>
                     ))}
                   </div>
@@ -149,29 +352,12 @@ export const ProfilePage = () => {
               </div>
             )}
 
-            {/* ВКЛАДКА: БРОНИ (Заглушка) */}
+            {/* ВКЛАДКА: БРОНИ */}
             {activeTab === 'bookings' && (
               <div className="text-center py-5">
                 <CalendarClock size={64} className="text-secondary opacity-25 mb-4 mx-auto" />
                 <h3 className="h4 fw-bold text-body-emphasis">Нет активных броней</h3>
                 <p className="text-body-secondary">Вы пока не забронировали ни одного столика.</p>
-              </div>
-            )}
-
-            {/* ВКЛАДКА: ПРОФИЛЬ */}
-            {activeTab === 'info' && (
-              <div>
-                <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-4 text-body-emphasis">Личные данные</h2>
-                <div className="row g-4">
-                  <div className="col-md-6">
-                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Имя</label>
-                    <input type="text" className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" value={userData?.name} readOnly />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Email</label>
-                    <input type="email" className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" value={userData?.email} readOnly />
-                  </div>
-                </div>
               </div>
             )}
 
@@ -182,6 +368,13 @@ export const ProfilePage = () => {
       <style>{`
         .fw-black { font-weight: 900; }
         .hover-bg-light:hover { background-color: var(--bs-secondary-bg) !important; }
+        .rotate-180 { transform: rotate(180deg); }
+        .transition-transform { transition: transform 0.3s ease; }
+        .z-3 { z-index: 1050; } 
+        .custom-scrollbar { overflow-y: auto; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--bs-secondary-color); border-radius: 10px; opacity: 0.5; }
       `}</style>
     </div>
   );
