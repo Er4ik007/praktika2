@@ -64,11 +64,13 @@ class Booking(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     venue_id = Column(String(50), nullable=False)
-    venue_name = Column(String(100), nullable=False) 
+    venue_name = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False)
     date = Column(String(50), nullable=False)
     guests = Column(String(10), nullable=False)
     phone = Column(String(20), nullable=False)
-    message = Column(Text, nullable=True) 
+    message = Column(Text, nullable=True)
+    cancel_reason = Column(Text, nullable=True)
     status = Column(String(20), default="active")
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())

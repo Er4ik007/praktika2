@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, LogOut, Settings, Heart, CalendarClock, AlertTriangle, Save, Trash2, ChevronDown } from 'lucide-react';
+import { User, LogOut, Settings, Heart, CalendarClock, AlertTriangle, Save, Trash2, ChevronDown, X, Check, Clock, MapPin, Users, Phone, History, Filter } from 'lucide-react';
 import { venues } from '../data'; 
 import { VenueCard } from '../components/VenueCard'; 
 
@@ -16,12 +16,42 @@ const COUNTRY_CODES = [
   { code: '+971', countryCode: 'ae', label: 'ОАЭ',      mask: '(XX) XXX-XXXX',   regex: /^\(\d{2}\) \d{3}-\d{4}$/ }
 ];
 
+interface Booking {
+  id: number;
+  venue_id: string;
+  venue_name: string;
+  name: string;
+  date: string;
+  guests: string;
+  phone: string;
+  message: string | null;
+  cancel_reason: string | null;
+  status: string;
+  created_at: string;
+}
+
 export const ProfilePage = () => {
   const navigate = useNavigate();
   const [userData, setUserData] = useState<{name: string, email: string, phone: string | null} | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('favorites'); 
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [cancelBookingId, setCancelBookingId] = useState<number | null>(null);
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const [bookingSubTab, setBookingSubTab] = useState<'active' | 'history'>('active');
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [selectedReasonTemplate, setSelectedReasonTemplate] = useState<string | null>(null);
+
+  const CANCEL_REASONS = [
+    'Изменились планы',
+    'Нашёл(а) другое заведение',
+    'Неудобное время',
+    'Не могу найти это место',
+    'Другое'
+  ];
 
   // Состояния редактирования имени
   const [isEditingName, setIsEditingName] = useState(false);
@@ -38,6 +68,61 @@ export const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const fetchBookings = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    setBookingsLoading(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/bookings', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBookings(data);
+      }
+    } catch (err) { console.error(err); }
+    finally { setBookingsLoading(false); }
+  };
+
+  const handleCancelBooking = async (bookingId: number, reason?: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    setCancellingId(bookingId);
+    try {
+      const res = await fetch(`http://localhost:8000/api/bookings/${bookingId}/cancel`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason: reason || null })
+      });
+      if (res.ok) {
+        setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled', cancel_reason: reason || null } : b));
+      }
+    } catch (err) { console.error(err); }
+    finally {
+      setCancellingId(null);
+      setCancelBookingId(null);
+      setShowCancelModal(false);
+      setCancelReason('');
+      setSelectedReasonTemplate(null);
+    }
+  };
+
+  const openCancelModal = (bookingId: number) => {
+    setCancelBookingId(bookingId);
+    setShowCancelModal(true);
+    setCancelReason('');
+    setSelectedReasonTemplate(null);
+  };
+
+  const confirmCancel = () => {
+    if (cancelBookingId === null) return;
+    const finalReason = selectedReasonTemplate === 'Другое' ? cancelReason : (selectedReasonTemplate || cancelReason || null);
+    handleCancelBooking(cancelBookingId, finalReason);
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -64,6 +149,9 @@ export const ProfilePage = () => {
     .then(res => res.json())
     .then(favData => {
       setFavoriteIds(favData);
+      return fetchBookings();
+    })
+    .then(() => {
       setIsLoading(false);
     })
     .catch(() => {
@@ -354,10 +442,160 @@ export const ProfilePage = () => {
 
             {/* ВКЛАДКА: БРОНИ */}
             {activeTab === 'bookings' && (
-              <div className="text-center py-5">
-                <CalendarClock size={64} className="text-secondary opacity-25 mb-4 mx-auto" />
-                <h3 className="h4 fw-bold text-body-emphasis">Нет активных броней</h3>
-                <p className="text-body-secondary">Вы пока не забронировали ни одного столика.</p>
+              <div>
+                <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-4 text-body-emphasis">Мои бронирования</h2>
+                
+                <div className="d-flex gap-2 mb-4">
+                  <button onClick={() => setBookingSubTab('active')} className={`btn rounded-pill px-4 py-2 small fw-bold ${bookingSubTab === 'active' ? 'bg-danger text-white' : 'bg-body-tertiary text-body-secondary'}`}>
+                    <Filter size={14} className="me-1" /> Активные
+                  </button>
+                  <button onClick={() => setBookingSubTab('history')} className={`btn rounded-pill px-4 py-2 small fw-bold ${bookingSubTab === 'history' ? 'bg-danger text-white' : 'bg-body-tertiary text-body-secondary'}`}>
+                    <History size={14} className="me-1" /> История
+                  </button>
+                </div>
+
+                {bookingsLoading ? (
+                  <div className="text-center py-5"><div className="spinner-border text-danger"></div></div>
+                ) : (() => {
+                  const filtered = bookingSubTab === 'active' 
+                    ? bookings.filter(b => b.status === 'active')
+                    : bookings;
+                  
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="text-center py-5">
+                        <CalendarClock size={64} className="text-secondary opacity-25 mb-4 mx-auto" />
+                        <h3 className="h4 fw-bold text-body-emphasis">
+                          {bookingSubTab === 'active' ? 'Нет активных бронирований' : 'История пуста'}
+                        </h3>
+                        <p className="text-body-secondary">
+                          {bookingSubTab === 'active' ? 'Все ваши бронирования отменены или ещё нет броней.' : 'У вас пока нет ни одного бронирования.'}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="d-grid gap-3">
+                      {filtered.map((booking) => (
+                        <div key={booking.id} className={`card rounded-4 border-0 shadow-sm overflow-hidden ${booking.status === 'cancelled' ? 'opacity-60' : ''}`}>
+                          <div className="card-body p-4">
+                            <div className="d-flex justify-content-between align-items-start mb-3">
+                              <div>
+                                <h5 className="fw-bold text-body-emphasis mb-1">{booking.venue_name}</h5>
+                                <span className={`badge rounded-pill fw-bold ${booking.status === 'active' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}`}>
+                                  {booking.status === 'active' ? 'Активно' : 'Отменено'}
+                                </span>
+                              </div>
+                              {booking.status === 'active' && (
+                                <button 
+                                  onClick={() => openCancelModal(booking.id)} 
+                                  className="btn btn-sm btn-outline-danger fw-bold px-3 d-flex align-items-center gap-1"
+                                >
+                                  <X size={14} /> Отменить
+                                </button>
+                              )}
+                            </div>
+                            <div className="row g-3 small">
+                              <div className="col-sm-6 d-flex align-items-center gap-2 text-body-secondary">
+                                <Clock size={16} className="text-danger" />
+                                <span>{booking.date}</span>
+                              </div>
+                              <div className="col-sm-6 d-flex align-items-center gap-2 text-body-secondary">
+                                <Users size={16} className="text-danger" />
+                                <span>{booking.guests} {booking.guests === '1' ? 'гость' : booking.guests === '8+' ? 'гостей' : parseInt(booking.guests) < 5 ? 'гостя' : 'гостей'}</span>
+                              </div>
+                              <div className="col-sm-6 d-flex align-items-center gap-2 text-body-secondary">
+                                <Phone size={16} className="text-danger" />
+                                <span>{booking.phone}</span>
+                              </div>
+                              {booking.message && (
+                                <div className="col-12 text-body-secondary fst-italic">
+                                  «{booking.message}»
+                                </div>
+                              )}
+                              {booking.cancel_reason && (
+                                <div className="col-12">
+                                  <span className="text-danger fw-bold">Причина отмены: </span>
+                                  <span className="text-body-secondary">{booking.cancel_reason}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* МОДАЛКА ОТМЕНЫ БРОНИРОВАНИЯ */}
+            {showCancelModal && (
+              <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ zIndex: 1060, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setShowCancelModal(false)}>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }} 
+                  animate={{ opacity: 1, scale: 1 }} 
+                  className="card border-0 rounded-4 shadow-lg p-4 p-md-5 bg-body" 
+                  style={{ maxWidth: '480px', width: '90%' }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h4 className="fw-bold text-body-emphasis mb-0">Отмена бронирования</h4>
+                    <button onClick={() => setShowCancelModal(false)} className="btn btn-sm btn-light rounded-circle p-2"><X size={16} /></button>
+                  </div>
+                  
+                  <p className="text-body-secondary mb-4">Укажите причину отмены (необязательно):</p>
+                  
+                  <div className="d-flex flex-wrap gap-2 mb-3">
+                    {CANCEL_REASONS.map((reason) => (
+                      <button
+                        key={reason}
+                        onClick={() => {
+                          setSelectedReasonTemplate(reason);
+                          if (reason !== 'Другое') setCancelReason('');
+                        }}
+                        className={`btn rounded-pill px-3 py-2 small fw-bold ${
+                          selectedReasonTemplate === reason 
+                            ? 'bg-danger text-white' 
+                            : 'bg-body-tertiary text-body-secondary'
+                        }`}
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
+
+                  {selectedReasonTemplate === 'Другое' && (
+                    <textarea
+                      value={cancelReason}
+                      onChange={(e) => setCancelReason(e.target.value)}
+                      className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none fw-medium mb-3"
+                      style={{ minHeight: '80px' }}
+                      placeholder="Напишите свою причину..."
+                    />
+                  )}
+
+                  <div className="d-flex gap-3 mt-4">
+                    <button 
+                      onClick={confirmCancel}
+                      disabled={cancellingId !== null}
+                      className="btn btn-danger fw-bold px-4 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                    >
+                      {cancellingId ? (
+                        <span className="spinner-border spinner-border-sm"></span>
+                      ) : (
+                        <>Да, отменить</>
+                      )}
+                    </button>
+                    <button 
+                      onClick={() => setShowCancelModal(false)} 
+                      className="btn btn-light fw-bold px-4"
+                    >
+                      Нет, оставить
+                    </button>
+                  </div>
+                </motion.div>
               </div>
             )}
 

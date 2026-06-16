@@ -38,8 +38,36 @@ class FavoriteCreate(BaseModel):
 # Что мы отвечаем React
 class FavoriteResponse(BaseModel):
     venue_id: str
-    message: str # Например: "Добавлено" или "Удалено"
-    
+    message: str
+
+class BookingCreate(BaseModel):
+    venue_id: str
+    venue_name: str
+    name: str
+    date: str
+    guests: str
+    phone: str
+    message: Optional[str] = None
+
+class CancelBooking(BaseModel):
+    reason: Optional[str] = None
+
+class BookingResponse(BaseModel):
+    id: int
+    venue_id: str
+    venue_name: str
+    name: str
+    date: str
+    guests: str
+    phone: str
+    message: Optional[str] = None
+    cancel_reason: Optional[str] = None
+    status: str
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
 class ForgotPassword(BaseModel):
     email: str
 

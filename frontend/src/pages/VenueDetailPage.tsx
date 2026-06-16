@@ -221,7 +221,7 @@ export const VenueDetailPage = () => {
 
       {/* Передаем в форму бронирования точный адрес выбранного филиала */}
       <section id="booking" className="container pb-5" style={{ maxWidth: '1000px' }}>
-        <BookingForm venueName={`${venue.name} (${activeBranch.address})`} />
+        <BookingForm venueName={`${venue.name} (${activeBranch.address})`} venueId={venue.id} />
       </section>
 
       <section className="container pb-5 mb-5" style={{ maxWidth: '1000px' }}>

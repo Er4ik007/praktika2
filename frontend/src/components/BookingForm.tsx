@@ -13,11 +13,9 @@ const COUNTRY_CODES = [
   { code: '+971', countryCode: 'ae', label: 'ОАЭ',      mask: '(XX) XXX-XXXX',   regex: /^\(\d{2}\) \d{3}-\d{4}$/ }
 ];
 
-export const BookingForm = ({ venueName }: { venueName?: string }) => {
-  // ВОЗВРАТИЛИ ВСЕ ПОЛЯ ФОРМЫ (Имя, Дата, Гости, Пожелания)
+export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueId?: string }) => {
   const [formState, setFormState] = useState({ name: '', date: '', guests: '2', message: '' });
   
-  // Состояния для телефона с кодами стран
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
   const [rawPhone, setRawPhone] = useState(''); 
   const [phoneError, setPhoneError] = useState('');
@@ -25,6 +23,8 @@ export const BookingForm = ({ venueName }: { venueName?: string }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -83,18 +83,57 @@ export const BookingForm = ({ venueName }: { venueName?: string }) => {
     if (phoneError) setPhoneError('');
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!selectedCountry.regex.test(rawPhone)) {
       setPhoneError('Номер введен не полностью или неверно');
       return;
     }
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormState({ name: '', date: '', guests: '2', message: '' });
-      setRawPhone('');
-    }, 5000);
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setSubmitError('Для бронирования необходимо войти в аккаунт');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError('');
+    const fullPhone = `${selectedCountry.code} ${rawPhone}`;
+
+    try {
+      const res = await fetch('http://localhost:8000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          venue_id: venueId || 'unknown',
+          venue_name: venueName || 'Неизвестное заведение',
+          name: formState.name,
+          date: formState.date,
+          guests: formState.guests,
+          phone: fullPhone,
+          message: formState.message || null
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Ошибка при бронировании');
+      }
+
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setFormState({ name: '', date: '', guests: '2', message: '' });
+        setRawPhone('');
+      }, 5000);
+    } catch (err: any) {
+      setSubmitError(err.message || 'Ошибка сети');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -186,8 +225,13 @@ export const BookingForm = ({ venueName }: { venueName?: string }) => {
                   <textarea value={formState.message} onChange={(e) => setFormState({...formState, message: e.target.value})} className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none h-25 fw-medium" style={{ minHeight: '80px' }} placeholder="У окна, детский стульчик..." />
                 </div>
               </div>
-              <button type="submit" className="btn btn-primary-custom w-100 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm mt-2">
-                Отправить запрос <ChevronRight size={18} />
+              {submitError && <div className="text-danger small fw-bold mt-2">{submitError}</div>}
+              <button type="submit" disabled={isSubmitting} className="btn btn-primary-custom w-100 py-3 d-flex align-items-center justify-content-center gap-2 shadow-sm mt-2">
+                {isSubmitting ? (
+                  <span className="spinner-border spinner-border-sm" role="status"></span>
+                ) : (
+                  <>Отправить запрос <ChevronRight size={18} /></>
+                )}
               </button>
             </div>
           )}
