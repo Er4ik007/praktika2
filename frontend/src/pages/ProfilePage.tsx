@@ -53,7 +53,7 @@ export const ProfilePage = () => {
   const [currentTheme, setCurrentTheme] = useState(getCurrentTheme);
 
   const applyTheme = (themeId: string) => {
-    const customThemes = ['autumn', 'ocean', 'lavender', 'forest', 'cosmic'];
+    const customThemes = ['autumn', 'ocean', 'lavender', 'forest', 'waterfall'];
     const doApply = () => {
       if (customThemes.includes(themeId)) {
         document.documentElement.setAttribute('data-bs-theme', 'dark');
@@ -668,7 +668,7 @@ export const ProfilePage = () => {
                       { id: 'ocean', name: 'Морская', colors: ['#0f1923', '#162231', '#38bdf8'] },
                       { id: 'lavender', name: 'Лавандовая', colors: ['#18131f', '#201a2a', '#a78bfa'] },
                       { id: 'forest', name: 'Лесная', colors: ['#111a14', '#19251d', '#4ade80'] },
-                      { id: 'cosmic', name: 'Космическая', colors: ['#0a0a1a', '#12102a', '#c084fc'] },
+                      { id: 'waterfall', name: 'Водопад', colors: ['#0a0a1a', '#12102a', '#c084fc'] },
                     ].map(t => {
                       const isActive = currentTheme === t.id;
                       return (

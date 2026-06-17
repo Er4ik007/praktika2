@@ -113,7 +113,7 @@ body {
 }
 
 /* === КОСМИЧЕСКАЯ ТЕМА === */
-[data-theme="cosmic"] {
+[data-theme="waterfall"] {
   --bs-body-bg: transparent;
   --bs-body-bg-rgb: 0, 0, 0;
   --bs-body-color: #c8c0e0;
@@ -127,54 +127,54 @@ body {
   --bs-link-color: #c084fc;
   --primary-color: #c084fc;
 }
-[data-theme="cosmic"] body {
+[data-theme="waterfall"] body {
   background: #0a0a1a;
 }
-[data-theme="cosmic"] .min-vh-100 {
+[data-theme="waterfall"] .min-vh-100 {
   background: transparent;
 }
-[data-theme="cosmic"] .btn-primary-custom {
+[data-theme="waterfall"] .btn-primary-custom {
   background: linear-gradient(135deg, #c084fc, #818cf8);
   border-color: #c084fc;
 }
-[data-theme="cosmic"] .btn-primary-custom:hover {
+[data-theme="waterfall"] .btn-primary-custom:hover {
   background: linear-gradient(135deg, #a855f7, #6366f1);
   border-color: #a855f7;
   box-shadow: 0 10px 30px rgba(168, 85, 247, 0.3);
 }
-[data-theme="cosmic"] .btn-danger {
+[data-theme="waterfall"] .btn-danger {
   background: linear-gradient(135deg, #c084fc, #818cf8);
   border-color: #c084fc;
 }
-[data-theme="cosmic"] .btn-outline-danger {
+[data-theme="waterfall"] .btn-outline-danger {
   border-color: #c084fc;
   color: #c084fc;
 }
-[data-theme="cosmic"] .btn-outline-danger:hover {
+[data-theme="waterfall"] .btn-outline-danger:hover {
   background: linear-gradient(135deg, #c084fc, #818cf8);
   color: white;
   border-color: #c084fc;
 }
-[data-theme="cosmic"] .card {
+[data-theme="waterfall"] .card {
   background: rgba(18, 16, 42, 0.6) !important;
   backdrop-filter: blur(12px);
   border: 1px solid rgba(192, 132, 252, 0.15) !important;
 }
-[data-theme="cosmic"] .header-glass {
+[data-theme="waterfall"] .header-glass {
   background: rgba(10, 10, 26, 0.7) !important;
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(192, 132, 252, 0.1) !important;
 }
-[data-theme="cosmic"] .form-control {
+[data-theme="waterfall"] .form-control {
   background: rgba(18, 16, 42, 0.5) !important;
 }
-[data-theme="cosmic"] .bg-body-tertiary {
+[data-theme="waterfall"] .bg-body-tertiary {
   background: rgba(18, 16, 42, 0.4) !important;
 }
-[data-theme="cosmic"] .bg-body {
+[data-theme="waterfall"] .bg-body {
   background-color: transparent !important;
 }
-[data-theme="cosmic"] footer {
+[data-theme="waterfall"] footer {
   background: rgba(10, 10, 26, 0.8) !important;
   backdrop-filter: blur(10px);
 }

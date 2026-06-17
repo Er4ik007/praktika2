@@ -17,7 +17,7 @@ export const Header = () => {
   const userName = localStorage.getItem('userName');
 
   useEffect(() => {
-    const customThemes = ['autumn', 'ocean', 'lavender', 'forest', 'cosmic'];
+    const customThemes = ['autumn', 'ocean', 'lavender', 'forest', 'waterfall'];
     if (customThemes.includes(theme)) {
       document.documentElement.setAttribute('data-bs-theme', 'dark');
       document.documentElement.setAttribute('data-theme', theme);

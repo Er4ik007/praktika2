@@ -1,17 +1,17 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-interface Star {
+const MEME_EMOJIS = ['🐕', '🐶', '🐸', '🔥', '💎', '🚀', '⭐', '🌙', '🍕', '💎', '🐱', '🦄'];
+
+interface MemeItem {
   x: number;
   y: number;
   size: number;
-  opacity: number;
   speed: number;
-  twinkleSpeed: number;
-  twinkleOffset: number;
-  color: string;
+  rotation: number;
+  rotationSpeed: number;
+  opacity: number;
+  emoji: string;
 }
-
-const COLORS = ['#c084fc', '#818cf8', '#a78bfa', '#e0e7ff', '#ffffff', '#f0abfc'];
 
 export const CosmicBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,7 +19,7 @@ export const CosmicBackground = () => {
 
   useEffect(() => {
     const checkTheme = () => {
-      setIsVisible(document.documentElement.getAttribute('data-theme') === 'cosmic');
+      setIsVisible(document.documentElement.getAttribute('data-theme') === 'waterfall');
     };
     checkTheme();
     const observer = new MutationObserver(checkTheme);
@@ -35,7 +35,6 @@ export const CosmicBackground = () => {
     if (!ctx) return;
 
     let animId: number;
-    let stars: Star[] = [];
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -44,58 +43,49 @@ export const CosmicBackground = () => {
     resize();
     window.addEventListener('resize', resize);
 
-    const createStars = () => {
-      stars = [];
-      const count = Math.floor((canvas.width * canvas.height) / 4000);
-      for (let i = 0; i < count; i++) {
-        stars.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          size: Math.random() * 2 + 0.5,
-          opacity: Math.random() * 0.8 + 0.2,
-          speed: Math.random() * 0.15 + 0.02,
-          twinkleSpeed: Math.random() * 0.02 + 0.005,
-          twinkleOffset: Math.random() * Math.PI * 2,
-          color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        });
-      }
-    };
-    createStars();
+    const memes: MemeItem[] = [];
+    const count = Math.floor(canvas.width / 90);
+    for (let i = 0; i < count; i++) {
+      memes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height * 2 - canvas.height,
+        size: 30 + Math.random() * 30,
+        speed: 1 + Math.random() * 3,
+        rotation: Math.random() * Math.PI * 2,
+        rotationSpeed: (Math.random() - 0.5) * 0.03,
+        opacity: 0.15 + Math.random() * 0.5,
+        emoji: MEME_EMOJIS[Math.floor(Math.random() * MEME_EMOJIS.length)],
+      });
+    }
 
     let time = 0;
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       time += 1;
 
-      for (const star of stars) {
-        star.y -= star.speed;
-        if (star.y < -5) {
-          star.y = canvas.height + 5;
-          star.x = Math.random() * canvas.width;
+      for (const meme of memes) {
+        meme.y += meme.speed;
+        meme.rotation += meme.rotationSpeed;
+
+        if (meme.y > canvas.height + 60) {
+          meme.y = -60;
+          meme.x = Math.random() * canvas.width;
         }
 
-        const twinkle = Math.sin(time * star.twinkleSpeed + star.twinkleOffset) * 0.3 + 0.7;
-        const alpha = star.opacity * twinkle;
+        const twinkle = Math.sin(time * 0.015 + meme.x * 0.008) * 0.15 + 0.85;
+        const alpha = meme.opacity * twinkle;
 
-        ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-        ctx.fillStyle = star.color;
+        ctx.save();
         ctx.globalAlpha = alpha;
-        ctx.fill();
-
-        if (star.size > 1.5) {
-          ctx.beginPath();
-          ctx.arc(star.x, star.y, star.size * 3, 0, Math.PI * 2);
-          const grad = ctx.createRadialGradient(star.x, star.y, 0, star.x, star.y, star.size * 3);
-          grad.addColorStop(0, star.color);
-          grad.addColorStop(1, 'transparent');
-          ctx.fillStyle = grad;
-          ctx.globalAlpha = alpha * 0.15;
-          ctx.fill();
-        }
+        ctx.translate(meme.x, meme.y);
+        ctx.rotate(meme.rotation);
+        ctx.font = `${meme.size}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(meme.emoji, 0, 0);
+        ctx.restore();
       }
 
-      ctx.globalAlpha = 1;
       animId = requestAnimationFrame(animate);
     };
     animate();
