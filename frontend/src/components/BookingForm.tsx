@@ -26,6 +26,8 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
+  const today = new Date().toISOString().split('T')[0];
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -210,7 +212,7 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
 
                 <div className="col-sm-6">
                   <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Дата</label>
-                  <input required type="date" value={formState.date} onChange={(e) => setFormState({...formState, date: e.target.value})} className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none fw-medium" />
+                  <input required type="date" min={today} value={formState.date} onChange={(e) => setFormState({...formState, date: e.target.value})} className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none fw-medium" />
                 </div>
                 <div className="col-sm-6">
                   <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Гости</label>

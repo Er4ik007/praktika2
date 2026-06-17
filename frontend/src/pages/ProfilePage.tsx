@@ -45,6 +45,38 @@ export const ProfilePage = () => {
   const [cancelReason, setCancelReason] = useState('');
   const [selectedReasonTemplate, setSelectedReasonTemplate] = useState<string | null>(null);
 
+  const getCurrentTheme = () => {
+    const appTheme = localStorage.getItem('appTheme');
+    if (appTheme && appTheme !== 'default') return appTheme;
+    return localStorage.getItem('theme') || 'light';
+  };
+  const [currentTheme, setCurrentTheme] = useState(getCurrentTheme);
+
+  const applyTheme = (themeId: string) => {
+    const customThemes = ['autumn', 'ocean', 'lavender', 'forest', 'cosmic'];
+    const doApply = () => {
+      if (customThemes.includes(themeId)) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
+        document.documentElement.setAttribute('data-theme', themeId);
+        localStorage.setItem('appTheme', themeId);
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.documentElement.setAttribute('data-bs-theme', themeId);
+        localStorage.setItem('appTheme', 'default');
+        localStorage.setItem('theme', themeId);
+      }
+      setCurrentTheme(themeId);
+    };
+    // @ts-ignore
+    if (document.startViewTransition) {
+      // @ts-ignore
+      document.startViewTransition(() => doApply());
+    } else {
+      doApply();
+    }
+  };
+
   const CANCEL_REASONS = [
     'Изменились планы',
     'Нашёл(а) другое заведение',
@@ -416,7 +448,7 @@ export const ProfilePage = () => {
       <div className="row g-5">
         
         {/* ЛЕВАЯ КОЛОНКА */}
-        <div className="col-lg-4">
+        <div className="col-lg-4" style={{ position: 'sticky', top: '90px', alignSelf: 'flex-start' }}>
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="card bg-body-tertiary border-0 rounded-4 shadow-sm p-4">
             <div className="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
               <div className="position-relative flex-shrink-0" style={{ width: '60px', height: '60px' }}>
@@ -427,8 +459,8 @@ export const ProfilePage = () => {
                     {userData?.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <button onClick={() => fileInputRef.current?.click()} className="btn btn-sm btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center shadow" style={{ bottom: '-2px', right: '-2px', width: '22px', height: '22px' }} disabled={isUploadingAvatar}>
-                  {isUploadingAvatar ? <span className="spinner-border spinner-border-sm" style={{ width: '10px', height: '10px' }}></span> : <Camera size={11} />}
+                <button onClick={() => fileInputRef.current?.click()} className="btn btn-sm btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center shadow" style={{ bottom: '-4px', right: '-4px', width: '28px', height: '28px' }} disabled={isUploadingAvatar}>
+                  {isUploadingAvatar ? <span className="spinner-border spinner-border-sm" style={{ width: '12px', height: '12px' }}></span> : <Camera size={14} />}
                 </button>
                 <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarUpload} className="d-none" />
               </div>
@@ -623,6 +655,40 @@ export const ProfilePage = () => {
                       )}
                     </div>
                   )}
+                </div>
+
+                {/* ВЫБОР ТЕМЫ */}
+                <div className="border-bottom pb-4">
+                  <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-3 d-block">Тема оформления</label>
+                  <div className="d-grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
+                    {[
+                      { id: 'light', name: 'Классика', colors: ['#ffffff', '#f8f9fa', '#ef4444'] },
+                      { id: 'dark', name: 'Тёмная', colors: ['#1a1a2e', '#16213e', '#ef4444'] },
+                      { id: 'autumn', name: 'Осенняя', colors: ['#1a1410', '#241c14', '#e07b39'] },
+                      { id: 'ocean', name: 'Морская', colors: ['#0f1923', '#162231', '#38bdf8'] },
+                      { id: 'lavender', name: 'Лавандовая', colors: ['#18131f', '#201a2a', '#a78bfa'] },
+                      { id: 'forest', name: 'Лесная', colors: ['#111a14', '#19251d', '#4ade80'] },
+                      { id: 'cosmic', name: 'Космическая', colors: ['#0a0a1a', '#12102a', '#c084fc'] },
+                    ].map(t => {
+                      const isActive = currentTheme === t.id;
+                      return (
+                        <button
+                          key={t.id}
+                          onClick={() => applyTheme(t.id)}
+                          className={`btn p-3 rounded-3 text-start border ${isActive ? 'border-danger border-2' : 'border'}`}
+                          style={{ backgroundColor: t.colors[1] }}
+                        >
+                          <div className="d-flex gap-1 mb-2">
+                            {t.colors.map((c, i) => (
+                              <div key={i} className="rounded-circle" style={{ width: '14px', height: '14px', backgroundColor: c, border: '1px solid rgba(128,128,128,0.2)' }} />
+                            ))}
+                          </div>
+                          <span className="fw-bold small" style={{ color: t.colors[2] }}>{t.name}</span>
+                          {isActive && <span className="ms-1" style={{ color: t.colors[2] }}>✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="border-top pt-5 mt-4">

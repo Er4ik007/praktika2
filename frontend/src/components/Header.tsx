@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Utensils, X, Menu as MenuIcon, Moon, Sun, User } from 'lucide-react';
+import { Utensils, X, Menu as MenuIcon, User } from 'lucide-react';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('appTheme');
+    if (saved && saved !== 'default') return saved;
+    return localStorage.getItem('theme') || 'light';
+  });
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -13,8 +17,18 @@ export const Header = () => {
   const userName = localStorage.getItem('userName');
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-bs-theme', theme);
-    localStorage.setItem('theme', theme);
+    const customThemes = ['autumn', 'ocean', 'lavender', 'forest', 'cosmic'];
+    if (customThemes.includes(theme)) {
+      document.documentElement.setAttribute('data-bs-theme', 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('appTheme', theme);
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      document.documentElement.setAttribute('data-bs-theme', theme);
+      localStorage.setItem('appTheme', 'default');
+      localStorage.setItem('theme', theme);
+    }
   }, [theme]);
 
   useEffect(() => {
@@ -27,26 +41,6 @@ export const Header = () => {
       .then(data => { if (data?.avatar) setUserAvatar(data.avatar); })
       .catch(() => {});
   }, [userName]);
-
-  const toggleTheme = (event: React.MouseEvent<HTMLButtonElement>) => {
-    const nextTheme = theme === 'light' ? 'dark' : 'light';
-    // @ts-ignore
-    if (!document.startViewTransition) {
-      setTheme(nextTheme);
-      return;
-    }
-    const x = event.clientX;
-    const y = event.clientY;
-    document.documentElement.style.setProperty('--x', `${x}px`);
-    document.documentElement.style.setProperty('--y', `${y}px`);
-
-    // @ts-ignore
-    document.startViewTransition(() => {
-      document.documentElement.setAttribute('data-bs-theme', nextTheme);
-      setTheme(nextTheme);
-      localStorage.setItem('theme', nextTheme);
-    });
-  };
 
   const menuItems = [
     { name: 'Главная', path: '/' },
@@ -106,10 +100,6 @@ export const Header = () => {
               <User size={16} /> Войти
             </button>
           )}
-
-          <button onClick={(e) => toggleTheme(e)} className="btn btn-link text-body p-2" title="Сменить тему">
-            {theme === 'light' ? <Moon size={22} /> : <Sun size={22} />}
-          </button>
 
           <div className="d-md-none">
             <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="btn btn-link text-body p-2">

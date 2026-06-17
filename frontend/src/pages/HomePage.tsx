@@ -1,61 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Link, useNavigate } from 'react-router-dom'; // Добавили useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
 import { venues, Venue } from '../data';
 import { VenueCard } from '../components/VenueCard';
 import { Minsk3DWidget } from '../components/Minsk3DWidget';
 
+const SLIDES = [
+  {
+    title: "Гастрономический Минск",
+    subtitle: "Откройте для себя лучшие вкусы столицы",
+    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80",
+    link: "/catalog"
+  },
+  {
+    title: "Белорусская Кухня",
+    subtitle: "Традиции, драники и мачанка в лучшем исполнении",
+    image: "src/images/dran.jpg",
+    link: "/catalog?filter=belarusian"
+  },
+  {
+    title: "Рестораны",
+    subtitle: "Идеальные места для идеального ужина",
+    image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1920&q=80",
+    link: "/catalog?filter=restaurant"
+  },
+  {
+    title: "Культура Кофе",
+    subtitle: "Лучшие спешелти кофейни в центре города",
+    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1920&q=80",
+    link: "/catalog?filter=coffee"
+  },
+  {
+    title: "Атмосферные Бары",
+    subtitle: "Авторские коктейли, крафт и живая музыка",
+    image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1920&q=80",
+    link: "/catalog?filter=bar"
+  }
+];
+
+const FEATURED_VENUES = venues.slice(0, 3);
+
 export const HomePage = () => {
   const [current, setCurrent] = useState(0);
-  const navigate = useNavigate(); // Для редиректа на логин
-  
+  const navigate = useNavigate();
+
   useEffect(() => {
     document.title = "Главная";
   }, []);
 
-  const slides = [
-    { 
-      title: "Гастрономический Минск", 
-      subtitle: "Откройте для себя лучшие вкусы столицы", 
-      image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80",
-      link: "/catalog"
-    },
-    { 
-      title: "Белорусская Кухня", 
-      subtitle: "Традиции, драники и мачанка в лучшем исполнении", 
-      image: "src/images/dran.jpg",
-      link: "/catalog?filter=belarusian"
-    },
-    { 
-      title: "Рестораны", 
-      subtitle: "Идеальные места для идеального ужина", 
-      image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1920&q=80",
-      link: "/catalog?filter=restaurant"
-    },
-    { 
-      title: "Культура Кофе", 
-      subtitle: "Лучшие спешелти кофейни в центре города", 
-      image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1920&q=80",
-      link: "/catalog?filter=coffee"
-    },
-    { 
-      title: "Атмосферные Бары", 
-      subtitle: "Авторские коктейли, крафт и живая музыка", 
-      image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1920&q=80",
-      link: "/catalog?filter=bar"
-    }
-  ];
-
-  // === НОВАЯ ЛОГИКА ИЗБРАННОГО (СИНХРОНИЗАЦИЯ С БД) ===
   const [favorites, setFavorites] = useState<string[]>([]);
-  
+
   useEffect(() => {
-    // Загружаем лайки с сервера при открытии Главной страницы
     const fetchFavorites = async () => {
       const token = localStorage.getItem('token');
       if (!token) return;
-
       try {
         const res = await fetch('http://localhost:8000/api/favorites', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -71,68 +70,58 @@ export const HomePage = () => {
     fetchFavorites();
   }, []);
 
-  const toggleFavorite = async (id: string) => {
+  const toggleFavorite = useCallback(async (id: string) => {
     const token = localStorage.getItem('token');
-    
-    // Если не вошел в аккаунт — отправляем на страницу логина
     if (!token) {
       alert("Пожалуйста, войдите в аккаунт, чтобы сохранять заведения в избранное.");
       navigate('/login');
       return;
     }
-
-    // Оптимистичный UI
     const isNowFavorite = !favorites.includes(id);
     setFavorites(prev => isNowFavorite ? [...prev, id] : prev.filter(fid => fid !== id));
-
     try {
       const res = await fetch('http://localhost:8000/api/favorites/toggle', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` 
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ venue_id: id })
       });
-      
       if (!res.ok) {
-        // Откат, если ошибка
         setFavorites(prev => !isNowFavorite ? [...prev, id] : prev.filter(fid => fid !== id));
         alert("Ошибка при сохранении");
       }
     } catch (err) {
       console.error(err);
     }
-  };
-  // === КОНЕЦ НОВОЙ ЛОГИКИ ===
+  }, [favorites, navigate]);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent((p) => (p + 1) % slides.length), 6000); 
+    const timer = setInterval(() => setCurrent((p) => (p + 1) % SLIDES.length), 6000);
     return () => clearInterval(timer);
-  }, [slides.length]);
-
-  const featuredVenues = venues.slice(0, 3);
+  }, []);
 
   return (
     <div>
       <section className="position-relative overflow-hidden w-100 mt-5" style={{ height: '80vh' }}>
         <AnimatePresence initial={false}>
           <motion.div key={current} initial={{ x: '100%', opacity: 0.5 }} animate={{ x: 0, opacity: 1 }} exit={{ x: '-100%', opacity: 0.5 }} transition={{ x: { type: "spring", stiffness: 300, damping: 30 }, opacity: { duration: 0.5 } }} className="position-absolute inset-0 w-100 h-100">
-            <div className="position-absolute inset-0 w-100 h-100 bg-cover bg-center" style={{ backgroundImage: `url(${slides[current].image})` }} />
+            <div className="position-absolute inset-0 w-100 h-100 bg-cover bg-center" style={{ backgroundImage: `url(${SLIDES[current].image})` }} />
             <div className="position-absolute inset-0 w-100 h-100 bg-black opacity-50" />
             <div className="position-relative h-100 z-1 d-flex flex-column justify-content-center align-items-center text-center px-3 text-white">
-              <motion.h1 initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="display-2 fw-black mb-3 tracking-tighter text-white">{slides[current].title}</motion.h1>
-              <motion.p initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="fs-3 fw-light opacity-75 max-w-2xl">{slides[current].subtitle}</motion.p>
+              <motion.h1 initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="display-2 fw-black mb-3 tracking-tighter text-white">{SLIDES[current].title}</motion.h1>
+              <motion.p initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="fs-3 fw-light opacity-75 max-w-2xl">{SLIDES[current].subtitle}</motion.p>
               
               <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4 }} className="mt-4">
-                <Link to={slides[current].link} className="btn btn-primary-custom">Перейти</Link>
+                <Link to={SLIDES[current].link} className="btn btn-primary-custom">Перейти</Link>
               </motion.div>
             </div>
           </motion.div>
         </AnimatePresence>
 
         <div className="position-absolute bottom-0 start-50 translate-middle-x mb-4 z-2 d-flex gap-2">
-          {slides.map((_, i) => (
+          {SLIDES.map((_, i) => (
             <button 
               key={i}
               onClick={() => setCurrent(i)}
@@ -158,9 +147,8 @@ export const HomePage = () => {
           </Link>
         </div>
 
-        {/* ПЕРЕДАЕМ ИНДЕКС И НОВУЮ ФУНКЦИЮ TOGGLE В КАРТОЧКИ */}
         <div className="row g-4">
-          {featuredVenues.map((venue: Venue, index: number) => (
+          {FEATURED_VENUES.map((venue: Venue, index: number) => (
             <div key={venue.id} className="col-md-4">
               <VenueCard 
                 venue={venue} 
@@ -233,14 +221,6 @@ export const HomePage = () => {
           </div>
         </div>
       </section>
-      <style>{`
-        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-        .z-1 { z-index: 1; }
-        .fw-black { font-weight: 900; }
-        .hover-move-x:hover { transform: translateX(8px); }
-        .grayscale { filter: grayscale(100%); }
-        .hover-color:hover { filter: grayscale(0%); }
-      `}</style>
     </div>
   );
 };

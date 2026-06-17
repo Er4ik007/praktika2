@@ -3,6 +3,7 @@ import { Suspense, lazy } from 'react';
 import React, { useEffect } from 'react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
+import { CosmicBackground } from './components/CosmicBackground';
 
 
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
@@ -29,6 +30,7 @@ function ScrollToTop() {
 export default function App() {
   return (
     <Router>
+      <CosmicBackground />
       <div className="min-vh-100 bg-body text-body d-flex flex-column selection-red">
         <ScrollToTop />
         <Header />
