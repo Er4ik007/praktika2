@@ -3,7 +3,7 @@ import random
 import smtplib
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta, timezone
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware # <--- ИМПОРТИРУЕМ CORS
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db
@@ -139,6 +139,101 @@ def delete_user_profile(
     db.delete(current_user)
     db.commit()
     return {"message": "Аккаунт успешно удален"}
+
+# ==========================================
+# АВАТАР ПОЛЬЗОВАТЕЛЯ
+# ==========================================
+
+@app.post("/api/users/avatar", response_model=schemas.UserResponse)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    if file.content_type not in ["image/jpeg", "image/png", "image/webp", "image/gif"]:
+        raise HTTPException(status_code=400, detail="Допустимые форматы: JPEG, PNG, WebP, GIF")
+
+    import base64
+    contents = await file.read()
+    if len(contents) > 2 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Максимальный размер файла — 2 МБ")
+
+    b64 = base64.b64encode(contents).decode("utf-8")
+    current_user.avatar = f"data:{file.content_type};base64,{b64}"
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+@app.delete("/api/users/avatar", response_model=schemas.UserResponse)
+def delete_avatar(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    current_user.avatar = None
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+# ==========================================
+# СМЕНА ПАРОЛЯ ИЗ ЛИЧНОГО КАБИНЕТА
+# ==========================================
+
+@app.post("/api/send-change-code")
+def send_change_code(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    reset_code = str(random.randint(1000, 9999))
+    current_user.reset_code = reset_code
+    current_user.reset_code_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
+    db.commit()
+
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+
+    if smtp_user and smtp_password:
+        try:
+            msg = MIMEText(
+                f"Здравствуйте, {current_user.name}!\n\n"
+                f"Вы запросили смену пароля на сайте Minsk Gastro Guide.\n"
+                f"Ваш код подтверждения: {reset_code}\n\n"
+                f"Код действителен 15 минут. Если вы не запрашивали смену пароля — проигнорируйте это письмо."
+            )
+            msg['Subject'] = 'Смена пароля - Minsk Gastro Guide'
+            msg['From'] = f"Minsk Gastro Support <{smtp_user}>"
+            msg['To'] = current_user.email
+
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+                server.login(smtp_user, smtp_password)
+                server.send_message(msg)
+        except Exception as e:
+            print(f"Ошибка отправки письма: {e}")
+            raise HTTPException(status_code=500, detail="Ошибка почтового сервера")
+
+    return {"message": "Код подтверждения отправлен на почту"}
+
+@app.post("/api/change-password")
+def change_password(
+    data: schemas.ChangePassword,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    if not current_user.reset_code or current_user.reset_code != data.code:
+        raise HTTPException(status_code=400, detail="Неверный код подтверждения")
+
+    expire_time = current_user.reset_code_expires
+    if expire_time.tzinfo is None:
+        expire_time = expire_time.replace(tzinfo=timezone.utc)
+
+    if expire_time < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Код просрочен")
+
+    current_user.password_hash = auth.hash_password(data.new_password)
+    current_user.reset_code = None
+    current_user.reset_code_expires = None
+    db.commit()
+
+    return {"message": "Пароль успешно изменен"}
 
 # ==========================================
 # ВОССТАНОВЛЕНИЕ ПАРОЛЯ С ОТПРАВКОЙ НА GMAIL

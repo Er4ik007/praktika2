@@ -16,6 +16,7 @@ export const LoginPage = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetCode, setResetCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => { document.title = "Вход"; }, []);
 
@@ -61,6 +62,11 @@ export const LoginPage = () => {
   const handleResetSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true); setError('');
+    if (newPassword !== confirmPassword) {
+      setError('Пароли не совпадают');
+      setIsLoading(false);
+      return;
+    }
     try {
       const res = await fetch('http://localhost:8000/api/reset-password', {
         method: 'POST',
@@ -74,6 +80,9 @@ export const LoginPage = () => {
       alert("Пароль успешно изменен! Теперь вы можете войти.");
       setIsForgotMode(false);
       setResetStep(1);
+      setNewPassword('');
+      setConfirmPassword('');
+      setResetCode('');
     } catch (err: any) { setError(err.message); } 
     finally { setIsLoading(false); }
   };
@@ -125,6 +134,10 @@ export const LoginPage = () => {
                     <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Новый пароль</label>
                     <input required minLength={6} type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium" placeholder="••••••••" />
                   </div>
+                  <div>
+                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Подтвердите пароль</label>
+                    <input required minLength={6} type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium" placeholder="••••••••" />
+                  </div>
                   <button type="submit" disabled={isLoading} className="btn btn-primary-custom w-100 py-3 mt-2">
                     {isLoading ? <span className="spinner-border spinner-border-sm"></span> : 'Сохранить пароль'}
                   </button>
@@ -132,7 +145,7 @@ export const LoginPage = () => {
               )}
 
               <div className="text-center mt-4 pt-3 border-top">
-                <button onClick={() => {setIsForgotMode(false); setResetStep(1); setError('');}} className="btn btn-link text-body-secondary fw-bold small text-decoration-none hover-underline">
+                <button onClick={() => {setIsForgotMode(false); setResetStep(1); setError(''); setNewPassword(''); setConfirmPassword(''); setResetCode('');}} className="btn btn-link text-body-secondary fw-bold small text-decoration-none hover-underline">
                   Вернуться ко входу
                 </button>
               </div>

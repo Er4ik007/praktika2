@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, LogOut, Settings, Heart, CalendarClock, AlertTriangle, Save, Trash2, ChevronDown, X, Check, Clock, MapPin, Users, Phone, History, Filter } from 'lucide-react';
+import { User, LogOut, Settings, Heart, CalendarClock, AlertTriangle, Save, Trash2, ChevronDown, X, Check, Clock, MapPin, Users, Phone, History, Filter, Camera, KeyRound, MailCheck } from 'lucide-react';
 import { venues } from '../data'; 
 import { VenueCard } from '../components/VenueCard'; 
 
@@ -32,7 +32,7 @@ interface Booking {
 
 export const ProfilePage = () => {
   const navigate = useNavigate();
-  const [userData, setUserData] = useState<{name: string, email: string, phone: string | null} | null>(null);
+  const [userData, setUserData] = useState<{name: string, email: string, phone: string | null, avatar: string | null} | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('favorites'); 
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
@@ -68,6 +68,22 @@ export const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Состояния аватара
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Состояния смены пароля
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [passwordStep, setPasswordStep] = useState<'input' | 'code'>('input');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changeCode, setChangeCode] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isSendingCode, setIsSendingCode] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const fetchBookings = async () => {
     const token = localStorage.getItem('token');
@@ -269,6 +285,128 @@ export const ProfilePage = () => {
     } catch (err) { console.error(err); }
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+      setSaveMessage('Допустимые форматы: JPEG, PNG, WebP, GIF');
+      setTimeout(() => setSaveMessage(''), 3000);
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setSaveMessage('Максимальный размер файла — 2 МБ');
+      setTimeout(() => setSaveMessage(''), 3000);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => setAvatarPreview(reader.result as string);
+    reader.readAsDataURL(file);
+
+    setIsUploadingAvatar(true);
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch('http://localhost:8000/api/users/avatar', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setUserData(updated);
+        setAvatarPreview(null);
+        setSaveMessage('Аватар обновлен!');
+        setTimeout(() => setSaveMessage(''), 3000);
+      }
+    } catch (err) { console.error(err); }
+    finally { setIsUploadingAvatar(false); }
+  };
+
+  const handleAvatarDelete = async () => {
+    const token = localStorage.getItem('token');
+    setIsUploadingAvatar(true);
+    try {
+      const res = await fetch('http://localhost:8000/api/users/avatar', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setUserData(updated);
+        setAvatarPreview(null);
+        setSaveMessage('Аватар удален');
+        setTimeout(() => setSaveMessage(''), 3000);
+      }
+    } catch (err) { console.error(err); }
+    finally { setIsUploadingAvatar(false); }
+  };
+
+  const handleSendChangeCode = async () => {
+    setIsSendingCode(true);
+    setPasswordError('');
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch('http://localhost:8000/api/send-change-code', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setPasswordStep('code');
+        setPasswordSuccess('Код отправлен на вашу почту');
+      } else {
+        const data = await res.json();
+        setPasswordError(data.detail || 'Ошибка отправки кода');
+      }
+    } catch (err) { setPasswordError('Ошибка сети'); }
+    finally { setIsSendingCode(false); }
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Пароли не совпадают');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError('Пароль должен быть не менее 6 символов');
+      return;
+    }
+    setIsChangingPassword(true);
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch('http://localhost:8000/api/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ code: changeCode, new_password: newPassword })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPasswordSuccess('Пароль успешно изменен!');
+        setPasswordStep('input');
+        setNewPassword('');
+        setConfirmPassword('');
+        setChangeCode('');
+        setShowPasswordChange(false);
+        setTimeout(() => setPasswordSuccess(''), 3000);
+      } else {
+        setPasswordError(data.detail || 'Неверный код');
+      }
+    } catch (err) { setPasswordError('Ошибка сети'); }
+    finally { setIsChangingPassword(false); }
+  };
+
+  const resetPasswordChange = () => {
+    setShowPasswordChange(false);
+    setPasswordStep('input');
+    setNewPassword('');
+    setConfirmPassword('');
+    setChangeCode('');
+    setPasswordError('');
+  };
+
   const favoriteVenues = venues.filter(v => favoriteIds.includes(v.id));
 
   if (isLoading) return <div className="d-flex justify-content-center align-items-center" style={{ height: '70vh' }}><div className="spinner-border text-danger"></div></div>;
@@ -281,8 +419,18 @@ export const ProfilePage = () => {
         <div className="col-lg-4">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="card bg-body-tertiary border-0 rounded-4 shadow-sm p-4">
             <div className="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
-              <div className="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center fw-bold fs-4 flex-shrink-0" style={{ width: '60px', height: '60px' }}>
-                {userData?.name.charAt(0).toUpperCase()}
+              <div className="position-relative flex-shrink-0" style={{ width: '60px', height: '60px' }}>
+                {(userData?.avatar || avatarPreview) ? (
+                  <img src={avatarPreview || userData?.avatar || ''} alt="Аватар" className="rounded-circle w-100 h-100" style={{ objectFit: 'cover' }} />
+                ) : (
+                  <div className="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center fw-bold fs-4 w-100 h-100">
+                    {userData?.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <button onClick={() => fileInputRef.current?.click()} className="btn btn-sm btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center shadow" style={{ bottom: '-2px', right: '-2px', width: '22px', height: '22px' }} disabled={isUploadingAvatar}>
+                  {isUploadingAvatar ? <span className="spinner-border spinner-border-sm" style={{ width: '10px', height: '10px' }}></span> : <Camera size={11} />}
+                </button>
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleAvatarUpload} className="d-none" />
               </div>
               <div className="overflow-hidden">
                 <h3 className="h5 fw-bold text-body-emphasis mb-1 text-truncate">{userData?.name}</h3>
@@ -394,6 +542,87 @@ export const ProfilePage = () => {
                     )}
                     {phoneError && <div className="text-danger small mt-2 fw-bold">{phoneError}</div>}
                   </div>
+                </div>
+
+                {/* АВАТАР */}
+                <div className="border-bottom pb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">Аватар</label>
+                    {userData?.avatar && (
+                      <button onClick={handleAvatarDelete} disabled={isUploadingAvatar} className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold">Удалить</button>
+                    )}
+                  </div>
+                  <div className="d-flex align-items-center gap-4">
+                    <div style={{ width: '80px', height: '80px' }}>
+                      {(userData?.avatar || avatarPreview) ? (
+                        <img src={avatarPreview || userData?.avatar || ''} alt="Аватар" className="rounded-circle w-100 h-100" style={{ objectFit: 'cover' }} />
+                      ) : (
+                        <div className="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center fw-bold fs-3 w-100 h-100">
+                          {userData?.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <button onClick={() => fileInputRef.current?.click()} disabled={isUploadingAvatar} className="btn btn-outline-danger fw-bold px-4 d-flex align-items-center gap-2">
+                        {isUploadingAvatar ? <span className="spinner-border spinner-border-sm"></span> : <><Camera size={18} /> Загрузить фото</>}
+                      </button>
+                      <p className="text-body-secondary small mt-2 mb-0">JPEG, PNG, WebP или GIF. До 2 МБ.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* СМЕНА ПАРОЛЯ */}
+                <div className="border-bottom pb-4">
+                  <div className="d-flex justify-content-between align-items-center mb-2">
+                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">Пароль</label>
+                    {passwordSuccess && <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-2 px-3 fw-bold">{passwordSuccess}</span>}
+                  </div>
+
+                  {!showPasswordChange ? (
+                    <button onClick={() => setShowPasswordChange(true)} className="btn btn-outline-danger fw-bold px-4 d-flex align-items-center gap-2">
+                      <KeyRound size={18} /> Изменить пароль
+                    </button>
+                  ) : (
+                    <div className="bg-body p-4 rounded-3 border">
+                      {passwordError && <div className="alert alert-danger small fw-bold text-center border-0 rounded-3 mb-3">{passwordError}</div>}
+
+                      {passwordStep === 'input' ? (
+                        <div className="d-grid gap-3">
+                          <p className="text-body-secondary small mb-0">На вашу почту будет отправлен код подтверждения.</p>
+                          <div>
+                            <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Новый пароль</label>
+                            <input minLength={6} type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-control rounded-3 bg-body-tertiary border-0 py-3 px-4 shadow-none fw-medium" placeholder="Минимум 6 символов" />
+                          </div>
+                          <div>
+                            <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Подтвердите пароль</label>
+                            <input minLength={6} type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-control rounded-3 bg-body-tertiary border-0 py-3 px-4 shadow-none fw-medium" placeholder="Повторите новый пароль" />
+                          </div>
+                          <div className="d-flex gap-2">
+                            <button onClick={handleSendChangeCode} disabled={isSendingCode || !newPassword || !confirmPassword} className="btn btn-danger fw-bold px-4 d-flex align-items-center gap-2">
+                              {isSendingCode ? <span className="spinner-border spinner-border-sm"></span> : <><MailCheck size={16} /> Отправить код</>}
+                            </button>
+                            <button onClick={resetPasswordChange} className="btn btn-light fw-bold px-4">Отмена</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="d-grid gap-3">
+                          <div className="bg-success bg-opacity-10 text-success p-3 rounded-3 small fw-bold d-flex gap-2 align-items-center mb-0">
+                            <MailCheck size={18}/> Код отправлен на {userData?.email}
+                          </div>
+                          <div>
+                            <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Код из письма</label>
+                            <input required type="text" maxLength={4} value={changeCode} onChange={e => setChangeCode(e.target.value)} className="form-control rounded-3 bg-body-tertiary border-0 py-3 px-4 shadow-none fw-black text-center letter-spacing-lg" placeholder="0000" />
+                          </div>
+                          <div className="d-flex gap-2">
+                            <button onClick={handleChangePassword} disabled={isChangingPassword || changeCode.length !== 4} className="btn btn-danger fw-bold px-4 d-flex align-items-center gap-2">
+                              {isChangingPassword ? <span className="spinner-border spinner-border-sm"></span> : <><Check size={16} /> Подтвердить</>}
+                            </button>
+                            <button onClick={() => setPasswordStep('input')} className="btn btn-light fw-bold px-4">Назад</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="border-top pt-5 mt-4">
@@ -613,6 +842,7 @@ export const ProfilePage = () => {
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--bs-secondary-color); border-radius: 10px; opacity: 0.5; }
+        .letter-spacing-lg { letter-spacing: 0.5em; }
       `}</style>
     </div>
   );

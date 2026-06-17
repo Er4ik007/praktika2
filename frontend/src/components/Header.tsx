@@ -6,6 +6,7 @@ import { Utensils, X, Menu as MenuIcon, Moon, Sun, User } from 'lucide-react';
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const navigate = useNavigate();
 
   // Достаем имя пользователя из памяти браузера (сохранено при логине)
@@ -15,6 +16,17 @@ export const Header = () => {
     document.documentElement.setAttribute('data-bs-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token || !userName) return;
+    fetch('http://localhost:8000/api/users/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.avatar) setUserAvatar(data.avatar); })
+      .catch(() => {});
+  }, [userName]);
 
   const toggleTheme = (event: React.MouseEvent<HTMLButtonElement>) => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
@@ -73,12 +85,17 @@ export const Header = () => {
           
           {/* === УМНАЯ КНОПКА АВТОРИЗАЦИИ ДЛЯ ПК === */}
           {userName ? (
-            // Пользователь вошел: Кнопка Профиля
-            <Link 
+            <Link
               to="/profile"
-              className="btn btn-sm btn-danger rounded-pill fw-bold px-3 d-none d-sm-flex align-items-center gap-2"
+              className="d-none d-sm-flex align-items-center gap-2 text-decoration-none"
             >
-              <User size={16} /> {userName}
+              {userAvatar ? (
+                <img src={userAvatar} alt={userName} className="rounded-circle" style={{ width: '36px', height: '36px', objectFit: 'cover' }} />
+              ) : (
+                <div className="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center fw-bold" style={{ width: '36px', height: '36px', fontSize: '14px' }}>
+                  {userName.charAt(0).toUpperCase()}
+                </div>
+              )}
             </Link>
           ) : (
             // Пользователь НЕ вошел: Кнопка Войти
@@ -117,12 +134,19 @@ export const Header = () => {
               {/* === УМНАЯ КНОПКА АВТОРИЗАЦИИ ДЛЯ МОБИЛОК === */}
               <li className="nav-item mt-3 pt-3 border-top">
                 {userName ? (
-                  <Link 
-                    to="/profile" 
-                    onClick={() => setIsMenuOpen(false)} 
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsMenuOpen(false)}
                     className="btn btn-danger w-100 rounded-3 py-2 fw-bold d-flex justify-content-center align-items-center gap-2"
                   >
-                    <User size={18} /> Мой профиль ({userName})
+                    {userAvatar ? (
+                      <img src={userAvatar} alt={userName} className="rounded-circle" style={{ width: '24px', height: '24px', objectFit: 'cover' }} />
+                    ) : (
+                      <span className="bg-white text-danger rounded-circle d-inline-flex justify-content-center align-items-center fw-bold" style={{ width: '24px', height: '24px', fontSize: '12px' }}>
+                        {userName.charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    Мой профиль
                   </Link>
                 ) : (
                   <button 

@@ -13,8 +13,9 @@ class User(Base):
     name = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    phone = Column(String(50), nullable=True) 
-    
+    phone = Column(String(50), nullable=True)
+    avatar = Column(Text, nullable=True)
+
     # НОВЫЕ ПОЛЯ ДЛЯ ВОССТАНОВЛЕНИЯ ПАРОЛЯ
     reset_code = Column(String(10), nullable=True)
     reset_code_expires = Column(DateTime(timezone=True), nullable=True)

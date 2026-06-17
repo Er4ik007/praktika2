@@ -26,6 +26,7 @@ class UserResponse(BaseModel):
     name: str
     email: str
     phone: Optional[str] = None
+    avatar: Optional[str] = None
 
     class Config:
         from_attributes = True  # Позволяет Pydantic читать данные из базы SQLAlchemy
@@ -73,5 +74,12 @@ class ForgotPassword(BaseModel):
 
 class ResetPassword(BaseModel):
     email: str
+    code: str
+    new_password: str = Field(..., min_length=6, max_length=50)
+
+class SendChangeCode(BaseModel):
+    pass
+
+class ChangePassword(BaseModel):
     code: str
     new_password: str = Field(..., min_length=6, max_length=50)
