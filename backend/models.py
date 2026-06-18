@@ -51,6 +51,7 @@ class Review(Base):
     id = Column(Integer, primary_key=True, index=True)
     rating = Column(Integer, nullable=False) 
     text = Column(Text, nullable=False)
+    photos = Column(Text, nullable=True)
     venue_id = Column(String(50), nullable=False, index=True) 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

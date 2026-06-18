@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, MapPin, ChevronLeft, CreditCard, Clock, Instagram, Send, X, ExternalLink } from 'lucide-react';
+import { Star, MapPin, ChevronLeft, CreditCard, Clock, Instagram, Send, X, ExternalLink, ImagePlus, Trash2, LogIn } from 'lucide-react';
 import { venues } from '../data';
 import { BookingForm } from '../components/BookingForm';
 import { useLang } from '../i18n/LanguageContext';
 
-const initialReviews = [
-  { id: 1, author: 'Анна С.', rating: 5, text: 'Потрясающее место! Обязательно придем еще раз.', date: 'Вчера' },
-  { id: 2, author: 'Максим', rating: 4, text: 'Вкусная еда.', date: '3 дня назад' }
-];
+interface Review {
+  id: number;
+  rating: number;
+  text: string;
+  photos: string[] | null;
+  venue_id: string;
+  created_at: string;
+  user_name: string;
+  user_avatar: string | null;
+  user_id: number;
+}
 
 export const VenueDetailPage = () => {
   const { id } = useParams();
@@ -18,11 +25,23 @@ export const VenueDetailPage = () => {
   const { t, tv } = useLang();
 
   const [activeBranchId, setActiveBranchId] = useState<string>('');
-  const [reviews, setReviews] = useState(initialReviews);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
   const [newReviewText, setNewReviewText] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
-  const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewPhotos, setReviewPhotos] = useState<string[]>([]);
+  const [reviewFiles, setReviewFiles] = useState<File[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [reviewSuccess, setReviewSuccess] = useState('');
   const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [deleteReviewId, setDeleteReviewId] = useState<number | null>(null);
+
+  const token = localStorage.getItem('token');
+  const currentUserId = token ? JSON.parse(atob(token.split('.')[1])).sub : null;
 
   useEffect(() => {
     if (venue && venue.branches.length > 0) {
@@ -32,33 +51,144 @@ export const VenueDetailPage = () => {
   }, [venue]);
 
   useEffect(() => {
+    if (id) {
+      fetch(`http://localhost:8000/api/reviews/${id}`)
+        .then(res => res.json())
+        .then(data => { setReviews(data); setReviewsLoading(false); })
+        .catch(() => setReviewsLoading(false));
+    }
+  }, [id]);
+
+  useEffect(() => {
     if (activeImage) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = 'unset';
     return () => { document.body.style.overflow = 'unset'; };
   }, [activeImage]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') setActiveImage(null); };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setActiveImage(null); }
+      if (lightboxPhotos.length > 0) {
+        if (e.key === 'ArrowLeft') setLightboxIndex(prev => (prev > 0 ? prev - 1 : lightboxPhotos.length - 1));
+        if (e.key === 'ArrowRight') setLightboxIndex(prev => (prev < lightboxPhotos.length - 1 ? prev + 1 : 0));
+      }
+    };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [lightboxPhotos.length]);
 
   if (!venue) return <div className="container py-5 my-5 text-center"><h1 className="display-4 fw-bold">{t('venue.notFound')}</h1></div>;
 
   const activeBranch = venue.branches.find(b => b.id === activeBranchId) || venue.branches[0];
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (reviewPhotos.length + files.length > 3) {
+      setReviewError(t('review.maxPhotos'));
+      return;
+    }
+    files.forEach(file => {
+      if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) return;
+      if (file.size > 5 * 1024 * 1024) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        setReviewPhotos(prev => [...prev, reader.result as string]);
+        setReviewFiles(prev => [...prev, file]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  };
+
+  const removeReviewPhoto = (index: number) => {
+    setReviewPhotos(prev => prev.filter((_, i) => i !== index));
+    setReviewFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newReviewText.trim()) return;
-    const newReview = { id: Date.now(), author: 'Вы', rating: newReviewRating, text: newReviewText, date: 'Только что' };
-    setReviews([newReview, ...reviews]);
-    setNewReviewText('');
-    setNewReviewRating(5);
-    setIsReviewSubmitted(true);
-    setTimeout(() => setIsReviewSubmitted(false), 3000);
+    if (!newReviewText.trim() || !token) return;
+    setIsSubmitting(true);
+    setReviewError('');
+
+    try {
+      const res = await fetch('http://localhost:8000/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ venue_id: id, rating: newReviewRating, text: newReviewText })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Ошибка');
+
+      if (reviewFiles.length > 0) {
+        const formData = new FormData();
+        reviewFiles.forEach(f => formData.append('files', f));
+        const photoRes = await fetch(`http://localhost:8000/api/reviews/photos?review_id=${data.id}`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        if (photoRes.ok) {
+          const photoData = await photoRes.json();
+          data.photos = photoData.photos;
+        }
+      }
+
+      setReviews([data, ...reviews]);
+      setNewReviewText('');
+      setNewReviewRating(5);
+      setReviewPhotos([]);
+      setReviewFiles([]);
+      setReviewSuccess(t('review.success'));
+      setTimeout(() => setReviewSuccess(''), 3000);
+    } catch (err: any) {
+      setReviewError(err.message || 'Ошибка');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: number) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setReviews(prev => prev.filter(r => r.id !== reviewId));
+        setDeleteReviewId(null);
+      }
+    } catch (err) { console.error(err); }
+  };
+
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diff = now.getTime() - date.getTime();
+      const mins = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(diff / 86400000);
+      if (mins < 1) return t('review.justNow');
+      if (mins < 60) return `${mins} ${t('review.minutesAgo')}`;
+      if (hours < 24) return `${hours} ${t('review.hoursAgo')}`;
+      if (days < 30) return `${days} ${t('review.daysAgo')}`;
+      return date.toLocaleDateString();
+    } catch { return dateStr; }
+  };
+
+  const openLightbox = (photos: string[], index: number) => {
+    setLightboxPhotos(photos);
+    setLightboxIndex(index);
+    setActiveImage(photos[index]);
   };
 
   const venueType = t(`venue.${venue.type}`);
+
+  const avgRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+    : null;
 
   return (
     <div className="pt-5">
@@ -83,7 +213,8 @@ export const VenueDetailPage = () => {
               <div className="d-flex flex-wrap gap-3 mb-4">
                 <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill">
                   <Star size={18} className="text-warning fill-warning" />
-                  <span className="fw-black text-body-emphasis">{venue.rating}</span>
+                  <span className="fw-black text-body-emphasis">{avgRating || venue.rating}</span>
+                  <span className="text-body-secondary small">({reviews.length})</span>
                 </div>
                 <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill fw-bold">
                   <CreditCard size={18} className="text-body-secondary" />
@@ -197,7 +328,7 @@ export const VenueDetailPage = () => {
                     <div className="row g-2">
                       {activeBranch.gallery.map((img, idx) => (
                         <div key={idx} className="col-6">
-                          <div onClick={() => setActiveImage(img)} className="ratio ratio-4x3 overflow-hidden rounded-3 border cursor-zoom-in">
+                          <div onClick={() => { setLightboxPhotos(activeBranch.gallery); setLightboxIndex(idx); setActiveImage(img); }} className="ratio ratio-4x3 overflow-hidden rounded-3 border cursor-zoom-in">
                             <img src={img} alt="Интерьер" className="object-fit-cover gallery-thumb" />
                           </div>
                         </div>
@@ -218,14 +349,190 @@ export const VenueDetailPage = () => {
       <section className="container pb-5 mb-5" style={{ maxWidth: '1000px' }}>
         <div className="card bg-body-tertiary border-0 rounded-4 p-4 p-md-5">
           <h3 className="display-6 fw-black italic text-uppercase tracking-tighter mb-5 text-body-emphasis">{t('venue.reviews')}</h3>
+
+          {token ? (
+            <form onSubmit={handleReviewSubmit} className="mb-5 p-4 bg-body rounded-4 border">
+              {reviewError && <div className="alert alert-danger small fw-bold text-center border-0 rounded-3 mb-3">{reviewError}</div>}
+              {reviewSuccess && <div className="alert alert-success small fw-bold text-center border-0 rounded-3 mb-3">{reviewSuccess}</div>}
+
+              <div className="mb-3">
+                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block">{t('review.yourRating')}</label>
+                <div className="d-flex gap-1">
+                  {[1, 2, 3, 4, 5].map(star => {
+                    const isActive = star <= (hoverRating || newReviewRating);
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setNewReviewRating(star)}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        className="btn p-1 border-0 bg-transparent star-btn"
+                      >
+                        <Star
+                          size={32}
+                          strokeWidth={isActive ? 0 : 1.5}
+                          fill={isActive ? '#facc15' : 'none'}
+                          className={`star-icon ${isActive ? 'star-active' : 'star-inactive'}`}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block">{t('review.yourReview')}</label>
+                <textarea
+                  value={newReviewText}
+                  onChange={e => setNewReviewText(e.target.value)}
+                  className="form-control rounded-3 bg-body-tertiary border-0 py-3 px-4 shadow-none fw-medium"
+                  style={{ minHeight: '100px' }}
+                  placeholder={t('review.placeholder')}
+                  maxLength={1000}
+                />
+              </div>
+
+              <div className="mb-3">
+                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block">{t('review.photos')} ({reviewPhotos.length}/3)</label>
+                <div className="d-flex gap-2 flex-wrap">
+                  {reviewPhotos.map((photo, idx) => (
+                    <div key={idx} className="position-relative" style={{ width: '80px', height: '80px' }}>
+                      <img src={photo} alt="" className="w-100 h-100 object-fit-cover rounded-3 border" />
+                      <button
+                        type="button"
+                        onClick={() => removeReviewPhoto(idx)}
+                        className="btn btn-sm btn-danger rounded-circle position-absolute d-flex align-items-center justify-content-center"
+                        style={{ top: '-6px', right: '-6px', width: '22px', height: '22px' }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  {reviewPhotos.length < 3 && (
+                    <label className="d-flex align-items-center justify-content-center rounded-3 border border-dashed cursor-pointer" style={{ width: '80px', height: '80px' }}>
+                      <ImagePlus size={24} className="text-body-secondary" />
+                      <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple onChange={handlePhotoSelect} className="d-none" />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <button type="submit" disabled={isSubmitting || !newReviewText.trim()} className="btn btn-danger fw-bold px-4 d-flex align-items-center gap-2">
+                {isSubmitting ? <span className="spinner-border spinner-border-sm"></span> : <><Send size={16} /> {t('review.submit')}</>}
+              </button>
+            </form>
+          ) : (
+            <div className="text-center mb-5 p-4 bg-body rounded-4 border">
+              <p className="text-body-secondary mb-3">{t('review.loginToLeave')}</p>
+              <button onClick={() => navigate('/login')} className="btn btn-danger fw-bold px-4 d-flex align-items-center gap-2 mx-auto">
+                <LogIn size={16} /> {t('review.login')}
+              </button>
+            </div>
+          )}
+
+          {reviewsLoading ? (
+            <div className="text-center py-4"><div className="spinner-border text-danger"></div></div>
+          ) : reviews.length === 0 ? (
+            <div className="text-center py-5">
+              <Star size={64} className="text-secondary opacity-25 mb-4 mx-auto" />
+              <h4 className="fw-bold text-body-emphasis">{t('review.noReviews')}</h4>
+              <p className="text-body-secondary">{t('review.beFirst')}</p>
+            </div>
+          ) : (
+            <div className="d-grid gap-3">
+              {reviews.map(review => (
+                <div key={review.id} className="bg-body rounded-4 p-4 border">
+                  <div className="d-flex justify-content-between align-items-start mb-3">
+                    <div className="d-flex align-items-center gap-3">
+                      {review.user_avatar ? (
+                        <img src={review.user_avatar} alt="" className="rounded-circle" style={{ width: '44px', height: '44px', objectFit: 'cover' }} />
+                      ) : (
+                        <div className="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center fw-bold" style={{ width: '44px', height: '44px' }}>
+                          {review.user_name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <div className="fw-bold text-body-emphasis">{review.user_name}</div>
+                        <div className="d-flex align-items-center gap-2">
+                          <div className="d-flex gap-1">
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <Star key={s} size={14} fill={s <= review.rating ? '#facc15' : 'none'} strokeWidth={s <= review.rating ? 0 : 1.5} className={s <= review.rating ? 'text-warning' : 'text-body-secondary'} />
+                            ))}
+                          </div>
+                          <span className="text-body-secondary small">{formatDate(review.created_at)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {String(currentUserId) === String(review.user_id) && (
+                      <div className="position-relative">
+                        <button
+                          onClick={() => setDeleteReviewId(deleteReviewId === review.id ? null : review.id)}
+                          className="btn btn-sm btn-light rounded-circle p-2"
+                        >
+                          <Trash2 size={14} className="text-body-secondary" />
+                        </button>
+                        {deleteReviewId === review.id && (
+                          <div className="position-absolute end-0 mt-1 bg-body border rounded-3 shadow-lg p-3" style={{ zIndex: 100, minWidth: '160px' }}>
+                            <p className="small fw-bold text-body-emphasis mb-2">{t('review.confirmDelete')}</p>
+                            <div className="d-flex gap-2">
+                              <button onClick={() => handleDeleteReview(review.id)} className="btn btn-sm btn-danger fw-bold flex-grow-1">{t('review.delete')}</button>
+                              <button onClick={() => setDeleteReviewId(null)} className="btn btn-sm btn-light fw-bold flex-grow-1">{t('review.cancel')}</button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-body-secondary mb-3">{review.text}</p>
+                  {review.photos && review.photos.length > 0 && (
+                    <div className="d-flex gap-2 flex-wrap">
+                      {review.photos.map((photo, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => openLightbox(review.photos!, idx)}
+                          className="overflow-hidden rounded-3 cursor-zoom-in"
+                          style={{ width: '80px', height: '80px' }}
+                        >
+                          <img src={photo} alt="" className="w-100 h-100 object-fit-cover gallery-thumb" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       <AnimatePresence>
-        {activeImage && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setActiveImage(null)} className="lightbox-overlay">
+        {activeImage && lightboxPhotos.length > 0 && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setActiveImage(null); setLightboxPhotos([]); }} className="lightbox-overlay">
             <button className="lightbox-close-btn"><X size={32} className="text-white" /></button>
+            {lightboxPhotos.length > 1 && (
+              <>
+                <button onClick={(e) => { e.stopPropagation(); setLightboxIndex(prev => (prev > 0 ? prev - 1 : lightboxPhotos.length - 1)); setActiveImage(lightboxPhotos[(lightboxIndex > 0 ? lightboxIndex - 1 : lightboxPhotos.length - 1)]); }} className="position-absolute start-0 top-50 translate-middle-y ms-4 btn btn-light rounded-circle p-3" style={{ zIndex: 10001 }}>
+                  <ChevronLeft size={24} />
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); const next = (lightboxIndex < lightboxPhotos.length - 1 ? lightboxIndex + 1 : 0); setLightboxIndex(next); setActiveImage(lightboxPhotos[next]); }} className="position-absolute end-0 top-50 translate-middle-y me-4 btn btn-light rounded-circle p-3" style={{ zIndex: 10001, transform: 'translate(50%, -50%) rotate(180deg)' }}>
+                  <ChevronLeft size={24} />
+                </button>
+              </>
+            )}
             <motion.img initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} src={activeImage} className="lightbox-image" onClick={(e) => e.stopPropagation()} />
+            {lightboxPhotos.length > 1 && (
+              <div className="position-absolute bottom-0 mb-4 d-flex gap-2" onClick={(e) => e.stopPropagation()}>
+                {lightboxPhotos.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => { setLightboxIndex(idx); setActiveImage(lightboxPhotos[idx]); }}
+                    className={`rounded-circle border-0 ${idx === lightboxIndex ? 'bg-white' : 'bg-white bg-opacity-50'}`}
+                    style={{ width: '10px', height: '10px' }}
+                  />
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -241,7 +548,7 @@ export const VenueDetailPage = () => {
         .gallery-thumb:hover { transform: scale(1.08); filter: brightness(0.9); }
         .lightbox-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: zoom-out; backdrop-filter: blur(5px); }
         .lightbox-image { max-width: 90%; max-height: 85vh; object-fit: contain; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); cursor: default; }
-        .lightbox-close-btn { position: absolute; top: 20px; right: 20px; background: transparent; border: 0; padding: 10px; cursor: pointer; transition: transform 0.2s ease; }
+        .lightbox-close-btn { position: absolute; top: 20px; right: 20px; background: transparent; border: 0; padding: 10px; cursor: pointer; transition: transform 0.2s ease; z-index: 10001; }
         .lightbox-close-btn:hover { transform: scale(1.1); }
         .group-map .map-bg { transition: transform 0.7s ease; filter: grayscale(100%); }
         .group-map:hover .map-bg { transform: scale(1.1); filter: grayscale(0%); }
@@ -251,6 +558,13 @@ export const VenueDetailPage = () => {
         .group-map:hover .map-overlay { opacity: 1; }
         .drop-shadow-md { filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3)); }
         .hover-danger-light:hover { background-color: #fee2e2 !important; color: #ef4444 !important; }
+        .border-dashed { border-style: dashed !important; border-width: 2px !important; }
+        .star-btn { transition: transform 0.15s ease; }
+        .star-btn:hover { transform: scale(1.2); }
+        .star-btn:active { transform: scale(0.9); }
+        .star-icon { transition: fill 0.2s ease, stroke 0.2s ease, transform 0.2s ease, filter 0.2s ease; }
+        .star-active { filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.6)); }
+        .star-inactive { filter: none; }
       `}</style>
     </div>
   );

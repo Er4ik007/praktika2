@@ -189,6 +189,10 @@ export const translations: Translations = {
   'profile.cancelReasonDesc': { ru: 'Укажите причину отмены (необязательно):', be: 'Пазначце прычыну адмены (неабавязкова):', en: 'Specify the reason for cancellation (optional):' },
   'profile.cancelConfirm': { ru: 'Да, отменить', be: 'Так, адмяніць', en: 'Yes, cancel' },
   'profile.cancelKeep': { ru: 'Нет, оставить', be: 'Не, пакінуць', en: 'No, keep' },
+  'profile.reviews': { ru: 'Мои отзывы', be: 'Мае водгукі', en: 'My Reviews' },
+  'profile.myReviews': { ru: 'Мои отзывы', be: 'Мае водгукі', en: 'My Reviews' },
+  'profile.noReviews': { ru: 'Пока нет отзывов', be: 'Пакуль няма водгукаў', en: 'No reviews yet' },
+  'profile.noReviewsDesc': { ru: 'Вы еще не оставляли ни одного отзыва.', be: 'Вы яшчэ не пакіналі ніводнага водгуку.', en: 'You haven\'t left any reviews yet.' },
 
   // Footer
   'footer.desc': { ru: 'Ваш надежный гид по лучшим заведениям Минска. Мы любим свой город и его кухню.', be: 'Ваш надзейны гід па лепшых установах Мінска. Мы любім свой горад і яго кухню.', en: 'Your reliable guide to the best venues in Minsk. We love our city and its cuisine.' },
@@ -214,6 +218,26 @@ export const translations: Translations = {
   'venue.interior': { ru: 'Интерьер', be: 'Інтэр\'ер', en: 'Interior' },
   'venue.reviews': { ru: 'Отзывы гостей', be: 'Водгукі гасцей', en: 'Guest Reviews' },
   'venue.notFound': { ru: 'Не найдено', be: 'Не знойдена', en: 'Not found' },
+
+  // Review form
+  'review.yourRating': { ru: 'Ваша оценка', be: 'Ваша ацэнка', en: 'Your rating' },
+  'review.yourReview': { ru: 'Ваш отзыв', be: 'Ваш водгук', en: 'Your review' },
+  'review.placeholder': { ru: 'Расскажите о вашем опыте...', be: 'Раскажыце пра ваш досвед...', en: 'Tell us about your experience...' },
+  'review.photos': { ru: 'Фотографии', be: 'Фотаздымкі', en: 'Photos' },
+  'review.submit': { ru: 'Опубликовать отзыв', be: 'Апублікаваць водгук', en: 'Post review' },
+  'review.success': { ru: 'Отзыв опубликован!', be: 'Водгук апублікаваны!', en: 'Review posted!' },
+  'review.maxPhotos': { ru: 'Максимум 3 фотографии', be: 'Максімум 3 фотаздымкі', en: 'Maximum 3 photos' },
+  'review.loginToLeave': { ru: 'Войдите, чтобы оставить отзыв', be: 'Увайдзіце, каб пакінуць водгук', en: 'Sign in to leave a review' },
+  'review.login': { ru: 'Войти', be: 'Увайсці', en: 'Sign in' },
+  'review.noReviews': { ru: 'Пока нет отзывов', be: 'Пакуль няма водгукаў', en: 'No reviews yet' },
+  'review.beFirst': { ru: 'Будьте первым, кто оставит отзыв!', be: 'Будзьце першым, хто пакіне водгук!', en: 'Be the first to leave a review!' },
+  'review.confirmDelete': { ru: 'Удалить отзыв?', be: 'Выдаліць водгук?', en: 'Delete review?' },
+  'review.delete': { ru: 'Да', be: 'Так', en: 'Yes' },
+  'review.cancel': { ru: 'Нет', be: 'Не', en: 'No' },
+  'review.justNow': { ru: 'Только что', be: 'Толькі што', en: 'Just now' },
+  'review.minutesAgo': { ru: 'мин. назад', be: 'хв. таму', en: 'min ago' },
+  'review.hoursAgo': { ru: 'ч. назад', be: 'гадз. таму', en: 'h ago' },
+  'review.daysAgo': { ru: 'дн. назад', be: 'дз. таму', en: 'd ago' },
 
   // Booking form
   'booking.title': { ru: 'Бронирование', be: 'Браніраванне', en: 'Booking' },

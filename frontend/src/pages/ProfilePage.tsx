@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, LogOut, Settings, Heart, CalendarClock, AlertTriangle, Save, Trash2, ChevronDown, X, Check, Clock, MapPin, Users, Phone, History, Filter, Camera, KeyRound, MailCheck } from 'lucide-react';
+import { User, LogOut, Settings, Heart, CalendarClock, AlertTriangle, Save, Trash2, ChevronDown, X, Check, Clock, MapPin, Users, Phone, History, Filter, Camera, KeyRound, MailCheck, Star, MessageSquare } from 'lucide-react';
 import { venues } from '../data';
 import { VenueCard } from '../components/VenueCard';
 import { useLang } from '../i18n/LanguageContext';
@@ -43,6 +43,18 @@ interface Booking {
   created_at: string;
 }
 
+interface Review {
+  id: number;
+  rating: number;
+  text: string;
+  photos: string[] | null;
+  venue_id: string;
+  created_at: string;
+  user_name: string;
+  user_avatar: string | null;
+  user_id: number;
+}
+
 export const ProfilePage = () => {
   const navigate = useNavigate();
   const { t, tv } = useLang();
@@ -52,6 +64,9 @@ export const ProfilePage = () => {
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [myReviews, setMyReviews] = useState<Review[]>([]);
+  const [myReviewsLoading, setMyReviewsLoading] = useState(false);
+  const [deleteReviewId, setDeleteReviewId] = useState<number | null>(null);
   const [cancelBookingId, setCancelBookingId] = useState<number | null>(null);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
   const [bookingSubTab, setBookingSubTab] = useState<'active' | 'history'>('active');
@@ -143,6 +158,37 @@ export const ProfilePage = () => {
     finally { setBookingsLoading(false); }
   };
 
+  const fetchMyReviews = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return Promise.resolve();
+    setMyReviewsLoading(true);
+    return fetch('http://localhost:8000/api/reviews/my', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => {
+      if (res.ok) return res.json();
+      return [];
+    })
+    .then(data => { setMyReviews(data); })
+    .catch(err => { console.error(err); })
+    .finally(() => { setMyReviewsLoading(false); });
+  };
+
+  const handleDeleteMyReview = async (reviewId: number) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await fetch(`http://localhost:8000/api/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setMyReviews(prev => prev.filter(r => r.id !== reviewId));
+        setDeleteReviewId(null);
+      }
+    } catch (err) { console.error(err); }
+  };
+
   const handleCancelBooking = async (bookingId: number, reason?: string) => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -209,6 +255,7 @@ export const ProfilePage = () => {
       setFavoriteIds(favData);
       return fetchBookings();
     })
+    .then(() => fetchMyReviews())
     .then(() => {
       setIsLoading(false);
     })
@@ -218,6 +265,16 @@ export const ProfilePage = () => {
       navigate('/login');
     });
   }, [navigate]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && localStorage.getItem('token')) {
+        fetchMyReviews();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -522,6 +579,9 @@ export const ProfilePage = () => {
               </button>
               <button onClick={() => setActiveTab('bookings')} className={`btn text-start fw-bold p-3 rounded-3 ${activeTab === 'bookings' ? 'btn-danger text-white' : 'btn-light bg-body text-body-secondary hover-bg-light'}`}>
                 <CalendarClock size={18} className="me-2" /> {t('profile.bookings')}
+              </button>
+              <button onClick={() => { setActiveTab('reviews'); fetchMyReviews(); }} className={`btn text-start fw-bold p-3 rounded-3 ${activeTab === 'reviews' ? 'btn-danger text-white' : 'btn-light bg-body text-body-secondary hover-bg-light'}`}>
+                <MessageSquare size={18} className="me-2" /> {t('profile.reviews')}
               </button>
               <button onClick={() => setActiveTab('info')} className={`btn text-start fw-bold p-3 rounded-3 ${activeTab === 'info' ? 'btn-danger text-white' : 'btn-light bg-body text-body-secondary hover-bg-light'}`}>
                 <Settings size={18} className="me-2" /> {t('profile.settings')}
@@ -912,6 +972,71 @@ export const ProfilePage = () => {
                     </div>
                   );
                 })()}
+              </div>
+            )}
+
+            {activeTab === 'reviews' && (
+              <div>
+                <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-4 text-body-emphasis">{t('profile.myReviews')}</h2>
+
+                {myReviewsLoading ? (
+                  <div className="text-center py-5"><div className="spinner-border text-danger"></div></div>
+                ) : myReviews.length === 0 ? (
+                  <div className="text-center py-5">
+                    <MessageSquare size={64} className="text-secondary opacity-25 mb-4 mx-auto" />
+                    <h3 className="h4 fw-bold text-body-emphasis">{t('profile.noReviews')}</h3>
+                    <p className="text-body-secondary">{t('profile.noReviewsDesc')}</p>
+                  </div>
+                ) : (
+                  <div className="d-grid gap-3">
+                    {myReviews.map(review => (
+                      <div key={review.id} className="card rounded-4 border-0 shadow-sm overflow-hidden">
+                        <div className="card-body p-4">
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                              <h5 className="fw-bold text-body-emphasis mb-1">
+                                {tv(`venue.name.${review.venue_id}`, review.venue_id)}
+                              </h5>
+                              <div className="d-flex align-items-center gap-2">
+                                <div className="d-flex gap-1">
+                                  {[1, 2, 3, 4, 5].map(s => (
+                                    <Star key={s} size={14} className={s <= review.rating ? 'text-warning fill-warning' : 'text-body-secondary'} />
+                                  ))}
+                                </div>
+                                <span className="text-body-secondary small">{new Date(review.created_at).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                            <div className="position-relative">
+                              <button
+                                onClick={() => setDeleteReviewId(deleteReviewId === review.id ? null : review.id)}
+                                className="btn btn-sm btn-light rounded-circle p-2"
+                              >
+                                <Trash2 size={14} className="text-body-secondary" />
+                              </button>
+                              {deleteReviewId === review.id && (
+                                <div className="position-absolute end-0 mt-1 bg-body border rounded-3 shadow-lg p-3" style={{ zIndex: 100, minWidth: '160px' }}>
+                                  <p className="small fw-bold text-body-emphasis mb-2">{t('review.confirmDelete')}</p>
+                                  <div className="d-flex gap-2">
+                                    <button onClick={() => handleDeleteMyReview(review.id)} className="btn btn-sm btn-danger fw-bold flex-grow-1">{t('review.delete')}</button>
+                                    <button onClick={() => setDeleteReviewId(null)} className="btn btn-sm btn-light fw-bold flex-grow-1">{t('review.cancel')}</button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-body-secondary mb-0">{review.text}</p>
+                          {review.photos && review.photos.length > 0 && (
+                            <div className="d-flex gap-2 flex-wrap mt-3">
+                              {review.photos.map((photo, idx) => (
+                                <img key={idx} src={photo} alt="" className="rounded-3" style={{ width: '60px', height: '60px', objectFit: 'cover' }} />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

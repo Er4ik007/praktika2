@@ -83,3 +83,22 @@ class SendChangeCode(BaseModel):
 class ChangePassword(BaseModel):
     code: str
     new_password: str = Field(..., min_length=6, max_length=50)
+
+class ReviewCreate(BaseModel):
+    venue_id: str
+    rating: int = Field(..., ge=1, le=5)
+    text: str = Field(..., min_length=1, max_length=1000)
+
+class ReviewResponse(BaseModel):
+    id: int
+    rating: int
+    text: str
+    photos: Optional[list[str]] = None
+    venue_id: str
+    created_at: str
+    user_name: str
+    user_avatar: Optional[str] = None
+    user_id: int
+
+    class Config:
+        from_attributes = True
