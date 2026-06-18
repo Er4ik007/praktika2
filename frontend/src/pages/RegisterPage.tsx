@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { useLang } from '../i18n/LanguageContext';
 
 const COUNTRY_CODES = [
   { code: '+375', countryCode: 'by', label: 'Беларусь', mask: '(XX) XXX-XX-XX', regex: /^\(\d{2}\) \d{3}-\d{2}-\d{2}$/ },
@@ -18,18 +19,18 @@ export const RegisterPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useLang();
 
-  // ТЕЛЕФОН ТЕПЕРЬ ИЗНАЧАЛЬНО ВНУТРИ FORMDATA (как имя и емейл)
   const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '' });
   const [showPassword, setShowPassword] = useState(false);
 
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
-  const [rawPhone, setRawPhone] = useState(''); 
+  const [rawPhone, setRawPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { document.title = "Регистрация"; }, []);
+  useEffect(() => { document.title = t('nav.register') || 'Регистрация'; }, [t]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -61,19 +62,16 @@ export const RegisterPage = () => {
     const inputValue = e.target.value;
     const formatted = formatPhoneNumber(inputValue, selectedCountry.mask);
     setRawPhone(formatted);
-    
-    // Сразу сохраняем полный номер телефона в formData!
     setFormData({
       ...formData,
       phone: formatted.length > 0 ? `${selectedCountry.code} ${formatted}` : ''
     });
-
     if (phoneError) setPhoneError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (rawPhone.length > 0 && !selectedCountry.regex.test(rawPhone)) {
       setPhoneError('Введите полный номер телефона');
       return;
@@ -82,13 +80,10 @@ export const RegisterPage = () => {
     setIsLoading(true);
     setError('');
 
-    // Приводим пустую строку телефона к null для базы данных перед отправкой
     const finalData = {
       ...formData,
       phone: formData.phone ? formData.phone : null
     };
-
-    console.log("=== ЧТО ОТПРАВЛЯЕТ REACT ==>", finalData);
 
     try {
       const response = await fetch('http://localhost:8000/api/register', {
@@ -113,29 +108,28 @@ export const RegisterPage = () => {
         {submitted ? (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-4">
             <CheckCircle className="text-success mb-3" size={60} />
-            <h2 className="h4 fw-bold text-body-emphasis mb-3">Регистрация успешна!</h2>
-            <Link to="/login" className="btn btn-primary-custom rounded-pill px-5 py-2">Войти</Link>
+            <h2 className="h4 fw-bold text-body-emphasis mb-3">{t('register.success')}</h2>
+            <Link to="/login" className="btn btn-primary-custom rounded-pill px-5 py-2">{t('register.successGo')}</Link>
           </motion.div>
         ) : (
           <>
-            <div className="text-center mb-4"><h1 className="h3 fw-black text-body-emphasis uppercase tracking-tighter">Регистрация</h1></div>
+            <div className="text-center mb-4"><h1 className="h3 fw-black text-body-emphasis uppercase tracking-tighter">{t('register.title')}</h1></div>
             {error && <div className="alert alert-danger small fw-bold text-center border-0 rounded-3 mb-4">{error}</div>}
-            
+
             <form onSubmit={handleSubmit} className="d-grid gap-3">
               <div>
-                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Ваше имя</label>
+                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">{t('register.name')}</label>
                 <input required type="text" maxLength={20} value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-medium" placeholder="Алексей" />
               </div>
               <div>
                 <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Email</label>
                 <input required type="email" pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" placeholder="mail@example.com" />
               </div>
-              
-              {/* ТЕЛЕФОН С СЕЛЕКТОРОМ */}
+
               <div>
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                  <label className="text-body-secondary small fw-bold text-uppercase tracking-widest">Контактный телефон</label>
-                  <span className="text-muted small" style={{ fontSize: '0.75rem' }}>Необязательно</span>
+                  <label className="text-body-secondary small fw-bold text-uppercase tracking-widest">{t('register.phone')}</label>
+                  <span className="text-muted small" style={{ fontSize: '0.75rem' }}>{t('register.phoneOptional')}</span>
                 </div>
                 <div className={`d-flex rounded-3 position-relative bg-body ${phoneError ? 'border border-danger' : 'border-0'}`}>
                   <div ref={dropdownRef} className="position-relative">
@@ -150,13 +144,13 @@ export const RegisterPage = () => {
                           <ul className="list-unstyled mb-0 m-0 p-0">
                             {COUNTRY_CODES.map((country) => (
                               <li key={country.label}>
-                                <button type="button" className="btn btn-link w-100 text-start text-decoration-none text-body px-3 py-2 d-flex align-items-center gap-3 hover-bg-light" 
-                                  onClick={() => { 
-                                    setSelectedCountry(country); 
-                                    setRawPhone(''); 
-                                    setFormData({...formData, phone: ''}); // Очищаем и в главном стейте
-                                    setPhoneError(''); 
-                                    setIsDropdownOpen(false); 
+                                <button type="button" className="btn btn-link w-100 text-start text-decoration-none text-body px-3 py-2 d-flex align-items-center gap-3 hover-bg-light"
+                                  onClick={() => {
+                                    setSelectedCountry(country);
+                                    setRawPhone('');
+                                    setFormData({...formData, phone: ''});
+                                    setPhoneError('');
+                                    setIsDropdownOpen(false);
                                   }}
                                 >
                                   <img src={`https://flagcdn.com/24x18/${country.countryCode}.png`} alt={country.label} className="rounded-1 shadow-sm" style={{ width: '24px', height: '18px', objectFit: 'cover' }} />
@@ -176,17 +170,17 @@ export const RegisterPage = () => {
               </div>
 
               <div>
-                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Пароль</label>
+                <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">{t('register.password')}</label>
                 <div className="position-relative">
-                  <input required minLength={6} maxLength={50} type={showPassword ? "text" : "password"} value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" placeholder="Минимум 6 символов" />
+                  <input required minLength={6} maxLength={50} type={showPassword ? "text" : "password"} value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none" placeholder={t('common.min6chars')} />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="btn border-0 position-absolute top-50 end-0 translate-middle-y px-3 text-secondary">
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
               </div>
-              <button type="submit" disabled={isLoading} className="btn btn-primary-custom w-100 py-3 mt-2">Создать аккаунт</button>
+              <button type="submit" disabled={isLoading} className="btn btn-primary-custom w-100 py-3 mt-2">{t('register.submit')}</button>
             </form>
-            <div className="text-center mt-4 pt-3 border-top"><span className="text-body-secondary small">Уже есть аккаунт? </span><Link to="/login" className="text-danger fw-bold small text-decoration-none hover-underline">Войти</Link></div>
+            <div className="text-center mt-4 pt-3 border-top"><span className="text-body-secondary small">{t('register.hasAccount')}</span><Link to="/login" className="text-danger fw-bold small text-decoration-none hover-underline">{t('register.login')}</Link></div>
           </>
         )}
       </motion.div>

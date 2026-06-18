@@ -5,38 +5,14 @@ import { ChevronRight } from 'lucide-react';
 import { venues, Venue } from '../data';
 import { VenueCard } from '../components/VenueCard';
 import { Minsk3DWidget } from '../components/Minsk3DWidget';
+import { useLang } from '../i18n/LanguageContext';
 
-const SLIDES = [
-  {
-    title: "Гастрономический Минск",
-    subtitle: "Откройте для себя лучшие вкусы столицы",
-    image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80",
-    link: "/catalog"
-  },
-  {
-    title: "Белорусская Кухня",
-    subtitle: "Традиции, драники и мачанка в лучшем исполнении",
-    image: "src/images/dran.jpg",
-    link: "/catalog?filter=belarusian"
-  },
-  {
-    title: "Рестораны",
-    subtitle: "Идеальные места для идеального ужина",
-    image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1920&q=80",
-    link: "/catalog?filter=restaurant"
-  },
-  {
-    title: "Культура Кофе",
-    subtitle: "Лучшие спешелти кофейни в центре города",
-    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1920&q=80",
-    link: "/catalog?filter=coffee"
-  },
-  {
-    title: "Атмосферные Бары",
-    subtitle: "Авторские коктейли, крафт и живая музыка",
-    image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1920&q=80",
-    link: "/catalog?filter=bar"
-  }
+const SLIDES_KEYS = [
+  { titleKey: 'home.slide1.title', subtitleKey: 'home.slide1.subtitle', image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80", link: "/catalog" },
+  { titleKey: 'home.slide2.title', subtitleKey: 'home.slide2.subtitle', image: "src/images/dran.jpg", link: "/catalog?filter=belarusian" },
+  { titleKey: 'home.slide3.title', subtitleKey: 'home.slide3.subtitle', image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1920&q=80", link: "/catalog?filter=restaurant" },
+  { titleKey: 'home.slide4.title', subtitleKey: 'home.slide4.subtitle', image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1920&q=80", link: "/catalog?filter=coffee" },
+  { titleKey: 'home.slide5.title', subtitleKey: 'home.slide5.subtitle', image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1920&q=80", link: "/catalog?filter=bar" },
 ];
 
 const FEATURED_VENUES = venues.slice(0, 3);
@@ -44,6 +20,7 @@ const FEATURED_VENUES = venues.slice(0, 3);
 export const HomePage = () => {
   const [current, setCurrent] = useState(0);
   const navigate = useNavigate();
+  const { t } = useLang();
 
   useEffect(() => {
     document.title = "Главная";
@@ -64,7 +41,7 @@ export const HomePage = () => {
           setFavorites(data);
         }
       } catch (err) {
-        console.error("Ошибка загрузки избранного", err);
+        console.error(err);
       }
     };
     fetchFavorites();
@@ -73,7 +50,6 @@ export const HomePage = () => {
   const toggleFavorite = useCallback(async (id: string) => {
     const token = localStorage.getItem('token');
     if (!token) {
-      alert("Пожалуйста, войдите в аккаунт, чтобы сохранять заведения в избранное.");
       navigate('/login');
       return;
     }
@@ -90,7 +66,6 @@ export const HomePage = () => {
       });
       if (!res.ok) {
         setFavorites(prev => !isNowFavorite ? [...prev, id] : prev.filter(fid => fid !== id));
-        alert("Ошибка при сохранении");
       }
     } catch (err) {
       console.error(err);
@@ -98,9 +73,16 @@ export const HomePage = () => {
   }, [favorites, navigate]);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent((p) => (p + 1) % SLIDES.length), 6000);
+    const timer = setInterval(() => setCurrent((p) => (p + 1) % SLIDES_KEYS.length), 6000);
     return () => clearInterval(timer);
   }, []);
+
+  const SLIDES = SLIDES_KEYS.map(s => ({
+    title: t(s.titleKey),
+    subtitle: t(s.subtitleKey),
+    image: s.image,
+    link: s.link,
+  }));
 
   return (
     <div>
@@ -110,11 +92,11 @@ export const HomePage = () => {
             <div className="position-absolute inset-0 w-100 h-100 bg-cover bg-center" style={{ backgroundImage: `url(${SLIDES[current].image})` }} />
             <div className="position-absolute inset-0 w-100 h-100 bg-black opacity-50" />
             <div className="position-relative h-100 z-1 d-flex flex-column justify-content-center align-items-center text-center px-3 text-white">
-              <motion.h1 initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="display-2 fw-black mb-3 tracking-tighter text-white">{SLIDES[current].title}</motion.h1>
-              <motion.p initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="fs-3 fw-light opacity-75 max-w-2xl">{SLIDES[current].subtitle}</motion.p>
-              
+              <motion.h1 key={`title-${current}-${t('home.slide1.title')}`} initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="display-2 fw-black mb-3 tracking-tighter text-white">{SLIDES[current].title}</motion.h1>
+              <motion.p key={`sub-${current}-${t('home.slide1.subtitle')}`} initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="fs-3 fw-light opacity-75 max-w-2xl">{SLIDES[current].subtitle}</motion.p>
+
               <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.4 }} className="mt-4">
-                <Link to={SLIDES[current].link} className="btn btn-primary-custom">Перейти</Link>
+                <Link to={SLIDES[current].link} className="btn btn-primary-custom">{t('home.goto')}</Link>
               </motion.div>
             </div>
           </motion.div>
@@ -122,13 +104,13 @@ export const HomePage = () => {
 
         <div className="position-absolute bottom-0 start-50 translate-middle-x mb-4 z-2 d-flex gap-2">
           {SLIDES.map((_, i) => (
-            <button 
+            <button
               key={i}
               onClick={() => setCurrent(i)}
               className="border-0 rounded-pill p-0 transition-all"
-              style={{ 
-                width: i === current ? '40px' : '10px', 
-                height: '10px', 
+              style={{
+                width: i === current ? '40px' : '10px',
+                height: '10px',
                 backgroundColor: i === current ? '#ef4444' : 'rgba(255,255,255,0.5)',
                 transition: 'all 0.3s ease'
               }}
@@ -140,20 +122,20 @@ export const HomePage = () => {
       <section className="py-5 container">
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 mt-5 pt-5">
           <div className="mb-4 mb-md-0">
-            <h2 className="display-5 fw-black italic text-uppercase tracking-tight mb-2 text-body-emphasis">Популярное</h2>
+            <h2 className="display-5 fw-black italic text-uppercase tracking-tight mb-2 text-body-emphasis">{t('home.popular')}</h2>
           </div>
           <Link to="/catalog" className="btn btn-link text-danger fw-bold text-decoration-none d-inline-flex align-items-center gap-1 hover-move-x">
-            Весь список <ChevronRight size={20} />
+            {t('home.allList')} <ChevronRight size={20} />
           </Link>
         </div>
 
         <div className="row g-4">
           {FEATURED_VENUES.map((venue: Venue, index: number) => (
             <div key={venue.id} className="col-md-4">
-              <VenueCard 
-                venue={venue} 
-                isFavorite={favorites.includes(venue.id)} 
-                onToggleFavorite={toggleFavorite} 
+              <VenueCard
+                venue={venue}
+                isFavorite={favorites.includes(venue.id)}
+                onToggleFavorite={toggleFavorite}
                 index={index}
               />
             </div>
@@ -166,27 +148,27 @@ export const HomePage = () => {
           <div className="row align-items-center justify-content-between g-5">
             <div className="col-lg-5">
               <h2 className="display-4 fw-black mb-4 italic text-uppercase lh-1 tracking-tighter text-body-emphasis">
-                Минск — это про еду и атмосферу
+                {t('home.about.title')}
               </h2>
               <p className="text-body-secondary fs-5 mb-5 lh-lg" style={{ maxWidth: '500px' }}>
-                Мы лично проверяем каждое заведение, прежде чем добавить его в каталог. Честные отзывы, актуальные меню и бронирование в пару кликов.
+                {t('home.about.desc')}
               </p>
               <div className="row g-4 mt-2">
                 <div className="col-6">
                   <div className="display-5 fw-black text-danger mb-1">150+</div>
-                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">Проверенных мест</div>
+                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">{t('home.stats.places')}</div>
                 </div>
                 <div className="col-6">
                   <div className="display-5 fw-black text-danger mb-1">12k</div>
-                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">Довольных гостей</div>
+                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">{t('home.stats.guests')}</div>
                 </div>
                 <div className="col-6">
                   <div className="display-5 fw-black text-danger mb-1">500+</div>
-                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">Честных отзывов</div>
+                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">{t('home.stats.reviews')}</div>
                 </div>
                 <div className="col-6">
                   <div className="display-5 fw-black text-danger mb-1">24/7</div>
-                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">Поддержка</div>
+                  <div className="small text-uppercase fw-bold tracking-widest text-body-secondary">{t('home.stats.support')}</div>
                 </div>
               </div>
             </div>

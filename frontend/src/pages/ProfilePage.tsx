@@ -2,8 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, LogOut, Settings, Heart, CalendarClock, AlertTriangle, Save, Trash2, ChevronDown, X, Check, Clock, MapPin, Users, Phone, History, Filter, Camera, KeyRound, MailCheck } from 'lucide-react';
-import { venues } from '../data'; 
-import { VenueCard } from '../components/VenueCard'; 
+import { venues } from '../data';
+import { VenueCard } from '../components/VenueCard';
+import { useLang } from '../i18n/LanguageContext';
+import { translations } from '../i18n/translations';
 
 const COUNTRY_CODES = [
   { code: '+375', countryCode: 'by', label: 'Беларусь', mask: '(XX) XXX-XX-XX', regex: /^\(\d{2}\) \d{3}-\d{2}-\d{2}$/ },
@@ -14,6 +16,17 @@ const COUNTRY_CODES = [
   { code: '+371', countryCode: 'lv', label: 'Латвия',    mask: 'XX-XXX-XXX',      regex: /^\d{2}-\d{3}-\d{3}$/ },
   { code: '+995', countryCode: 'ge', label: 'Грузия',   mask: '(XXX) XX-XX-XX',  regex: /^\(\d{3}\) \d{2}-\d{2}-\d{2}$/ },
   { code: '+971', countryCode: 'ae', label: 'ОАЭ',      mask: '(XX) XXX-XXXX',   regex: /^\(\d{2}\) \d{3}-\d{4}$/ }
+];
+
+const PRESET_AVATARS = [
+  { id: 'fork', color: '#ef4444', emoji: '🍴', label: 'Вилка и нож' },
+  { id: 'coffee', color: '#f59e0b', emoji: '☕', label: 'Кофе' },
+  { id: 'wine', color: '#8b5cf6', emoji: '🍷', label: 'Вино' },
+  { id: 'pizza', color: '#f97316', emoji: '🍕', label: 'Пицца' },
+  { id: 'bowl', color: '#22c55e', emoji: '🍜', label: 'Блюдо' },
+  { id: 'cocktail', color: '#ec4899', emoji: '🍸', label: 'Коктейль' },
+  { id: 'chef', color: '#475569', emoji: '👨‍🍳', label: 'Шеф-повар' },
+  { id: 'pan', color: '#14b8a6', emoji: '🥘', label: 'Сковорода' },
 ];
 
 interface Booking {
@@ -32,9 +45,10 @@ interface Booking {
 
 export const ProfilePage = () => {
   const navigate = useNavigate();
+  const { t, tv } = useLang();
   const [userData, setUserData] = useState<{name: string, email: string, phone: string | null, avatar: string | null} | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('favorites'); 
+  const [activeTab, setActiveTab] = useState('favorites');
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
@@ -77,7 +91,7 @@ export const ProfilePage = () => {
     }
   };
 
-  const CANCEL_REASONS = [
+  const CANCEL_REASONS_KEYS = [
     'Изменились планы',
     'Нашёл(а) другое заведение',
     'Неудобное время',
@@ -85,14 +99,12 @@ export const ProfilePage = () => {
     'Другое'
   ];
 
-  // Состояния редактирования имени
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState('');
 
-  // Состояния редактирования телефона (УМНЫЕ)
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
-  const [rawPhone, setRawPhone] = useState(''); 
+  const [rawPhone, setRawPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -101,12 +113,10 @@ export const ProfilePage = () => {
   const [saveMessage, setSaveMessage] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Состояния аватара
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Состояния смены пароля
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [passwordStep, setPasswordStep] = useState<'input' | 'code'>('input');
   const [newPassword, setNewPassword] = useState('');
@@ -237,7 +247,6 @@ export const ProfilePage = () => {
     if (phoneError) setPhoneError('');
   };
 
-  // СОХРАНЕНИЕ ИМЕНИ
   const handleSaveName = async () => {
     if (editName.length < 2 || editName.length > 20) {
       setSaveMessage('Имя должно быть от 2 до 20 символов');
@@ -263,7 +272,6 @@ export const ProfilePage = () => {
     finally { setIsSaving(false); }
   };
 
-  // СОХРАНЕНИЕ ТЕЛЕФОНА (Склеиваем код и номер)
   const handleSavePhone = async () => {
     if (rawPhone.length > 0 && !selectedCountry.regex.test(rawPhone)) {
       setPhoneError('Номер введен не полностью');
@@ -376,6 +384,45 @@ export const ProfilePage = () => {
     finally { setIsUploadingAvatar(false); }
   };
 
+  const handlePresetAvatar = async (color: string, emoji: string) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+    ctx.beginPath();
+    ctx.arc(128, 128, 128, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.font = '100px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(emoji, 128, 132);
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const file = new File([blob], 'avatar.png', { type: 'image/png' });
+      setIsUploadingAvatar(true);
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('http://localhost:8000/api/users/avatar', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setUserData(updated);
+          setAvatarPreview(null);
+          setSaveMessage('Аватар обновлен!');
+          setTimeout(() => setSaveMessage(''), 3000);
+        }
+      } catch (err) { console.error(err); }
+      finally { setIsUploadingAvatar(false); }
+    }, 'image/png');
+  };
+
   const handleSendChangeCode = async () => {
     setIsSendingCode(true);
     setPasswordError('');
@@ -387,7 +434,7 @@ export const ProfilePage = () => {
       });
       if (res.ok) {
         setPasswordStep('code');
-        setPasswordSuccess('Код отправлен на вашу почту');
+        setPasswordSuccess(t('common.codeSentTo') + ' ' + (userData?.email || ''));
       } else {
         const data = await res.json();
         setPasswordError(data.detail || 'Ошибка отправки кода');
@@ -416,7 +463,7 @@ export const ProfilePage = () => {
       });
       const data = await res.json();
       if (res.ok) {
-        setPasswordSuccess('Пароль успешно изменен!');
+        setPasswordSuccess(t('common.save') + '!');
         setPasswordStep('input');
         setNewPassword('');
         setConfirmPassword('');
@@ -446,8 +493,7 @@ export const ProfilePage = () => {
   return (
     <div className="container py-5 mt-5">
       <div className="row g-5">
-        
-        {/* ЛЕВАЯ КОЛОНКА */}
+
         <div className="col-lg-4" style={{ position: 'sticky', top: '90px', alignSelf: 'flex-start' }}>
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="card bg-body-tertiary border-0 rounded-4 shadow-sm p-4">
             <div className="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
@@ -472,51 +518,48 @@ export const ProfilePage = () => {
 
             <div className="d-flex flex-column gap-2 h-100">
               <button onClick={() => setActiveTab('favorites')} className={`btn text-start fw-bold p-3 rounded-3 ${activeTab === 'favorites' ? 'btn-danger text-white' : 'btn-light bg-body text-body-secondary hover-bg-light'}`}>
-                <Heart size={18} className="me-2" /> Мое Избранное
+                <Heart size={18} className="me-2" /> {t('profile.favorites')}
               </button>
               <button onClick={() => setActiveTab('bookings')} className={`btn text-start fw-bold p-3 rounded-3 ${activeTab === 'bookings' ? 'btn-danger text-white' : 'btn-light bg-body text-body-secondary hover-bg-light'}`}>
-                <CalendarClock size={18} className="me-2" /> Мои бронирования
+                <CalendarClock size={18} className="me-2" /> {t('profile.bookings')}
               </button>
               <button onClick={() => setActiveTab('info')} className={`btn text-start fw-bold p-3 rounded-3 ${activeTab === 'info' ? 'btn-danger text-white' : 'btn-light bg-body text-body-secondary hover-bg-light'}`}>
-                <Settings size={18} className="me-2" /> Настройки профиля
+                <Settings size={18} className="me-2" /> {t('profile.settings')}
               </button>
-              
+
               <button onClick={handleLogout} className="btn text-start fw-bold p-3 rounded-3 mt-3 text-danger hover-bg-light border border-danger border-opacity-25">
-                <LogOut size={18} className="me-2" /> Выйти из аккаунта
+                <LogOut size={18} className="me-2" /> {t('profile.logout')}
               </button>
             </div>
           </motion.div>
         </div>
 
-        {/* ПРАВАЯ КОЛОНКА */}
         <div className="col-lg-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card bg-body-tertiary border-0 rounded-4 shadow-sm p-4 p-md-5 h-100">
-            
-            {/* === ВКЛАДКА: НАСТРОЙКИ ПРОФИЛЯ === */}
+
             {activeTab === 'info' && (
               <div className="d-grid gap-4">
                 <div className="d-flex align-items-center gap-3 mb-2">
-                  <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-0 text-body-emphasis">Личные данные</h2>
+                  <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-0 text-body-emphasis">{t('profile.personalData')}</h2>
                   {saveMessage && <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-2 px-3 fw-bold">{saveMessage}</span>}
                 </div>
-                
+
                 <div className="row g-4">
                   <div className="col-12 border-bottom pb-4">
-                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block">Email (Логин)</label>
+                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block">{t('profile.emailLabel')}</label>
                     <div className="fs-5 fw-bold text-body-secondary ps-2">{userData?.email}</div>
                   </div>
-                  
-                  {/* ИМЯ */}
+
                   <div className="col-12 border-bottom pb-4">
                     <div className="d-flex justify-content-between align-items-center mb-2">
-                      <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">Имя</label>
+                      <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">{t('profile.nameLabel')}</label>
                       {isEditingName ? (
                         <div className="d-flex gap-2">
-                          <button type="button" onClick={handleSaveName} disabled={isSaving} className="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold">Сохранить</button>
-                          <button type="button" onClick={() => { setEditName(userData?.name || ''); setIsEditingName(false); }} className="btn btn-sm btn-light rounded-pill px-3 py-1 fw-bold">Отмена</button>
+                          <button type="button" onClick={handleSaveName} disabled={isSaving} className="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold">{t('profile.save')}</button>
+                          <button type="button" onClick={() => { setEditName(userData?.name || ''); setIsEditingName(false); }} className="btn btn-sm btn-light rounded-pill px-3 py-1 fw-bold">{t('profile.cancel')}</button>
                         </div>
                       ) : (
-                        <button type="button" onClick={() => setIsEditingName(true)} className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold">Изменить</button>
+                        <button type="button" onClick={() => setIsEditingName(true)} className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold">{t('profile.edit')}</button>
                       )}
                     </div>
                     {isEditingName ? (
@@ -526,21 +569,19 @@ export const ProfilePage = () => {
                     )}
                   </div>
 
-                  {/* ТЕЛЕФОН */}
                   <div className="col-12 border-bottom pb-4">
                     <div className="d-flex justify-content-between align-items-center mb-2">
-                      <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">Телефон</label>
+                      <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">{t('profile.phoneLabel')}</label>
                       {isEditingPhone ? (
                         <div className="d-flex gap-2">
-                          <button type="button" onClick={handleSavePhone} disabled={isSaving} className="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold">Сохранить</button>
-                          <button type="button" onClick={() => { setRawPhone(''); setIsEditingPhone(false); setPhoneError(''); }} className="btn btn-sm btn-light rounded-pill px-3 py-1 fw-bold">Отмена</button>
+                          <button type="button" onClick={handleSavePhone} disabled={isSaving} className="btn btn-sm btn-success rounded-pill px-3 py-1 fw-bold">{t('profile.save')}</button>
+                          <button type="button" onClick={() => { setRawPhone(''); setIsEditingPhone(false); setPhoneError(''); }} className="btn btn-sm btn-light rounded-pill px-3 py-1 fw-bold">{t('profile.cancel')}</button>
                         </div>
                       ) : (
-                        <button type="button" onClick={() => setIsEditingPhone(true)} className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold">Изменить</button>
+                        <button type="button" onClick={() => setIsEditingPhone(true)} className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold">{t('profile.edit')}</button>
                       )}
                     </div>
                     {isEditingPhone ? (
-                      /* ПРИ РЕДАКТИРОВАНИИ ВЫЕЗЖАЕТ УМНЫЙ СЕЛЕКТОР */
                       <div className={`d-flex rounded-3 position-relative bg-body ${phoneError ? 'border border-danger' : 'border-0'}`}>
                         <div ref={dropdownRef} className="position-relative">
                           <button type="button" onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="btn border-0 h-100 d-flex align-items-center gap-2 px-3 text-body" style={{ borderRight: '1px solid var(--bs-border-color)' }}>
@@ -548,7 +589,6 @@ export const ProfilePage = () => {
                             <span className="fw-bold">{selectedCountry.code}</span>
                             <ChevronDown size={14} className={`text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                           </button>
-
                           <AnimatePresence>
                             {isDropdownOpen && (
                               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="position-absolute top-100 start-0 mt-2 bg-body border rounded-3 shadow-lg z-3 custom-scrollbar" style={{ minWidth: '240px', maxHeight: '250px', overflowY: 'auto' }}>
@@ -570,21 +610,20 @@ export const ProfilePage = () => {
                         <input value={rawPhone} onChange={handlePhoneChange} type="tel" className="form-control bg-transparent text-body border-0 py-3 shadow-none fw-medium flex-grow-1" placeholder={selectedCountry.mask} />
                       </div>
                     ) : (
-                      <div className="fs-5 fw-bold text-body-emphasis ps-2">{userData?.phone || 'Не указан'}</div>
+                      <div className="fs-5 fw-bold text-body-emphasis ps-2">{userData?.phone || t('common.notSpecified')}</div>
                     )}
                     {phoneError && <div className="text-danger small mt-2 fw-bold">{phoneError}</div>}
                   </div>
                 </div>
 
-                {/* АВАТАР */}
                 <div className="border-bottom pb-4">
                   <div className="d-flex justify-content-between align-items-center mb-3">
-                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">Аватар</label>
+                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">{t('profile.avatar')}</label>
                     {userData?.avatar && (
-                      <button onClick={handleAvatarDelete} disabled={isUploadingAvatar} className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold">Удалить</button>
+                      <button onClick={handleAvatarDelete} disabled={isUploadingAvatar} className="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-bold">{t('profile.delete')}</button>
                     )}
                   </div>
-                  <div className="d-flex align-items-center gap-4">
+                  <div className="d-flex align-items-center gap-4 mb-4">
                     <div style={{ width: '80px', height: '80px' }}>
                       {(userData?.avatar || avatarPreview) ? (
                         <img src={avatarPreview || userData?.avatar || ''} alt="Аватар" className="rounded-circle w-100 h-100" style={{ objectFit: 'cover' }} />
@@ -596,23 +635,45 @@ export const ProfilePage = () => {
                     </div>
                     <div>
                       <button onClick={() => fileInputRef.current?.click()} disabled={isUploadingAvatar} className="btn btn-outline-danger fw-bold px-4 d-flex align-items-center gap-2">
-                        {isUploadingAvatar ? <span className="spinner-border spinner-border-sm"></span> : <><Camera size={18} /> Загрузить фото</>}
+                        {isUploadingAvatar ? <span className="spinner-border spinner-border-sm"></span> : <><Camera size={18} /> {t('profile.uploadPhoto')}</>}
                       </button>
                       <p className="text-body-secondary small mt-2 mb-0">JPEG, PNG, WebP или GIF. До 2 МБ.</p>
                     </div>
                   </div>
+
+                  <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block">Готовые аватарки</label>
+                  <div className="d-flex flex-wrap gap-2">
+                    {PRESET_AVATARS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        onClick={() => handlePresetAvatar(preset.color, preset.emoji)}
+                        disabled={isUploadingAvatar}
+                        className="btn p-0 border-0 rounded-circle"
+                        style={{ width: '56px', height: '56px', transition: 'transform 0.15s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                        title={preset.label}
+                      >
+                        <div
+                          className="rounded-circle w-100 h-100 d-flex align-items-center justify-content-center"
+                          style={{ backgroundColor: preset.color, fontSize: '24px' }}
+                        >
+                          {preset.emoji}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                {/* СМЕНА ПАРОЛЯ */}
                 <div className="border-bottom pb-4">
                   <div className="d-flex justify-content-between align-items-center mb-2">
-                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">Пароль</label>
+                    <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-0">{t('profile.password')}</label>
                     {passwordSuccess && <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill py-2 px-3 fw-bold">{passwordSuccess}</span>}
                   </div>
 
                   {!showPasswordChange ? (
                     <button onClick={() => setShowPasswordChange(true)} className="btn btn-outline-danger fw-bold px-4 d-flex align-items-center gap-2">
-                      <KeyRound size={18} /> Изменить пароль
+                      <KeyRound size={18} /> {t('profile.changePassword')}
                     </button>
                   ) : (
                     <div className="bg-body p-4 rounded-3 border">
@@ -622,34 +683,34 @@ export const ProfilePage = () => {
                         <div className="d-grid gap-3">
                           <p className="text-body-secondary small mb-0">На вашу почту будет отправлен код подтверждения.</p>
                           <div>
-                            <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Новый пароль</label>
-                            <input minLength={6} type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-control rounded-3 bg-body-tertiary border-0 py-3 px-4 shadow-none fw-medium" placeholder="Минимум 6 символов" />
+                            <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">{t('common.newPassword')}</label>
+                            <input minLength={6} type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="form-control rounded-3 bg-body-tertiary border-0 py-3 px-4 shadow-none fw-medium" placeholder={t('common.min6chars')} />
                           </div>
                           <div>
-                            <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Подтвердите пароль</label>
-                            <input minLength={6} type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-control rounded-3 bg-body-tertiary border-0 py-3 px-4 shadow-none fw-medium" placeholder="Повторите новый пароль" />
+                            <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">{t('common.confirmPassword')}</label>
+                            <input minLength={6} type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="form-control rounded-3 bg-body-tertiary border-0 py-3 px-4 shadow-none fw-medium" placeholder={t('common.repeatPassword')} />
                           </div>
                           <div className="d-flex gap-2">
                             <button onClick={handleSendChangeCode} disabled={isSendingCode || !newPassword || !confirmPassword} className="btn btn-danger fw-bold px-4 d-flex align-items-center gap-2">
-                              {isSendingCode ? <span className="spinner-border spinner-border-sm"></span> : <><MailCheck size={16} /> Отправить код</>}
+                              {isSendingCode ? <span className="spinner-border spinner-border-sm"></span> : <><MailCheck size={16} /> {t('common.sendCode')}</>}
                             </button>
-                            <button onClick={resetPasswordChange} className="btn btn-light fw-bold px-4">Отмена</button>
+                            <button onClick={resetPasswordChange} className="btn btn-light fw-bold px-4">{t('common.cancel')}</button>
                           </div>
                         </div>
                       ) : (
                         <div className="d-grid gap-3">
                           <div className="bg-success bg-opacity-10 text-success p-3 rounded-3 small fw-bold d-flex gap-2 align-items-center mb-0">
-                            <MailCheck size={18}/> Код отправлен на {userData?.email}
+                            <MailCheck size={18}/> {t('common.codeSentTo')} {userData?.email}
                           </div>
                           <div>
-                            <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">Код из письма</label>
+                            <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">{t('common.confirmCode')}</label>
                             <input required type="text" maxLength={4} value={changeCode} onChange={e => setChangeCode(e.target.value)} className="form-control rounded-3 bg-body-tertiary border-0 py-3 px-4 shadow-none fw-black text-center letter-spacing-lg" placeholder="0000" />
                           </div>
                           <div className="d-flex gap-2">
                             <button onClick={handleChangePassword} disabled={isChangingPassword || changeCode.length !== 4} className="btn btn-danger fw-bold px-4 d-flex align-items-center gap-2">
-                              {isChangingPassword ? <span className="spinner-border spinner-border-sm"></span> : <><Check size={16} /> Подтвердить</>}
+                              {isChangingPassword ? <span className="spinner-border spinner-border-sm"></span> : <><Check size={16} /> {t('common.confirm')}</>}
                             </button>
-                            <button onClick={() => setPasswordStep('input')} className="btn btn-light fw-bold px-4">Назад</button>
+                            <button onClick={() => setPasswordStep('input')} className="btn btn-light fw-bold px-4">{t('common.back')}</button>
                           </div>
                         </div>
                       )}
@@ -657,34 +718,33 @@ export const ProfilePage = () => {
                   )}
                 </div>
 
-                {/* ВЫБОР ТЕМЫ */}
                 <div className="border-bottom pb-4">
-                  <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-3 d-block">Тема оформления</label>
+                  <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-3 d-block">{t('profile.theme')}</label>
                   <div className="d-grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}>
                     {[
-                      { id: 'light', name: 'Классика', colors: ['#ffffff', '#f8f9fa', '#ef4444'] },
-                      { id: 'dark', name: 'Тёмная', colors: ['#1a1a2e', '#16213e', '#ef4444'] },
-                      { id: 'autumn', name: 'Осенняя', colors: ['#1a1410', '#241c14', '#e07b39'] },
-                      { id: 'ocean', name: 'Морская', colors: ['#0f1923', '#162231', '#38bdf8'] },
-                      { id: 'lavender', name: 'Лавандовая', colors: ['#18131f', '#201a2a', '#a78bfa'] },
-                      { id: 'forest', name: 'Лесная', colors: ['#111a14', '#19251d', '#4ade80'] },
-                      { id: 'waterfall', name: 'Водопад', colors: ['#0a0a1a', '#12102a', '#c084fc'] },
-                    ].map(t => {
-                      const isActive = currentTheme === t.id;
+                      { id: 'light', name: t('theme.classic'), colors: ['#ffffff', '#f8f9fa', '#ef4444'] },
+                      { id: 'dark', name: t('theme.dark'), colors: ['#1a1a2e', '#16213e', '#ef4444'] },
+                      { id: 'autumn', name: t('theme.autumn'), colors: ['#1a1410', '#241c14', '#e07b39'] },
+                      { id: 'ocean', name: t('theme.ocean'), colors: ['#0f1923', '#162231', '#38bdf8'] },
+                      { id: 'lavender', name: t('theme.lavender'), colors: ['#18131f', '#201a2a', '#a78bfa'] },
+                      { id: 'forest', name: t('theme.forest'), colors: ['#111a14', '#19251d', '#4ade80'] },
+                      { id: 'waterfall', name: t('theme.waterfall'), colors: ['#0a0a1a', '#12102a', '#c084fc'] },
+                    ].map(t_item => {
+                      const isActive = currentTheme === t_item.id;
                       return (
                         <button
-                          key={t.id}
-                          onClick={() => applyTheme(t.id)}
+                          key={t_item.id}
+                          onClick={() => applyTheme(t_item.id)}
                           className={`btn p-3 rounded-3 text-start border ${isActive ? 'border-danger border-2' : 'border'}`}
-                          style={{ backgroundColor: t.colors[1] }}
+                          style={{ backgroundColor: t_item.colors[1] }}
                         >
                           <div className="d-flex gap-1 mb-2">
-                            {t.colors.map((c, i) => (
+                            {t_item.colors.map((c, i) => (
                               <div key={i} className="rounded-circle" style={{ width: '14px', height: '14px', backgroundColor: c, border: '1px solid rgba(128,128,128,0.2)' }} />
                             ))}
                           </div>
-                          <span className="fw-bold small" style={{ color: t.colors[2] }}>{t.name}</span>
-                          {isActive && <span className="ms-1" style={{ color: t.colors[2] }}>✓</span>}
+                          <span className="fw-bold small" style={{ color: t_item.colors[2] }}>{t_item.name}</span>
+                          {isActive && <span className="ms-1" style={{ color: t_item.colors[2] }}>✓</span>}
                         </button>
                       );
                     })}
@@ -692,20 +752,20 @@ export const ProfilePage = () => {
                 </div>
 
                 <div className="border-top pt-5 mt-4">
-                  <h4 className="text-danger fw-bold mb-3 d-flex align-items-center gap-2"><AlertTriangle size={20}/> Опасная зона</h4>
+                  <h4 className="text-danger fw-bold mb-3 d-flex align-items-center gap-2"><AlertTriangle size={20}/> {t('profile.dangerZone')}</h4>
                   <p className="text-body-secondary small mb-4">Удаление аккаунта приведет к безвозвратной потере всех ваших данных, включая бронирования и избранное. Это действие нельзя отменить.</p>
-                  
+
                   {showDeleteConfirm ? (
                     <div className="bg-danger bg-opacity-10 p-4 rounded-3 border border-danger border-opacity-25 animate-fade-in">
                       <p className="fw-bold text-danger mb-3">Вы уверены, что хотите удалить аккаунт?</p>
                       <div className="d-flex gap-3">
                         <button onClick={handleDeleteAccount} className="btn btn-danger fw-bold px-4">Да, удалить навсегда</button>
-                        <button onClick={() => setShowDeleteConfirm(false)} className="btn btn-light fw-bold px-4">Отмена</button>
+                        <button onClick={() => setShowDeleteConfirm(false)} className="btn btn-light fw-bold px-4">{t('profile.cancel')}</button>
                       </div>
                     </div>
                   ) : (
                     <button onClick={() => setShowDeleteConfirm(true)} className="btn btn-outline-danger fw-bold px-4 d-flex align-items-center gap-2">
-                      <Trash2 size={18} /> Удалить аккаунт
+                      <Trash2 size={18} /> {t('profile.deleteAccount')}
                     </button>
                   )}
                 </div>
@@ -713,15 +773,14 @@ export const ProfilePage = () => {
               </div>
             )}
 
-            {/* ВКЛАДКА: ИЗБРАННОЕ */}
             {activeTab === 'favorites' && (
               <div>
-                <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-4 text-body-emphasis">Сохраненные места</h2>
+                <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-4 text-body-emphasis">{t('profile.savedPlaces')}</h2>
                 {favoriteVenues.length === 0 ? (
                   <div className="text-center py-5">
                     <Heart size={64} className="text-secondary opacity-25 mb-4 mx-auto" />
-                    <h3 className="h4 fw-bold text-body-emphasis">Пока тут пусто</h3>
-                    <p className="text-body-secondary">Вы еще не добавили ни одного заведения в избранное.</p>
+                    <h3 className="h4 fw-bold text-body-emphasis">{t('profile.emptyFavorites')}</h3>
+                    <p className="text-body-secondary">{t('profile.emptyFavoritesDesc')}</p>
                   </div>
                 ) : (
                   <div className="row g-4">
@@ -735,33 +794,32 @@ export const ProfilePage = () => {
               </div>
             )}
 
-            {/* ВКЛАДКА: БРОНИ */}
             {activeTab === 'bookings' && (
               <div>
-                <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-4 text-body-emphasis">Мои бронирования</h2>
-                
+                <h2 className="display-6 fw-black italic text-uppercase tracking-tighter mb-4 text-body-emphasis">{t('profile.bookings')}</h2>
+
                 <div className="d-flex gap-2 mb-4">
                   <button onClick={() => setBookingSubTab('active')} className={`btn rounded-pill px-4 py-2 small fw-bold ${bookingSubTab === 'active' ? 'bg-danger text-white' : 'bg-body-tertiary text-body-secondary'}`}>
-                    <Filter size={14} className="me-1" /> Активные
+                    <Filter size={14} className="me-1" /> {t('profile.bookingsActive')}
                   </button>
                   <button onClick={() => setBookingSubTab('history')} className={`btn rounded-pill px-4 py-2 small fw-bold ${bookingSubTab === 'history' ? 'bg-danger text-white' : 'bg-body-tertiary text-body-secondary'}`}>
-                    <History size={14} className="me-1" /> История
+                    <History size={14} className="me-1" /> {t('profile.bookingsHistory')}
                   </button>
                 </div>
 
                 {bookingsLoading ? (
                   <div className="text-center py-5"><div className="spinner-border text-danger"></div></div>
                 ) : (() => {
-                  const filtered = bookingSubTab === 'active' 
+                  const filtered = bookingSubTab === 'active'
                     ? bookings.filter(b => b.status === 'active')
                     : bookings;
-                  
+
                   if (filtered.length === 0) {
                     return (
                       <div className="text-center py-5">
                         <CalendarClock size={64} className="text-secondary opacity-25 mb-4 mx-auto" />
                         <h3 className="h4 fw-bold text-body-emphasis">
-                          {bookingSubTab === 'active' ? 'Нет активных бронирований' : 'История пуста'}
+                          {bookingSubTab === 'active' ? t('profile.noActiveBookings') : t('profile.emptyHistory')}
                         </h3>
                         <p className="text-body-secondary">
                           {bookingSubTab === 'active' ? 'Все ваши бронирования отменены или ещё нет броней.' : 'У вас пока нет ни одного бронирования.'}
@@ -777,17 +835,49 @@ export const ProfilePage = () => {
                           <div className="card-body p-4">
                             <div className="d-flex justify-content-between align-items-start mb-3">
                               <div>
-                                <h5 className="fw-bold text-body-emphasis mb-1">{booking.venue_name}</h5>
+                                <h5 className="fw-bold text-body-emphasis mb-1">
+                                  {(() => {
+                                    const translatedName = tv(`venue.name.${booking.venue_id}`, '');
+                                    if (translatedName) {
+                                      const addrMatch = booking.venue_name.match(/\((.+)\)$/);
+                                      if (addrMatch) {
+                                        const venue = venues.find(v => v.id === booking.venue_id);
+                                        let branchIdx = -1;
+                                        if (venue) {
+                                          for (let bi = 0; bi < venue.branches.length; bi++) {
+                                            const addrKey = `venue.${booking.venue_id}.addr${bi}`;
+                                            const addrEntry = translations[addrKey];
+                                            if (addrEntry) {
+                                              const allAddrs = Object.values(addrEntry) as string[];
+                                              if (allAddrs.some(a => booking.venue_name.includes(a))) {
+                                                branchIdx = bi;
+                                                break;
+                                              }
+                                            }
+                                            if (booking.venue_name.includes(venue.branches[bi].address)) {
+                                              branchIdx = bi;
+                                              break;
+                                            }
+                                          }
+                                        }
+                                        const translatedAddr = branchIdx >= 0 ? tv(`venue.${booking.venue_id}.addr${branchIdx}`, addrMatch[1]) : addrMatch[1];
+                                        return `${translatedName} (${translatedAddr})`;
+                                      }
+                                      return translatedName;
+                                    }
+                                    return booking.venue_name;
+                                  })()}
+                                </h5>
                                 <span className={`badge rounded-pill fw-bold ${booking.status === 'active' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}`}>
-                                  {booking.status === 'active' ? 'Активно' : 'Отменено'}
+                                  {booking.status === 'active' ? t('profile.active') : t('profile.cancelled')}
                                 </span>
                               </div>
                               {booking.status === 'active' && (
-                                <button 
-                                  onClick={() => openCancelModal(booking.id)} 
+                                <button
+                                  onClick={() => openCancelModal(booking.id)}
                                   className="btn btn-sm btn-outline-danger fw-bold px-3 d-flex align-items-center gap-1"
                                 >
-                                  <X size={14} /> Отменить
+                                  <X size={14} /> {t('profile.cancelBooking')}
                                 </button>
                               )}
                             </div>
@@ -798,7 +888,7 @@ export const ProfilePage = () => {
                               </div>
                               <div className="col-sm-6 d-flex align-items-center gap-2 text-body-secondary">
                                 <Users size={16} className="text-danger" />
-                                <span>{booking.guests} {booking.guests === '1' ? 'гость' : booking.guests === '8+' ? 'гостей' : parseInt(booking.guests) < 5 ? 'гостя' : 'гостей'}</span>
+                                <span>{booking.guests} {booking.guests === '1' ? t('booking.guest1') : booking.guests === '8+' ? t('booking.guest5') : parseInt(booking.guests) < 5 ? t('booking.guest2') : t('booking.guest5')}</span>
                               </div>
                               <div className="col-sm-6 d-flex align-items-center gap-2 text-body-secondary">
                                 <Phone size={16} className="text-danger" />
@@ -825,25 +915,24 @@ export const ProfilePage = () => {
               </div>
             )}
 
-            {/* МОДАЛКА ОТМЕНЫ БРОНИРОВАНИЯ */}
             {showCancelModal && (
               <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ zIndex: 1060, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setShowCancelModal(false)}>
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95 }} 
-                  animate={{ opacity: 1, scale: 1 }} 
-                  className="card border-0 rounded-4 shadow-lg p-4 p-md-5 bg-body" 
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="card border-0 rounded-4 shadow-lg p-4 p-md-5 bg-body"
                   style={{ maxWidth: '480px', width: '90%' }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h4 className="fw-bold text-body-emphasis mb-0">Отмена бронирования</h4>
+                    <h4 className="fw-bold text-body-emphasis mb-0">{t('profile.cancelReasonTitle')}</h4>
                     <button onClick={() => setShowCancelModal(false)} className="btn btn-sm btn-light rounded-circle p-2"><X size={16} /></button>
                   </div>
-                  
-                  <p className="text-body-secondary mb-4">Укажите причину отмены (необязательно):</p>
-                  
+
+                  <p className="text-body-secondary mb-4">{t('profile.cancelReasonDesc')}</p>
+
                   <div className="d-flex flex-wrap gap-2 mb-3">
-                    {CANCEL_REASONS.map((reason) => (
+                    {CANCEL_REASONS_KEYS.map((reason) => (
                       <button
                         key={reason}
                         onClick={() => {
@@ -851,8 +940,8 @@ export const ProfilePage = () => {
                           if (reason !== 'Другое') setCancelReason('');
                         }}
                         className={`btn rounded-pill px-3 py-2 small fw-bold ${
-                          selectedReasonTemplate === reason 
-                            ? 'bg-danger text-white' 
+                          selectedReasonTemplate === reason
+                            ? 'bg-danger text-white'
                             : 'bg-body-tertiary text-body-secondary'
                         }`}
                       >
@@ -872,7 +961,7 @@ export const ProfilePage = () => {
                   )}
 
                   <div className="d-flex gap-3 mt-4">
-                    <button 
+                    <button
                       onClick={confirmCancel}
                       disabled={cancellingId !== null}
                       className="btn btn-danger fw-bold px-4 flex-grow-1 d-flex align-items-center justify-content-center gap-2"
@@ -880,14 +969,14 @@ export const ProfilePage = () => {
                       {cancellingId ? (
                         <span className="spinner-border spinner-border-sm"></span>
                       ) : (
-                        <>Да, отменить</>
+                        <>{t('profile.cancelConfirm')}</>
                       )}
                     </button>
-                    <button 
-                      onClick={() => setShowCancelModal(false)} 
+                    <button
+                      onClick={() => setShowCancelModal(false)}
                       className="btn btn-light fw-bold px-4"
                     >
-                      Нет, оставить
+                      {t('profile.cancelKeep')}
                     </button>
                   </div>
                 </motion.div>
@@ -903,7 +992,7 @@ export const ProfilePage = () => {
         .hover-bg-light:hover { background-color: var(--bs-secondary-bg) !important; }
         .rotate-180 { transform: rotate(180deg); }
         .transition-transform { transition: transform 0.3s ease; }
-        .z-3 { z-index: 1050; } 
+        .z-3 { z-index: 1050; }
         .custom-scrollbar { overflow-y: auto; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

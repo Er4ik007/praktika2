@@ -1,6 +1,7 @@
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, MapPin, Star, ChevronRight, ChevronDown } from 'lucide-react';
+import { useLang } from '../i18n/LanguageContext';
 
 const COUNTRY_CODES = [
   { code: '+375', countryCode: 'by', label: 'Беларусь', mask: '(XX) XXX-XX-XX', regex: /^\(\d{2}\) \d{3}-\d{2}-\d{2}$/ },
@@ -15,13 +16,14 @@ const COUNTRY_CODES = [
 
 export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueId?: string }) => {
   const [formState, setFormState] = useState({ name: '', date: '', guests: '2', message: '' });
-  
+  const { t } = useLang();
+
   const [selectedCountry, setSelectedCountry] = useState(COUNTRY_CODES[0]);
-  const [rawPhone, setRawPhone] = useState(''); 
+  const [rawPhone, setRawPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -38,7 +40,6 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // УМНОЕ АВТОЗАПОЛНЕНИЕ С ДЕКОДИРОВАНИЕМ НОМЕРА С СЕРВЕРА
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem('token');
@@ -51,7 +52,6 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
           const data = await res.json();
           if (data.name) setFormState(prev => ({ ...prev, name: data.name }));
           if (data.phone) {
-            // Находим код страны и отделяем его от маскированной части
             const matched = COUNTRY_CODES.find(c => data.phone.startsWith(c.code));
             if (matched) {
               setSelectedCountry(matched);
@@ -142,19 +142,19 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
     <section className="py-5 bg-body-tertiary rounded-4 px-3" id="booking">
       <div className="mx-auto bg-body rounded-4 shadow-lg overflow-hidden row border" style={{ maxWidth: '900px' }}>
         <div className="col-md-5 bg-danger p-5 text-white d-flex flex-column justify-content-center">
-          <h2 className="display-6 fw-bold mb-4">Бронирование</h2>
-          {venueName && <p className="h5 mb-4 text-white text-opacity-75">в {venueName}</p>}
+          <h2 className="display-6 fw-bold mb-4">{t('booking.title')}</h2>
+          {venueName && <p className="h5 mb-4 text-white text-opacity-75">{t('booking.at')} {venueName}</p>}
           <p className="text-white text-opacity-75 mb-5 fs-5">
-            Забронируйте столик прямо сейчас. Мы свяжемся с вами в течение 10 минут для подтверждения.
+            {t('booking.desc')}
           </p>
           <div className="d-grid gap-3">
             <div className="d-flex align-items-center gap-3">
               <MapPin size={24} />
-              <span className="fw-medium">Весь Минск</span>
+              <span className="fw-medium">{t('booking.allMinsk')}</span>
             </div>
             <div className="d-flex align-items-center gap-3">
               <Star size={24} />
-              <span className="fw-medium">Гарантия столика</span>
+              <span className="fw-medium">{t('booking.guarantee')}</span>
             </div>
           </div>
         </div>
@@ -164,21 +164,20 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
              <AnimatePresence>
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-100 d-flex flex-column justify-content-center align-items-center text-center py-5 text-success">
                  <Send size={40} className="mb-3" />
-                 <h3 className="h2 fw-bold text-body-emphasis mb-2">Заявка отправлена!</h3>
-                 <p className="text-body-secondary">Ожидайте звонка на номер <br/><b>{selectedCountry.code} {rawPhone}</b></p>
+                 <h3 className="h2 fw-bold text-body-emphasis mb-2">{t('booking.sent')}</h3>
+                 <p className="text-body-secondary">{t('booking.sentDesc')} <br/><b>{selectedCountry.code} {rawPhone}</b></p>
                </motion.div>
              </AnimatePresence>
           ) : (
             <div className="d-grid gap-4">
               <div className="row g-3">
                 <div className="col-12">
-                  <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Имя</label>
+                  <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">{t('booking.name')}</label>
                   <input required value={formState.name} onChange={(e) => setFormState({...formState, name: e.target.value})} type="text" className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none fw-medium" placeholder="Иван Иванов" />
                 </div>
-                
-                {/* ПОЛНОЦЕННЫЙ ТЕЛЕФОН С СЕЛЕКТОРОМ КОДОВ СТРАН */}
+
                 <div className="col-12">
-                  <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Контактный телефон</label>
+                  <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">{t('booking.phone')}</label>
                   <div className={`d-flex rounded-3 position-relative bg-body-tertiary ${phoneError ? 'border border-danger' : 'border-0'}`}>
                     <div ref={dropdownRef} className="position-relative">
                       <button type="button" onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="btn border-0 h-100 d-flex align-items-center gap-2 px-3 text-body" style={{ borderRight: '1px solid var(--bs-border-color)' }}>
@@ -211,20 +210,18 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
                 </div>
 
                 <div className="col-sm-6">
-                  <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Дата</label>
+                  <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">{t('booking.date')}</label>
                   <input required type="date" min={today} value={formState.date} onChange={(e) => setFormState({...formState, date: e.target.value})} className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none fw-medium" />
                 </div>
                 <div className="col-sm-6">
-                  <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Гости</label>
-                  {/* ВОССТАНОВИЛИ ВЫБОР ГОСТЕЙ ОТ 1 ДО 8+ */}
+                  <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">{t('booking.guests')}</label>
                   <select value={formState.guests} onChange={(e) => setFormState({...formState, guests: e.target.value})} className="form-select rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none fw-medium">
                     <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option>
                   </select>
                 </div>
-                {/* ВОССТАНОВИЛИ ПОЖЕЛАНИЯ */}
                 <div className="col-12">
-                  <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Пожелания</label>
-                  <textarea value={formState.message} onChange={(e) => setFormState({...formState, message: e.target.value})} className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none h-25 fw-medium" style={{ minHeight: '80px' }} placeholder="У окна, детский стульчик..." />
+                  <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">{t('booking.wishes')}</label>
+                  <textarea value={formState.message} onChange={(e) => setFormState({...formState, message: e.target.value})} className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none h-25 fw-medium" style={{ minHeight: '80px' }} placeholder={t('booking.wishesPlaceholder')} />
                 </div>
               </div>
               {submitError && <div className="text-danger small fw-bold mt-2">{submitError}</div>}
@@ -232,7 +229,7 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
                 {isSubmitting ? (
                   <span className="spinner-border spinner-border-sm" role="status"></span>
                 ) : (
-                  <>Отправить запрос <ChevronRight size={18} /></>
+                  <>{t('booking.submit')} <ChevronRight size={18} /></>
                 )}
               </button>
             </div>

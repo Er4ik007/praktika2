@@ -3,6 +3,7 @@ import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { Star, MapPin, Utensils, Coffee, Wine, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Venue } from '../data';
+import { useLang } from '../i18n/LanguageContext';
 
 interface VenueCardProps {
   venue: Venue;
@@ -14,6 +15,7 @@ interface VenueCardProps {
 export const VenueCard = React.memo(({ venue, isFavorite, onToggleFavorite }: VenueCardProps) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
+  const { t, tv } = useLang();
 
   const springConfig = { damping: 25, stiffness: 300 };
   const springX = useSpring(mouseX, springConfig);
@@ -39,6 +41,10 @@ export const VenueCard = React.memo(({ venue, isFavorite, onToggleFavorite }: Ve
   }, [mouseX, mouseY]);
 
   const randomDelay = (venue.id.charCodeAt(0) % 5) * 0.4;
+
+  const typeLabel = t(`venueCard.type.${venue.type === 'restaurant' ? 'restaurant' : venue.type === 'coffee' ? 'coffee' : venue.type === 'bar' ? 'bar' : 'cafe'}`);
+  const venueDesc = tv(`venue.${venue.id}.desc`, venue.description);
+  const venueAddr = tv(`venue.${venue.id}.addr0`, venue.branches[0].address);
 
   return (
     <div
@@ -89,19 +95,19 @@ export const VenueCard = React.memo(({ venue, isFavorite, onToggleFavorite }: Ve
             {venue.type === 'coffee' && <Coffee size={14} />}
             {venue.type === 'bar' && <Wine size={14} />}
             {venue.type === 'cafe' && <MapPin size={14} />}
-            {venue.type === 'restaurant' ? 'Ресторан' : venue.type === 'coffee' ? 'Кофейня' : venue.type === 'bar' ? 'Бар' : 'Кафе'}
+            {typeLabel}
           </div>
-          <h3 className="h4 fw-bold mb-3 text-body-emphasis text-truncate">{venue.name}</h3>
+          <h3 className="h4 fw-bold mb-3 text-body-emphasis text-truncate">{tv(`venue.name.${venue.id}`, venue.name)}</h3>
           <p className="card-text text-body-secondary small mb-4 line-clamp-3">
-            {venue.description}
+            {venueDesc}
           </p>
           <div className="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
             <div className="d-flex align-items-center gap-1 text-body-secondary small text-truncate pe-2">
               <MapPin size={14} />
-              <span className="text-truncate">{venue.branches[0].address}</span>
+              <span className="text-truncate">{venueAddr}</span>
             </div>
             <Link to={`/venue/${venue.id}`} className="text-danger fw-bold text-decoration-none small d-flex align-items-center gap-1 transition-transform flex-shrink-0 hover-move-x">
-              Подробнее <ChevronRight size={14} />
+              {t('venueCard.more')} <ChevronRight size={14} />
             </Link>
           </div>
         </div>

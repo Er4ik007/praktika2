@@ -1,26 +1,30 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { useLang } from '../i18n/LanguageContext';
 
 export const NotFoundPage = () => {
+  const { t } = useLang();
+
   useEffect(() => {
     document.title = "404";
   }, []);
+
   return (
     <div className="container d-flex flex-column align-items-center justify-content-center text-center" style={{ minHeight: '70vh' }}>
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="display-1 fw-black italic text-body-emphasis mb-3"
       >
         404
       </motion.div>
-      <h2 className="h2 fw-bold text-body-secondary mb-4">Страница не найдена</h2>
+      <h2 className="h2 fw-bold text-body-secondary mb-4">{t('notFound.title')}</h2>
       <p className="text-muted mb-5 mw-md mx-auto">
-        Кажется, вы забрели не туда. Возможно, заведение переехало, или ссылка устарела.
+        {t('notFound.desc')}
       </p>
       <Link to="/" className="btn btn-primary-custom px-5">
-        На главную
+        {t('notFound.goHome')}
       </Link>
       <style>{`
         .fw-black { font-weight: 900; }

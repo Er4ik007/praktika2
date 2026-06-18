@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Utensils, X, Menu as MenuIcon, User } from 'lucide-react';
+import { useLang } from '../i18n/LanguageContext';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,8 +14,8 @@ export const Header = () => {
   });
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { t } = useLang();
 
-  // Достаем имя пользователя из памяти браузера (сохранено при логине)
   const userName = localStorage.getItem('userName');
 
   useEffect(() => {
@@ -43,10 +45,10 @@ export const Header = () => {
   }, [userName]);
 
   const menuItems = [
-    { name: 'Главная', path: '/' },
-    { name: 'Каталог', path: '/catalog' },
-    { name: 'О нас', path: '/about' },
-    { name: 'Контакты', path: '/contacts' },
+    { name: t('nav.home'), path: '/' },
+    { name: t('nav.catalog'), path: '/catalog' },
+    { name: t('nav.about'), path: '/about' },
+    { name: t('nav.contacts'), path: '/contacts' },
   ];
 
   return (
@@ -54,16 +56,16 @@ export const Header = () => {
       <div className="container d-flex align-items-center justify-content-between h-100">
         <Link to="/" className="d-flex align-items-center text-decoration-none gap-2">
           <Utensils className="text-danger" size={32} />
-          <span className="fw-bold fs-4 text-body text-uppercase tracking-tighter d-none d-sm-block">МИНСК ГАСТРО</span>
+          <span className="fw-bold fs-4 text-body text-uppercase tracking-tighter d-none d-sm-block">{t('site.name')}</span>
         </Link>
 
         <nav className="d-none d-md-block">
           <ul className="nav align-items-center">
             {menuItems.map((item) => (
               <li key={item.path} className="nav-item ms-4">
-                <NavLink 
+                <NavLink
                   to={item.path}
-                  className={({ isActive }) => 
+                  className={({ isActive }) =>
                     `nav-link px-0 py-1 fw-medium transition-colors ${isActive ? 'text-danger border-bottom border-danger' : 'text-body opacity-75'}`
                   }
                   style={{ transition: 'all 0.3s ease' }}
@@ -76,8 +78,8 @@ export const Header = () => {
         </nav>
 
         <div className="d-flex align-items-center gap-2">
-          
-          {/* === УМНАЯ КНОПКА АВТОРИЗАЦИИ ДЛЯ ПК === */}
+          <LanguageSwitcher />
+
           {userName ? (
             <Link
               to="/profile"
@@ -92,12 +94,11 @@ export const Header = () => {
               )}
             </Link>
           ) : (
-            // Пользователь НЕ вошел: Кнопка Войти
-            <button 
+            <button
               onClick={() => navigate('/login')}
               className="btn btn-sm btn-outline-danger rounded-pill fw-bold px-3 d-none d-sm-flex align-items-center gap-2"
             >
-              <User size={16} /> Войти
+              <User size={16} /> {t('nav.login')}
             </button>
           )}
 
@@ -120,8 +121,7 @@ export const Header = () => {
                   </NavLink>
                 </li>
               ))}
-              
-              {/* === УМНАЯ КНОПКА АВТОРИЗАЦИИ ДЛЯ МОБИЛОК === */}
+
               <li className="nav-item mt-3 pt-3 border-top">
                 {userName ? (
                   <Link
@@ -136,14 +136,14 @@ export const Header = () => {
                         {userName.charAt(0).toUpperCase()}
                       </span>
                     )}
-                    Мой профиль
+                    {t('nav.profile')}
                   </Link>
                 ) : (
-                  <button 
-                    onClick={() => { setIsMenuOpen(false); navigate('/login'); }} 
+                  <button
+                    onClick={() => { setIsMenuOpen(false); navigate('/login'); }}
                     className="btn btn-outline-danger w-100 rounded-3 py-2 fw-bold d-flex justify-content-center align-items-center gap-2"
                   >
-                    <User size={18} /> Войти в аккаунт
+                    <User size={18} /> {t('nav.login')}
                   </button>
                 )}
               </li>

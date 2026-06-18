@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Star, MapPin, ChevronLeft, CreditCard, Clock, Instagram, Send, X, ExternalLink } from 'lucide-react';
 import { venues } from '../data';
 import { BookingForm } from '../components/BookingForm';
+import { useLang } from '../i18n/LanguageContext';
 
 const initialReviews = [
   { id: 1, author: 'Анна С.', rating: 5, text: 'Потрясающее место! Обязательно придем еще раз.', date: 'Вчера' },
@@ -14,17 +15,15 @@ export const VenueDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const venue = venues.find(v => v.id === id);
+  const { t, tv } = useLang();
 
-  // СОСТОЯНИЕ ДЛЯ ВЫБОРА АКТИВНОГО ФИЛИАЛА
   const [activeBranchId, setActiveBranchId] = useState<string>('');
-
   const [reviews, setReviews] = useState(initialReviews);
   const [newReviewText, setNewReviewText] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(5);
   const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
   const [activeImage, setActiveImage] = useState<string | null>(null);
 
-  // При загрузке страницы автоматически выбираем первый филиал в списке
   useEffect(() => {
     if (venue && venue.branches.length > 0) {
       setActiveBranchId(venue.branches[0].id);
@@ -44,9 +43,8 @@ export const VenueDetailPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  if (!venue) return <div className="container py-5 my-5 text-center"><h1 className="display-4 fw-bold">Не найдено</h1></div>;
+  if (!venue) return <div className="container py-5 my-5 text-center"><h1 className="display-4 fw-bold">{t('venue.notFound')}</h1></div>;
 
-  // Находим текущий активный филиал по ID
   const activeBranch = venue.branches.find(b => b.id === activeBranchId) || venue.branches[0];
 
   const handleReviewSubmit = (e: React.FormEvent) => {
@@ -60,6 +58,8 @@ export const VenueDetailPage = () => {
     setTimeout(() => setIsReviewSubmitted(false), 3000);
   };
 
+  const venueType = t(`venue.${venue.type}`);
+
   return (
     <div className="pt-5">
       <section className="position-relative w-100" style={{ height: '50vh' }}>
@@ -72,14 +72,14 @@ export const VenueDetailPage = () => {
 
       <section className="container mt-n5 position-relative z-1 mb-5">
         <div className="card border-0 rounded-4 p-4 p-md-5 shadow-lg mx-auto bg-body" style={{ maxWidth: '1000px', marginTop: '-120px' }}>
-          
+
           <div className="row mb-5">
             <div className="col-lg-8">
               <div className="small fw-bold text-danger text-uppercase tracking-widest mb-3">
-                {venue.type === 'restaurant' ? 'Ресторан' : venue.type === 'coffee' ? 'Кофейня' : venue.type === 'bar' ? 'Бар' : 'Кафе'}
+                {venueType}
               </div>
-              <h1 className="display-4 fw-black mb-4 text-body-emphasis tracking-tighter">{venue.name}</h1>
-              
+              <h1 className="display-4 fw-black mb-4 text-body-emphasis tracking-tighter">{tv(`venue.name.${venue.id}`, venue.name)}</h1>
+
               <div className="d-flex flex-wrap gap-3 mb-4">
                 <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill">
                   <Star size={18} className="text-warning fill-warning" />
@@ -91,22 +91,21 @@ export const VenueDetailPage = () => {
                 </div>
               </div>
 
-              {/* === ВЫБОР ФИЛИАЛА === */}
               {venue.branches.length > 1 && (
                 <div className="mb-4">
-                  <span className="small fw-bold text-body-secondary text-uppercase tracking-widest d-block mb-2">Выберите адрес:</span>
+                  <span className="small fw-bold text-body-secondary text-uppercase tracking-widest d-block mb-2">{t('venue.selectAddress')}</span>
                   <div className="d-flex flex-wrap gap-2">
-                    {venue.branches.map(branch => (
-                      <button 
+                    {venue.branches.map((branch, bIdx) => (
+                      <button
                         key={branch.id}
                         onClick={() => setActiveBranchId(branch.id)}
                         className={`btn rounded-pill px-4 py-2 small fw-bold transition-colors border-0 shadow-sm ${
-                          activeBranchId === branch.id 
-                            ? 'bg-danger text-white' 
+                          activeBranchId === branch.id
+                            ? 'bg-danger text-white'
                             : 'bg-body-tertiary text-body-secondary hover-danger-light'
                         }`}
                       >
-                        {branch.address}
+                        {tv(`venue.${venue.id}.addr${bIdx}`, branch.address)}
                       </button>
                     ))}
                   </div>
@@ -115,14 +114,13 @@ export const VenueDetailPage = () => {
 
             </div>
             <div className="col-lg-4 text-lg-end mt-4 mt-lg-0">
-              <a href="#booking" className="btn btn-primary-custom shadow-lg">Забронировать</a>
+              <a href="#booking" className="btn btn-primary-custom shadow-lg">{t('venue.book')}</a>
             </div>
           </div>
 
-          {/* === ИНФОРМАЦИЯ КОНКРЕТНОГО ФИЛИАЛА (АНИМИРОВАННАЯ СМЕНА) === */}
           <AnimatePresence mode="wait">
-            <motion.div 
-              key={activeBranchId} // Анимация будет проигрываться при смене ID филиала
+            <motion.div
+              key={activeBranchId}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
@@ -130,9 +128,9 @@ export const VenueDetailPage = () => {
               className="row g-5"
             >
               <div className="col-lg-8">
-                <h3 className="h4 fw-bold mb-4 italic text-decoration-underline text-danger underline-offset-8 text-body-emphasis">Описание</h3>
-                <p className="text-body-secondary fs-5 lh-lg mb-5">{venue.description}</p>
-                
+                <h3 className="h4 fw-bold mb-4 italic text-decoration-underline text-danger underline-offset-8 text-body-emphasis">{t('venue.description')}</h3>
+                <p className="text-body-secondary fs-5 lh-lg mb-5">{tv(`venue.${venue.id}.desc`, venue.description)}</p>
+
                 <div className="row g-4 py-4 border-top border-bottom border-light align-items-center">
                   <div className="col-md-7">
                     <div className="d-flex align-items-start gap-3 mb-4">
@@ -140,27 +138,24 @@ export const VenueDetailPage = () => {
                         <Clock size={24} className="text-danger" />
                       </div>
                       <div>
-                        <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">Режим работы</h4>
-                        {/* Выводим время работы ИМЕННО ЭТОГО филиала */}
-                        <p className="text-body-secondary small fw-medium mb-0">{activeBranch.workingHours}</p>
+                        <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">{t('venue.workHours')}</h4>
+                        <p className="text-body-secondary small fw-medium mb-0" style={{ whiteSpace: 'pre-line' }}>{tv(`venue.${venue.id}.wh${venue.branches.indexOf(activeBranch)}`, activeBranch.workingHours)}</p>
                       </div>
                     </div>
-                    
+
                     <div className="d-flex align-items-start gap-3">
                       <div className="bg-danger bg-opacity-10 p-3 rounded-4 flex-shrink-0">
                         <MapPin size={24} className="text-danger" />
                       </div>
                       <div className="w-100">
-                        <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">Адрес</h4>
-                        {/* Выводим адрес ИМЕННО ЭТОГО филиала */}
-                        <p className="text-body-secondary small fw-medium mb-0">{activeBranch.address}</p>
+                        <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">{t('venue.address')}</h4>
+                        <p className="text-body-secondary small fw-medium mb-0">{tv(`venue.${venue.id}.addr${venue.branches.indexOf(activeBranch)}`, activeBranch.address)}</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* ИНТЕРАКТИВНАЯ КАРТА (Ищет конкретный филиал) */}
                   <div className="col-md-5 h-100">
-                    <a 
+                    <a
                       href={`https://yandex.by/maps/157/minsk/search/${encodeURIComponent('Минск ' + activeBranch.address)}`}
                       target="_blank" rel="noopener noreferrer"
                       className="d-block position-relative rounded-4 overflow-hidden shadow-sm border bg-body-tertiary text-decoration-none group-map"
@@ -172,36 +167,33 @@ export const VenueDetailPage = () => {
                       </div>
                       <div className="position-absolute inset-0 bg-dark bg-opacity-50 d-flex flex-column align-items-center justify-content-center opacity-0 transition-opacity map-overlay">
                         <div className="bg-white text-dark fw-bold rounded-pill px-4 py-2 d-flex align-items-center text-center gap-2 shadow-lg">
-                          <ExternalLink size={16} /> Маршрут
+                          <ExternalLink size={16} /> {t('venue.route')}
                         </div>
                       </div>
                     </a>
                   </div>
                 </div>
               </div>
-              
-              {/* БОКОВАЯ ПАНЕЛЬ ФИЛИАЛА */}
+
               <div className="col-lg-4">
                 <div className="bg-body-tertiary rounded-4 p-4 h-100">
-                  <h3 className="fw-black italic text-uppercase h5 mb-4 text-body-emphasis">Особенности</h3>
+                  <h3 className="fw-black italic text-uppercase h5 mb-4 text-body-emphasis">{t('venue.features')}</h3>
                   <ul className="list-unstyled mb-4">
-                    {/* Выводим фишки ИМЕННО ЭТОГО филиала */}
-                    {activeBranch.features.map((item) => (
+                    {activeBranch.features.map((item, idx) => (
                       <li key={item} className="d-flex align-items-center gap-3 mb-3 fw-bold text-body-secondary small">
                         <div className="bg-danger rounded-circle" style={{ width: '6px', height: '6px' }} />
-                        {item}
+                        {tv(`venue.${venue.id}.f${idx}`, item)}
                       </li>
                     ))}
                   </ul>
-                  
+
                   <a href={venue.instagramUrl} target="_blank" rel="noopener noreferrer" className="card p-3 border-0 rounded-4 d-flex flex-row align-items-center justify-content-between text-decoration-none bg-body shadow-sm mb-4">
                     <div className="small fw-bold text-uppercase tracking-widest text-body-secondary">Instagram</div>
                     <Instagram size={18} className="text-danger" />
                   </a>
 
-                  {/* ГАЛЕРЕЯ ИМЕННО ЭТОГО ФИЛИАЛА */}
                   <div className="pt-3 border-top">
-                    <h4 className="fw-black italic text-uppercase h6 mb-3 text-body-emphasis">Интерьер</h4>
+                    <h4 className="fw-black italic text-uppercase h6 mb-3 text-body-emphasis">{t('venue.interior')}</h4>
                     <div className="row g-2">
                       {activeBranch.gallery.map((img, idx) => (
                         <div key={idx} className="col-6">
@@ -219,15 +211,13 @@ export const VenueDetailPage = () => {
         </div>
       </section>
 
-      {/* Передаем в форму бронирования точный адрес выбранного филиала */}
       <section id="booking" className="container pb-5" style={{ maxWidth: '1000px' }}>
-        <BookingForm venueName={`${venue.name} (${activeBranch.address})`} venueId={venue.id} />
+        <BookingForm venueName={`${tv(`venue.name.${venue.id}`, venue.name)} (${tv(`venue.${venue.id}.addr${venue.branches.indexOf(activeBranch)}`, activeBranch.address)})`} venueId={venue.id} />
       </section>
 
       <section className="container pb-5 mb-5" style={{ maxWidth: '1000px' }}>
         <div className="card bg-body-tertiary border-0 rounded-4 p-4 p-md-5">
-          <h3 className="display-6 fw-black italic text-uppercase tracking-tighter mb-5 text-body-emphasis">Отзывы гостей</h3>
-          {/* ... Блок отзывов остался без изменений ... */}
+          <h3 className="display-6 fw-black italic text-uppercase tracking-tighter mb-5 text-body-emphasis">{t('venue.reviews')}</h3>
         </div>
       </section>
 
@@ -239,23 +229,20 @@ export const VenueDetailPage = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      
+
       <style>{`
         .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
         .z-1 { z-index: 1; }
         .z-2 { z-index: 2; }
         .fw-black { font-weight: 900; }
         .underline-offset-8 { text-underline-offset: 8px; }
-        
         .cursor-zoom-in { cursor: zoom-in; }
         .gallery-thumb { width: 100%; height: 100%; transition: transform 0.3s ease, filter 0.3s ease; }
         .gallery-thumb:hover { transform: scale(1.08); filter: brightness(0.9); }
-
         .lightbox-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: zoom-out; backdrop-filter: blur(5px); }
         .lightbox-image { max-width: 90%; max-height: 85vh; object-fit: contain; border-radius: 1rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); cursor: default; }
         .lightbox-close-btn { position: absolute; top: 20px; right: 20px; background: transparent; border: 0; padding: 10px; cursor: pointer; transition: transform 0.2s ease; }
         .lightbox-close-btn:hover { transform: scale(1.1); }
-
         .group-map .map-bg { transition: transform 0.7s ease; filter: grayscale(100%); }
         .group-map:hover .map-bg { transform: scale(1.1); filter: grayscale(0%); }
         .group-map .map-pin { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -263,7 +250,6 @@ export const VenueDetailPage = () => {
         .group-map .map-overlay { opacity: 0; transition: opacity 0.3s ease; }
         .group-map:hover .map-overlay { opacity: 1; }
         .drop-shadow-md { filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3)); }
-
         .hover-danger-light:hover { background-color: #fee2e2 !important; color: #ef4444 !important; }
       `}</style>
     </div>

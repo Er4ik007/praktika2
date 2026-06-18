@@ -1,9 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
-import React, { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
+import React from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { CosmicBackground } from './components/CosmicBackground';
+import { LangProvider, useLang } from './i18n/LanguageContext';
 
 
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
@@ -18,7 +20,6 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
 
-// BOM 123
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -27,28 +28,39 @@ function ScrollToTop() {
   return null;
 }
 
-export default function App() {
+function AppContent() {
+  const { lang } = useLang();
+
   return (
-    <Router>
+    <>
       <CosmicBackground />
       <div className="min-vh-100 bg-body text-body d-flex flex-column selection-red">
         <ScrollToTop />
         <Header />
-        <main style={{ minHeight: 'calc(100vh - 350px)' }}>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/venue/:id" element={<VenueDetailPage />} />
-            <Route path="/contacts" element={<ContactPage />} />
-            <Route path="/catalog" element={<CatalogPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/support" element={<SupportPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-          </Routes>
-        </main>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={lang}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+            style={{ minHeight: 'calc(100vh - 350px)' }}
+          >
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/venue/:id" element={<VenueDetailPage />} />
+              <Route path="/contacts" element={<ContactPage />} />
+              <Route path="/catalog" element={<CatalogPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/support" element={<SupportPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+            </Routes>
+          </motion.div>
+        </AnimatePresence>
         <Footer />
         <style>{`
           .font-sans { font-family: 'Inter', sans-serif; }
@@ -56,6 +68,16 @@ export default function App() {
           .fw-black { font-weight: 900; }
         `}</style>
       </div>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <LangProvider>
+        <AppContent />
+      </LangProvider>
     </Router>
   );
 }

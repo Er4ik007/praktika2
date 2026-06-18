@@ -185,6 +185,72 @@ body {
   backdrop-filter: blur(10px);
 }
 
+/* === Универсальные стили форм и рамок для тёмных тем === */
+[data-theme="autumn"] .form-control,
+[data-theme="autumn"] .form-select {
+  background-color: #2a1f15 !important;
+  border: 1px solid #4a3828 !important;
+}
+[data-theme="autumn"] .form-control:focus,
+[data-theme="autumn"] .form-select:focus {
+  border-color: #e07b39 !important;
+  box-shadow: 0 0 0 0.2rem rgba(224, 123, 57, 0.15) !important;
+}
+[data-theme="autumn"] .border-bottom,
+[data-theme="autumn"] .border-top { border-color: #4a3828 !important; }
+
+[data-theme="ocean"] .form-control,
+[data-theme="ocean"] .form-select {
+  background-color: #1a2d42 !important;
+  border: 1px solid #2a4565 !important;
+}
+[data-theme="ocean"] .form-control:focus,
+[data-theme="ocean"] .form-select:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.15) !important;
+}
+[data-theme="ocean"] .border-bottom,
+[data-theme="ocean"] .border-top { border-color: #2a4565 !important; }
+
+[data-theme="lavender"] .form-control,
+[data-theme="lavender"] .form-select {
+  background-color: #261e35 !important;
+  border: 1px solid #3d3258 !important;
+}
+[data-theme="lavender"] .form-control:focus,
+[data-theme="lavender"] .form-select:focus {
+  border-color: #a78bfa !important;
+  box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.15) !important;
+}
+[data-theme="lavender"] .border-bottom,
+[data-theme="lavender"] .border-top { border-color: #3d3258 !important; }
+
+[data-theme="forest"] .form-control,
+[data-theme="forest"] .form-select {
+  background-color: #1a2a1e !important;
+  border: 1px solid #2e4a35 !important;
+}
+[data-theme="forest"] .form-control:focus,
+[data-theme="forest"] .form-select:focus {
+  border-color: #4ade80 !important;
+  box-shadow: 0 0 0 0.2rem rgba(74, 222, 128, 0.15) !important;
+}
+[data-theme="forest"] .border-bottom,
+[data-theme="forest"] .border-top { border-color: #2e4a35 !important; }
+
+[data-theme="waterfall"] .form-control,
+[data-theme="waterfall"] .form-select {
+  background: rgba(18, 16, 42, 0.5) !important;
+  border: 1px solid rgba(192, 132, 252, 0.2) !important;
+}
+[data-theme="waterfall"] .form-control:focus,
+[data-theme="waterfall"] .form-select:focus {
+  border-color: #c084fc !important;
+  box-shadow: 0 0 0 0.2rem rgba(192, 132, 252, 0.15) !important;
+}
+[data-theme="waterfall"] .border-bottom,
+[data-theme="waterfall"] .border-top { border-color: rgba(192, 132, 252, 0.15) !important; }
+
 .text-primary-custom {
   color: var(--primary-color) !important;
 }
