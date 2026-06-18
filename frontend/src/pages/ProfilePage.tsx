@@ -329,7 +329,7 @@ export const ProfilePage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
-      setSaveMessage('Допустимые форматы: JPEG, PNG, WebP, GIF');
+      setSaveMessage(t('profile.allowedFormats'));
       setTimeout(() => setSaveMessage(''), 3000);
       return;
     }
@@ -637,11 +637,11 @@ export const ProfilePage = () => {
                       <button onClick={() => fileInputRef.current?.click()} disabled={isUploadingAvatar} className="btn btn-outline-danger fw-bold px-4 d-flex align-items-center gap-2">
                         {isUploadingAvatar ? <span className="spinner-border spinner-border-sm"></span> : <><Camera size={18} /> {t('profile.uploadPhoto')}</>}
                       </button>
-                      <p className="text-body-secondary small mt-2 mb-0">JPEG, PNG, WebP или GIF. До 2 МБ.</p>
+                      <p className="text-body-secondary small mt-2 mb-0">{t('profile.avatarFormats')}</p>
                     </div>
                   </div>
 
-                  <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block">Готовые аватарки</label>
+                   <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block">{t('profile.presetAvatars')}</label>
                   <div className="d-flex flex-wrap gap-2">
                     {PRESET_AVATARS.map((preset) => (
                       <button

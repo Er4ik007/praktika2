@@ -8,8 +8,6 @@ const LANGUAGES: { code: Lang; label: string; flag: string; displayCode: string 
   { code: 'ru', label: 'Русский', flag: '🇷🇺', displayCode: 'RU' },
   { code: 'be', label: 'Беларуская', flag: '🇧🇾', displayCode: 'BY' },
   { code: 'en', label: 'English', flag: '🇺🇸', displayCode: 'US' },
-  { code: 'pl', label: 'Polski', flag: '🇵🇱', displayCode: 'PL' },
-  { code: 'zh', label: '中文', flag: '🇨🇳', displayCode: 'CH' },
 ];
 
 export const LanguageSwitcher = () => {
@@ -59,7 +57,7 @@ export const LanguageSwitcher = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-            className="position-absolute top-100 end-0 mt-2 bg-body border rounded-4 shadow-lg overflow-hidden"
+            className="position-absolute top-100 end-0 mt-2 bg-body border rounded-4 shadow-lg overflow-hidden lang-dropdown"
             style={{ minWidth: '180px' }}
           >
             {LANGUAGES.map((item, i) => (
