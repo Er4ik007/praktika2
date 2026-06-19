@@ -189,6 +189,8 @@ export const translations: Translations = {
   'profile.cancelReasonDesc': { ru: 'Укажите причину отмены (необязательно):', be: 'Пазначце прычыну адмены (неабавязкова):', en: 'Specify the reason for cancellation (optional):' },
   'profile.cancelConfirm': { ru: 'Да, отменить', be: 'Так, адмяніць', en: 'Yes, cancel' },
   'profile.cancelKeep': { ru: 'Нет, оставить', be: 'Не, пакінуць', en: 'No, keep' },
+  'profile.cancelReasonLabel': { ru: 'Причина отмены: ', be: 'Прычына адмены: ', en: 'Cancellation reason: ' },
+  'profile.cancelReasonPlaceholder': { ru: 'Напишите свою причину...', be: 'Напішыце сваю прычыну...', en: 'Write your reason...' },
   'profile.reviews': { ru: 'Мои отзывы', be: 'Мае водгукі', en: 'My Reviews' },
   'profile.myReviews': { ru: 'Мои отзывы', be: 'Мае водгукі', en: 'My Reviews' },
   'profile.noReviews': { ru: 'Пока нет отзывов', be: 'Пакуль няма водгукаў', en: 'No reviews yet' },

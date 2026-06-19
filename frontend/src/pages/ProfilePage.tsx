@@ -961,7 +961,7 @@ export const ProfilePage = () => {
                               )}
                               {booking.cancel_reason && (
                                 <div className="col-12">
-                                  <span className="text-danger fw-bold">Причина отмены: </span>
+                                  <span className="text-danger fw-bold">{t('profile.cancelReasonLabel')}</span>
                                   <span className="text-body-secondary">{booking.cancel_reason}</span>
                                 </div>
                               )}
@@ -1062,7 +1062,7 @@ export const ProfilePage = () => {
                 >
                   <div className="d-flex justify-content-between align-items-center mb-4">
                     <h4 className="fw-bold text-body-emphasis mb-0">{t('profile.cancelReasonTitle')}</h4>
-                    <button onClick={() => setShowCancelModal(false)} className="btn btn-sm btn-light rounded-circle p-2"><X size={16} /></button>
+                    <button onClick={() => setShowCancelModal(false)} className="btn btn-sm btn-light rounded-circle d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', flexShrink: 0 }}><X size={16} /></button>
                   </div>
 
                   <p className="text-body-secondary mb-4">{t('profile.cancelReasonDesc')}</p>
@@ -1092,7 +1092,7 @@ export const ProfilePage = () => {
                       onChange={(e) => setCancelReason(e.target.value)}
                       className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none fw-medium mb-3"
                       style={{ minHeight: '80px' }}
-                      placeholder="Напишите свою причину..."
+                      placeholder={t('profile.cancelReasonPlaceholder')}
                     />
                   )}
 
