@@ -102,3 +102,28 @@ class ReviewResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ContactMessageCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    email: str = Field(..., min_length=1, max_length=100)
+    subject: str = Field(..., min_length=1, max_length=200)
+    message: str = Field(..., min_length=1, max_length=5000)
+
+class SupportMessageCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    email: str = Field(..., min_length=1, max_length=100)
+    category: str = Field(..., min_length=1, max_length=50)
+    message: str = Field(..., min_length=1, max_length=5000)
+
+class MessageResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    subject: str
+    message: str
+    source: str
+    category: Optional[str] = None
+    created_at: str
+
+    class Config:
+        from_attributes = True

@@ -79,4 +79,20 @@ class Booking(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="bookings")
-    
+
+# ==========================================
+# ТАБЛИЦА СООБЩЕНИЙ (Messages - Контакты/Поддержка)
+# ==========================================
+class Message(Base):
+    __tablename__ = "messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    email = Column(String(100), nullable=False)
+    subject = Column(String(200), nullable=False)
+    message = Column(Text, nullable=False)
+    source = Column(String(20), nullable=False)
+    category = Column(String(50), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+

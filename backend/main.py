@@ -530,3 +530,103 @@ def delete_review(
     db.delete(review)
     db.commit()
     return {"message": "Отзыв удален"}
+
+
+# ==========================================
+# КОНТАКТЫ И ПОДДЕРЖКА
+# ==========================================
+
+def send_message_email(name: str, email: str, subject: str, body: str, source: str, category: str = None):
+    smtp_user = os.getenv("SMTP_USER")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    if not smtp_user or not smtp_password:
+        return
+
+    label = "Поддержка" if source == "support" else "Контакты"
+    category_line = f"Категория: {category}\n" if category else ""
+
+    msg = MIMEText(
+        f"Новое обращение ({label})\n\n"
+        f"От: {name}\n"
+        f"Email: {email}\n"
+        f"Тема: {subject}\n"
+        f"{category_line}\n"
+        f"Сообщение:\n{body}"
+    )
+    msg['Subject'] = f"[{label}] {subject}"
+    msg['From'] = f"Minsk Gastro Guide <{smtp_user}>"
+    msg['To'] = smtp_user
+    msg['Reply-To'] = email
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+    except Exception as e:
+        print(f"Ошибка отправки письма: {e}")
+
+
+@app.post("/api/messages/contact", response_model=schemas.MessageResponse)
+def send_contact_message(
+    data: schemas.ContactMessageCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user_optional)
+):
+    user_id = current_user.id if current_user else None
+    new_msg = models.Message(
+        name=data.name,
+        email=data.email,
+        subject=data.subject,
+        message=data.message,
+        source="contact",
+        user_id=user_id
+    )
+    db.add(new_msg)
+    db.commit()
+    db.refresh(new_msg)
+
+    send_message_email(data.name, data.email, data.subject, data.message, "contact")
+
+    return schemas.MessageResponse(
+        id=new_msg.id,
+        name=new_msg.name,
+        email=new_msg.email,
+        subject=new_msg.subject,
+        message=new_msg.message,
+        source=new_msg.source,
+        category=new_msg.category,
+        created_at=str(new_msg.created_at)
+    )
+
+
+@app.post("/api/messages/support", response_model=schemas.MessageResponse)
+def send_support_message(
+    data: schemas.SupportMessageCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    new_msg = models.Message(
+        name=data.name,
+        email=data.email,
+        subject=f"[Поддержка] {data.category}",
+        message=data.message,
+        source="support",
+        category=data.category,
+        user_id=current_user.id
+    )
+    db.add(new_msg)
+    db.commit()
+    db.refresh(new_msg)
+
+    send_message_email(data.name, data.email, f"[Поддержка] {data.category}", data.message, "support", data.category)
+
+    return schemas.MessageResponse(
+        id=new_msg.id,
+        name=new_msg.name,
+        email=new_msg.email,
+        subject=new_msg.subject,
+        message=new_msg.message,
+        source=new_msg.source,
+        category=new_msg.category,
+        created_at=str(new_msg.created_at)
+    )

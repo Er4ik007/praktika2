@@ -1,19 +1,37 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Send, MessageSquare, LifeBuoy } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
 
 export const SupportPage = () => {
+  const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', category: '', message: '' });
   const { t } = useLang();
 
   useEffect(() => {
-    document.title = t('nav.support') || 'Поддержка';
-  }, [t]);
+    document.title = t('support.title') || 'Служба поддержки';
+    if (!localStorage.getItem('token')) {
+      navigate('/login');
+    }
+  }, [t, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('http://localhost:8000/api/messages/support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(formData)
+      });
+    } catch {}
   };
 
   return (
@@ -39,6 +57,8 @@ export const SupportPage = () => {
                 <input
                   required
                   type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
                   className="form-control rounded-3 bg-body border border-body-secondary py-3 px-4 shadow-none"
                   placeholder="Алексей"
                 />
@@ -50,6 +70,8 @@ export const SupportPage = () => {
                   type="email"
                   pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}"
                   title="Email должен содержать доменную зону (например: .com, .by, .ru)"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="form-control rounded-3 bg-body border border-body-secondary py-3 px-4 shadow-none"
                   placeholder="alex@example.com"
                 />
@@ -57,12 +79,18 @@ export const SupportPage = () => {
 
               <div className="col-12">
                 <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2 d-block ms-1">{t('support.form.category')}</label>
-                <select className="form-select rounded-3 bg-body border border-body-secondary py-3 px-4 shadow-none fw-medium">
-                  <option>{t('support.form.category.general')}</option>
-                  <option>{t('support.form.category.booking')}</option>
-                  <option>{t('support.form.category.venue')}</option>
-                  <option>{t('support.form.category.technical')}</option>
-                  <option>{t('support.form.category.other')}</option>
+                <select
+                  required
+                  value={formData.category}
+                  onChange={(e) => setFormData({...formData, category: e.target.value})}
+                  className="form-select rounded-3 bg-body border border-body-secondary py-3 px-4 shadow-none fw-medium"
+                >
+                  <option value="">{t('support.form.category.general')}</option>
+                  <option value="general">{t('support.form.category.general')}</option>
+                  <option value="booking">{t('support.form.category.booking')}</option>
+                  <option value="venue">{t('support.form.category.venue')}</option>
+                  <option value="technical">{t('support.form.category.technical')}</option>
+                  <option value="other">{t('support.form.category.other')}</option>
                 </select>
               </div>
 
@@ -71,6 +99,8 @@ export const SupportPage = () => {
                 <textarea
                   required
                   rows={5}
+                  value={formData.message}
+                  onChange={(e) => setFormData({...formData, message: e.target.value})}
                   className="form-control rounded-3 bg-body border border-body-secondary py-3 px-4 shadow-none h-25"
                   style={{ minHeight: '150px' }}
                   placeholder={t('support.form.messagePlaceholder')}
@@ -100,7 +130,7 @@ export const SupportPage = () => {
             <h2 className="h3 fw-bold text-body-emphasis mb-2">{t('support.form.sent')}</h2>
             <p className="text-success fw-medium opacity-75 mb-4">{t('support.form.sentDesc')}</p>
             <button
-              onClick={() => setSubmitted(false)}
+              onClick={() => { setSubmitted(false); setFormData({ name: '', email: '', category: '', message: '' }); }}
               className="btn btn-link text-success fw-bold text-uppercase small tracking-widest text-decoration-none hover-underline px-0"
             >
               {t('support.form.sendAnother')}

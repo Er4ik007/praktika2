@@ -473,7 +473,8 @@ export const VenueDetailPage = () => {
                       <div className="position-relative">
                         <button
                           onClick={() => setDeleteReviewId(deleteReviewId === review.id ? null : review.id)}
-                          className="btn btn-sm bg-body-tertiary rounded-circle p-2"
+                          className="btn btn-sm bg-body-tertiary rounded-circle border-0 p-0 d-flex align-items-center justify-content-center"
+                          style={{ width: '32px', height: '32px' }}
                         >
                           <Trash2 size={14} className="text-body-secondary" />
                         </button>
@@ -482,7 +483,7 @@ export const VenueDetailPage = () => {
                             <p className="small fw-bold text-body-emphasis mb-2">{t('review.confirmDelete')}</p>
                             <div className="d-flex gap-2">
                               <button onClick={() => handleDeleteReview(review.id)} className="btn btn-sm btn-danger fw-bold flex-grow-1">{t('review.delete')}</button>
-                              <button onClick={() => setDeleteReviewId(null)} className="btn btn-sm bg-body-tertiary text-body-secondary fw-bold flex-grow-1">{t('review.cancel')}</button>
+                              <button onClick={() => setDeleteReviewId(null)} className="btn btn-sm bg-body text-body-secondary fw-bold flex-grow-1 border">{t('review.cancel')}</button>
                             </div>
                           </div>
                         )}

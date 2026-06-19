@@ -193,6 +193,7 @@ export const translations: Translations = {
   'profile.myReviews': { ru: 'Мои отзывы', be: 'Мае водгукі', en: 'My Reviews' },
   'profile.noReviews': { ru: 'Пока нет отзывов', be: 'Пакуль няма водгукаў', en: 'No reviews yet' },
   'profile.noReviewsDesc': { ru: 'Вы еще не оставляли ни одного отзыва.', be: 'Вы яшчэ не пакіналі ніводнага водгуку.', en: 'You haven\'t left any reviews yet.' },
+  'profile.goToVenue': { ru: 'Перейти к заведению', be: 'Перайсці да ўстановы', en: 'Go to venue' },
 
   // Footer
   'footer.desc': { ru: 'Ваш надежный гид по лучшим заведениям Минска. Мы любим свой город и его кухню.', be: 'Ваш надзейны гід па лепшых установах Мінска. Мы любім свой горад і яго кухню.', en: 'Your reliable guide to the best venues in Minsk. We love our city and its cuisine.' },

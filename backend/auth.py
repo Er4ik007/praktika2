@@ -1,8 +1,9 @@
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
+from typing import Optional
 from sqlalchemy.orm import Session
 import models
 from database import get_db
@@ -55,3 +56,22 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
         
     return user # Возвращаем объект пользователя (со всеми его данными)
+
+
+# === ОХРАННИК С ОПЦИОНАЛЬНЫМ ТОКЕНОМ ===
+def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+    token = auth_header.removeprefix("Bearer ")
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            return None
+        user = db.query(models.User).filter(models.User.id == int(user_id)).first()
+        return user
+    except jwt.PyJWTError:
+        return None

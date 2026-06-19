@@ -12,13 +12,25 @@ export const ContactPage = () => {
     document.title = t('nav.contacts');
   }, [t]);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitted(true);
     setTimeout(() => {
       setIsSubmitted(false);
       setFormData({ name: '', email: '', subject: '', message: '' });
     }, 5000);
+
+    try {
+      const token = localStorage.getItem('token');
+      await fetch('http://localhost:8000/api/messages/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify(formData)
+      });
+    } catch {}
   };
 
   return (
@@ -55,7 +67,7 @@ export const ContactPage = () => {
               </div>
               <div>
                 <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">Email</h4>
-                <p className="text-secondary fw-medium mb-0">asasin.leha@yandex.ru</p>
+                <p className="text-secondary fw-medium mb-0">asasin.leha007@gmail.com</p>
               </div>
             </div>
             <div className="d-flex align-items-start gap-4">
