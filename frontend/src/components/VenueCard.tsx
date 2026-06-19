@@ -10,9 +10,10 @@ interface VenueCardProps {
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
   index: number;
+  liveRating?: { avg: string; count: number };
 }
 
-export const VenueCard = React.memo(({ venue, isFavorite, onToggleFavorite }: VenueCardProps) => {
+export const VenueCard = React.memo(({ venue, isFavorite, onToggleFavorite, liveRating }: VenueCardProps) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const { t, tv } = useLang();
@@ -80,7 +81,7 @@ export const VenueCard = React.memo(({ venue, isFavorite, onToggleFavorite }: Ve
           </button>
           <div className="position-absolute top-0 end-0 m-3 bg-body px-2 py-1 rounded-pill d-flex align-items-center gap-1 small fw-bold text-body-emphasis shadow-sm">
             <Star size={14} className="text-warning fill-warning" style={{ fill: '#ffc107' }} />
-            {venue.rating}
+            {liveRating ? liveRating.avg : '0'}
           </div>
           <div className="position-absolute bottom-0 start-0 m-3 d-flex gap-1">
             {[...Array(4)].map((_, i) => (

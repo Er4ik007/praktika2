@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, MapPin, ChevronLeft, CreditCard, Clock, Instagram, Send, X, ExternalLink, ImagePlus, Trash2, LogIn } from 'lucide-react';
+import { Star, MapPin, ChevronLeft, ChevronRight, CreditCard, Clock, Instagram, Send, X, ExternalLink, ImagePlus, Trash2, LogIn } from 'lucide-react';
 import { venues } from '../data';
 import { BookingForm } from '../components/BookingForm';
 import { useLang } from '../i18n/LanguageContext';
@@ -195,10 +195,15 @@ export const VenueDetailPage = () => {
       <section className="position-relative w-100" style={{ height: '50vh' }}>
         <img src={venue.image} alt={venue.name} className="w-100 h-100 object-fit-cover" />
         <div className="position-absolute inset-0 bg-black opacity-25" />
-        <button onClick={() => navigate(-1)} className="position-absolute top-0 start-0 m-4 p-3 bg-body border-0 rounded-circle shadow-sm z-2">
-          <ChevronLeft size={24} className="text-body" />
-        </button>
       </section>
+
+      <button
+        onClick={() => navigate(-1)}
+        className="position-fixed m-4 p-3 bg-body border rounded-circle shadow-sm z-2"
+        style={{ top: '70px', left: '0' }}
+      >
+        <ChevronLeft size={24} className="text-body" />
+      </button>
 
       <section className="container mt-n5 position-relative z-1 mb-5">
         <div className="card border-0 rounded-4 p-4 p-md-5 shadow-lg mx-auto bg-body" style={{ maxWidth: '1000px', marginTop: '-120px' }}>
@@ -468,16 +473,16 @@ export const VenueDetailPage = () => {
                       <div className="position-relative">
                         <button
                           onClick={() => setDeleteReviewId(deleteReviewId === review.id ? null : review.id)}
-                          className="btn btn-sm btn-light rounded-circle p-2"
+                          className="btn btn-sm bg-body-tertiary rounded-circle p-2"
                         >
                           <Trash2 size={14} className="text-body-secondary" />
                         </button>
                         {deleteReviewId === review.id && (
-                          <div className="position-absolute end-0 mt-1 bg-body border rounded-3 shadow-lg p-3" style={{ zIndex: 100, minWidth: '160px' }}>
+                          <div className="position-absolute end-0 mt-1 bg-body-tertiary border rounded-3 shadow-lg p-3" style={{ zIndex: 100, minWidth: '160px' }}>
                             <p className="small fw-bold text-body-emphasis mb-2">{t('review.confirmDelete')}</p>
                             <div className="d-flex gap-2">
                               <button onClick={() => handleDeleteReview(review.id)} className="btn btn-sm btn-danger fw-bold flex-grow-1">{t('review.delete')}</button>
-                              <button onClick={() => setDeleteReviewId(null)} className="btn btn-sm btn-light fw-bold flex-grow-1">{t('review.cancel')}</button>
+                              <button onClick={() => setDeleteReviewId(null)} className="btn btn-sm bg-body-tertiary text-body-secondary fw-bold flex-grow-1">{t('review.cancel')}</button>
                             </div>
                           </div>
                         )}
@@ -515,8 +520,8 @@ export const VenueDetailPage = () => {
                 <button onClick={(e) => { e.stopPropagation(); setLightboxIndex(prev => (prev > 0 ? prev - 1 : lightboxPhotos.length - 1)); setActiveImage(lightboxPhotos[(lightboxIndex > 0 ? lightboxIndex - 1 : lightboxPhotos.length - 1)]); }} className="position-absolute start-0 top-50 translate-middle-y ms-4 btn btn-light rounded-circle p-3" style={{ zIndex: 10001 }}>
                   <ChevronLeft size={24} />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); const next = (lightboxIndex < lightboxPhotos.length - 1 ? lightboxIndex + 1 : 0); setLightboxIndex(next); setActiveImage(lightboxPhotos[next]); }} className="position-absolute end-0 top-50 translate-middle-y me-4 btn btn-light rounded-circle p-3" style={{ zIndex: 10001, transform: 'translate(50%, -50%) rotate(180deg)' }}>
-                  <ChevronLeft size={24} />
+                <button onClick={(e) => { e.stopPropagation(); const next = (lightboxIndex < lightboxPhotos.length - 1 ? lightboxIndex + 1 : 0); setLightboxIndex(next); setActiveImage(lightboxPhotos[next]); }} className="position-absolute end-0 top-50 translate-middle-y me-4 btn btn-light rounded-circle p-3" style={{ zIndex: 10001 }}>
+                  <ChevronRight size={24} />
                 </button>
               </>
             )}
