@@ -29,7 +29,7 @@ export const CatalogPage = () => {
       const ratings: Record<string, { avg: string; count: number }> = {};
       await Promise.all(venues.map(async (venue) => {
         try {
-          const res = await fetch(`http://localhost:8000/api/reviews/${venue.id}`);
+          const res = await fetch(`https://praktika2-vkkr.onrender.com/api/reviews/${venue.id}`);
           if (res.ok) {
             const reviews = await res.json();
             if (reviews.length > 0) {
@@ -61,7 +61,7 @@ export const CatalogPage = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
       try {
-        const res = await fetch('http://localhost:8000/api/favorites', {
+        const res = await fetch('https://praktika2-vkkr.onrender.com/api/favorites', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -97,7 +97,7 @@ export const CatalogPage = () => {
     setFavorites(prev => isNowFavorite ? [...prev, id] : prev.filter(fid => fid !== id));
 
     try {
-      const res = await fetch('http://localhost:8000/api/favorites/toggle', {
+      const res = await fetch('https://praktika2-vkkr.onrender.com/api/favorites/toggle', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

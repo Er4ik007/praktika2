@@ -36,7 +36,7 @@ export const Header = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token || !userName) return;
-    fetch('http://localhost:8000/api/users/me', {
+    fetch('https://praktika2-vkkr.onrender.com/api/users/me', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.ok ? res.json() : null)

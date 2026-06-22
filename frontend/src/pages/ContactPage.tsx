@@ -22,7 +22,7 @@ export const ContactPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:8000/api/messages/contact', {
+      await fetch('https://praktika2-vkkr.onrender.com/api/messages/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -45,7 +45,7 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
       const token = localStorage.getItem('token');
       if (!token) return;
       try {
-        const res = await fetch('http://localhost:8000/api/users/me', {
+        const res = await fetch('https://praktika2-vkkr.onrender.com/api/users/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -103,7 +103,7 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
     const fullPhone = `${selectedCountry.code} ${rawPhone}`;
 
     try {
-      const res = await fetch('http://localhost:8000/api/bookings', {
+      const res = await fetch('https://praktika2-vkkr.onrender.com/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -38,7 +38,7 @@ app = FastAPI(
 # ==========================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # В рабочей версии тут будет ссылка на Vercel, пока разрешаем всем
+    allow_origins=["https://praktika2-eta.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],  # Разрешаем GET, POST, OPTIONS и т.д.
     allow_headers=["*"],  # Разрешаем любые заголовки (включая токены)

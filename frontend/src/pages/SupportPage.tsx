@@ -23,7 +23,7 @@ export const SupportPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:8000/api/messages/support', {
+      await fetch('https://praktika2-vkkr.onrender.com/api/messages/support', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

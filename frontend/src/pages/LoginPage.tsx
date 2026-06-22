@@ -25,7 +25,7 @@ export const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true); setError('');
     try {
-      const res = await fetch('http://localhost:8000/api/login', {
+      const res = await fetch('https://praktika2-vkkr.onrender.com/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -45,7 +45,7 @@ export const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true); setError('');
     try {
-      const res = await fetch('http://localhost:8000/api/forgot-password', {
+      const res = await fetch('https://praktika2-vkkr.onrender.com/api/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail })
@@ -65,7 +65,7 @@ export const LoginPage = () => {
       return;
     }
     try {
-      const res = await fetch('http://localhost:8000/api/reset-password', {
+      const res = await fetch('https://praktika2-vkkr.onrender.com/api/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail, code: resetCode, new_password: newPassword })

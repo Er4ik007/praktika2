@@ -60,7 +60,7 @@ export const VenueDetailPage = () => {
 
   useEffect(() => {
     if (id) {
-      fetch(`http://localhost:8000/api/reviews/${id}`)
+      fetch(`https://praktika2-vkkr.onrender.com/api/reviews/${id}`)
         .then(res => res.json())
         .then(data => { setReviews(data); setReviewsLoading(false); })
         .catch(() => setReviewsLoading(false));
@@ -130,7 +130,7 @@ export const VenueDetailPage = () => {
     setReviewError('');
 
     try {
-      const res = await fetch('http://localhost:8000/api/reviews', {
+      const res = await fetch('https://praktika2-vkkr.onrender.com/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ venue_id: id, branch_id: activeBranch.id, rating: newReviewRating, text: newReviewText })
@@ -141,7 +141,7 @@ export const VenueDetailPage = () => {
       if (reviewFiles.length > 0) {
         const formData = new FormData();
         reviewFiles.forEach(f => formData.append('files', f));
-        const photoRes = await fetch(`http://localhost:8000/api/reviews/photos?review_id=${data.id}`, {
+        const photoRes = await fetch(`https://praktika2-vkkr.onrender.com/api/reviews/photos?review_id=${data.id}`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData
@@ -169,7 +169,7 @@ export const VenueDetailPage = () => {
   const handleDeleteReview = async (reviewId: number) => {
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:8000/api/reviews/${reviewId}`, {
+      const res = await fetch(`https://praktika2-vkkr.onrender.com/api/reviews/${reviewId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
