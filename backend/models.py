@@ -53,6 +53,7 @@ class Review(Base):
     text = Column(Text, nullable=False)
     photos = Column(Text, nullable=True)
     venue_id = Column(String(50), nullable=False, index=True) 
+    branch_id = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user_id = Column(Integer, ForeignKey("users.id"))

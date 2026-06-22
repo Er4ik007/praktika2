@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Star, MapPin, ChevronLeft, ChevronRight, CreditCard, Clock, Instagram, Send, X, ExternalLink, ImagePlus, Trash2, LogIn } from 'lucide-react';
+import { Star, MapPin, ChevronLeft, ChevronRight, ChevronDown, CreditCard, Clock, Instagram, Send, X, ExternalLink, ImagePlus, Trash2, LogIn, Check } from 'lucide-react';
 import { venues } from '../data';
 import { BookingForm } from '../components/BookingForm';
 import { useLang } from '../i18n/LanguageContext';
@@ -12,6 +12,7 @@ interface Review {
   text: string;
   photos: string[] | null;
   venue_id: string;
+  branch_id: string | null;
   created_at: string;
   user_name: string;
   user_avatar: string | null;
@@ -21,6 +22,7 @@ interface Review {
 export const VenueDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const venue = venues.find(v => v.id === id);
   const { t, tv } = useLang();
 
@@ -39,16 +41,22 @@ export const VenueDetailPage = () => {
   const [lightboxPhotos, setLightboxPhotos] = useState<string[]>([]);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [deleteReviewId, setDeleteReviewId] = useState<number | null>(null);
+  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
+  const branchDropdownRef = useRef<HTMLDivElement>(null);
 
   const token = localStorage.getItem('token');
   const currentUserId = token ? JSON.parse(atob(token.split('.')[1])).sub : null;
 
   useEffect(() => {
     if (venue && venue.branches.length > 0) {
-      setActiveBranchId(venue.branches[0].id);
+      const branchParam = searchParams.get('branch');
+      const targetBranch = branchParam
+        ? venue.branches.find(b => b.id === branchParam)
+        : null;
+      setActiveBranchId(targetBranch ? targetBranch.id : venue.branches[0].id);
       document.title = `${venue.name}`;
     }
-  }, [venue]);
+  }, [venue, searchParams]);
 
   useEffect(() => {
     if (id) {
@@ -76,6 +84,16 @@ export const VenueDetailPage = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightboxPhotos.length]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (branchDropdownRef.current && !branchDropdownRef.current.contains(e.target as Node)) {
+        setBranchDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (!venue) return <div className="container py-5 my-5 text-center"><h1 className="display-4 fw-bold">{t('venue.notFound')}</h1></div>;
 
@@ -115,7 +133,7 @@ export const VenueDetailPage = () => {
       const res = await fetch('http://localhost:8000/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ venue_id: id, rating: newReviewRating, text: newReviewText })
+        body: JSON.stringify({ venue_id: id, branch_id: activeBranch.id, rating: newReviewRating, text: newReviewText })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Ошибка');
@@ -186,8 +204,10 @@ export const VenueDetailPage = () => {
 
   const venueType = t(`venue.${venue.type}`);
 
-  const avgRating = reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+  const filteredReviews = reviews.filter(r => r.branch_id === activeBranch.id);
+
+  const avgRating = filteredReviews.length > 0
+    ? (filteredReviews.reduce((sum, r) => sum + r.rating, 0) / filteredReviews.length).toFixed(1)
     : null;
 
   return (
@@ -219,7 +239,7 @@ export const VenueDetailPage = () => {
                 <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill">
                   <Star size={18} className="text-warning fill-warning" />
                   <span className="fw-black text-body-emphasis">{avgRating || venue.rating}</span>
-                  <span className="text-body-secondary small">({reviews.length})</span>
+                  <span className="text-body-secondary small">({filteredReviews.length})</span>
                 </div>
                 <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill fw-bold">
                   <CreditCard size={18} className="text-body-secondary" />
@@ -228,23 +248,85 @@ export const VenueDetailPage = () => {
               </div>
 
               {venue.branches.length > 1 && (
-                <div className="mb-4">
+                <div className="mb-4" ref={branchDropdownRef} style={{ position: 'relative' }}>
                   <span className="small fw-bold text-body-secondary text-uppercase tracking-widest d-block mb-2">{t('venue.selectAddress')}</span>
-                  <div className="d-flex flex-wrap gap-2">
-                    {venue.branches.map((branch, bIdx) => (
-                      <button
-                        key={branch.id}
-                        onClick={() => setActiveBranchId(branch.id)}
-                        className={`btn rounded-pill px-4 py-2 small fw-bold transition-colors border-0 shadow-sm ${
-                          activeBranchId === branch.id
-                            ? 'bg-danger text-white'
-                            : 'bg-body-tertiary text-body-secondary hover-danger-light'
-                        }`}
+                  <button
+                    onClick={() => setBranchDropdownOpen(prev => !prev)}
+                    className="d-flex align-items-center justify-content-between gap-3 w-100 bg-body-tertiary border-0 rounded-3 px-4 py-3 text-start shadow-sm branch-dropdown-trigger"
+                    style={{ transition: 'box-shadow 0.2s ease, background-color 0.2s ease' }}
+                  >
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="bg-danger bg-opacity-10 p-2 rounded-2 flex-shrink-0">
+                        <MapPin size={18} className="text-danger" />
+                      </div>
+                      <div>
+                        <span className="small fw-bold text-body-secondary text-uppercase tracking-widest d-block" style={{ fontSize: '10px', letterSpacing: '0.1em' }}>{t('venue.address')}</span>
+                        <span className="fw-bold text-body-emphasis">{tv(`venue.${venue.id}.addr${venue.branches.indexOf(activeBranch)}`, activeBranch.address)}</span>
+                      </div>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: branchDropdownOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown size={20} className="text-body-secondary" />
+                    </motion.div>
+                  </button>
+
+                  <AnimatePresence>
+                    {branchDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                        transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                        className="position-absolute start-0 end-0 mt-2 border rounded-4 shadow-lg overflow-hidden branch-dropdown"
+                        style={{ zIndex: 50 }}
                       >
-                        {tv(`venue.${venue.id}.addr${bIdx}`, branch.address)}
-                      </button>
-                    ))}
-                  </div>
+                        <div className="py-2">
+                          {venue.branches.map((branch, bIdx) => {
+                            const isActive = activeBranchId === branch.id;
+                            return (
+                              <button
+                                key={branch.id}
+                                onClick={() => { setActiveBranchId(branch.id); setBranchDropdownOpen(false); }}
+                                className="d-flex align-items-center gap-3 w-100 border-0 text-start px-4 py-3 branch-dropdown-item"
+                                style={{
+                                  transition: 'background-color 0.15s ease',
+                                  backgroundColor: isActive ? 'var(--bs-danger-bg-subtle, rgba(220,53,69,0.08))' : 'transparent',
+                                }}
+                              >
+                                <div
+                                  className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                                  style={{
+                                    width: '32px',
+                                    height: '32px',
+                                    backgroundColor: isActive ? 'var(--bs-danger, #dc3545)' : 'var(--bs-body-tertiary)',
+                                    transition: 'background-color 0.2s ease',
+                                  }}
+                                >
+                                  {isActive ? (
+                                    <Check size={16} className="text-white" />
+                                  ) : (
+                                    <MapPin size={14} className="text-body-secondary" />
+                                  )}
+                                </div>
+                                <div className="flex-grow-1 min-width-0">
+                                  <span className={`d-block fw-bold small ${isActive ? 'text-danger' : 'text-body-emphasis'}`}>
+                                    {tv(`venue.${venue.id}.addr${bIdx}`, branch.address)}
+                                  </span>
+                                  {branch.workingHours && (
+                                    <span className="d-block text-body-secondary" style={{ fontSize: '12px' }}>
+                                      {branch.workingHours.split('\n')[0]}
+                                    </span>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               )}
 
@@ -438,7 +520,7 @@ export const VenueDetailPage = () => {
 
           {reviewsLoading ? (
             <div className="text-center py-4"><div className="spinner-border text-danger"></div></div>
-          ) : reviews.length === 0 ? (
+          ) : filteredReviews.length === 0 ? (
             <div className="text-center py-5">
               <Star size={64} className="text-secondary opacity-25 mb-4 mx-auto" />
               <h4 className="fw-bold text-body-emphasis">{t('review.noReviews')}</h4>
@@ -446,7 +528,7 @@ export const VenueDetailPage = () => {
             </div>
           ) : (
             <div className="d-grid gap-3">
-              {reviews.map(review => (
+              {filteredReviews.map(review => (
                 <div key={review.id} className="bg-body rounded-4 p-4 border">
                   <div className="d-flex justify-content-between align-items-start mb-3">
                     <div className="d-flex align-items-center gap-3">
@@ -467,6 +549,16 @@ export const VenueDetailPage = () => {
                           </div>
                           <span className="text-body-secondary small">{formatDate(review.created_at)}</span>
                         </div>
+                        {review.branch_id && venue && (() => {
+                          const branchIdx = venue.branches.findIndex(b => b.id === review.branch_id);
+                          const branch = branchIdx >= 0 ? venue.branches[branchIdx] : null;
+                          return branch ? (
+                            <div className="d-flex align-items-center gap-1 mt-1">
+                              <MapPin size={12} className="text-danger" />
+                              <span className="text-body-secondary small">{tv(`venue.${venue.id}.addr${branchIdx}`, branch.address)}</span>
+                            </div>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
                     {String(currentUserId) === String(review.user_id) && (
@@ -571,6 +663,11 @@ export const VenueDetailPage = () => {
         .star-icon { transition: fill 0.2s ease, stroke 0.2s ease, transform 0.2s ease, filter 0.2s ease; }
         .star-active { filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.6)); }
         .star-inactive { filter: none; }
+        .branch-dropdown-trigger:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        [data-bs-theme="dark"] .branch-dropdown-trigger:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        .branch-dropdown-item:hover { background-color: var(--bs-body-tertiary) !important; }
+        .branch-dropdown-item:hover > div:first-child:not([style*="background-color: var(--bs-danger"]) { background-color: var(--bs-danger) !important; }
+        .branch-dropdown-item:hover > div:first-child:not([style*="background-color: var(--bs-danger"]) svg { color: white !important; }
       `}</style>
     </div>
   );

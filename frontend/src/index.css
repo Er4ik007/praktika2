@@ -254,11 +254,16 @@ body {
 }
 
 /* === Универсальные стили форм и рамок для тёмных тем === */
-[data-theme="autumn"] .lang-dropdown { background-color: #1a1410 !important; }
-[data-theme="ocean"] .lang-dropdown { background-color: #0f1923 !important; }
-[data-theme="lavender"] .lang-dropdown { background-color: #18131f !important; }
-[data-theme="forest"] .lang-dropdown { background-color: #111a14 !important; }
-[data-theme="waterfall"] .lang-dropdown { background-color: #12102a !important; }
+[data-theme="autumn"] .lang-dropdown,
+[data-theme="autumn"] .branch-dropdown { background-color: #1a1410 !important; }
+[data-theme="ocean"] .lang-dropdown,
+[data-theme="ocean"] .branch-dropdown { background-color: #0f1923 !important; }
+[data-theme="lavender"] .lang-dropdown,
+[data-theme="lavender"] .branch-dropdown { background-color: #18131f !important; }
+[data-theme="forest"] .lang-dropdown,
+[data-theme="forest"] .branch-dropdown { background-color: #111a14 !important; }
+[data-theme="waterfall"] .lang-dropdown,
+[data-theme="waterfall"] .branch-dropdown { background-color: #12102a !important; }
 [data-theme="autumn"] .form-control,
 [data-theme="autumn"] .form-select {
   background-color: rgba(26, 20, 16, 0.5) !important;

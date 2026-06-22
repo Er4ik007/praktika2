@@ -20,6 +20,8 @@ from sqlalchemy import text
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS photos TEXT"))
+        conn.execute(text("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS branch_id VARCHAR(50)"))
+        conn.execute(text("ALTER TABLE reviews DROP COLUMN IF EXISTS branch_address"))
         conn.commit()
 except Exception:
     pass
@@ -403,15 +405,17 @@ def create_review(
 ):
     existing = db.query(models.Review).filter(
         models.Review.user_id == current_user.id,
-        models.Review.venue_id == review.venue_id
+        models.Review.venue_id == review.venue_id,
+        models.Review.branch_id == review.branch_id
     ).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Вы уже оставляли отзыв на это заведение")
+        raise HTTPException(status_code=400, detail="Вы уже оставляли отзыв на этот адрес")
 
     new_review = models.Review(
         rating=review.rating,
         text=review.text,
         venue_id=review.venue_id,
+        branch_id=review.branch_id,
         user_id=current_user.id
     )
     db.add(new_review)
@@ -424,6 +428,7 @@ def create_review(
         text=new_review.text,
         photos=None,
         venue_id=new_review.venue_id,
+        branch_id=new_review.branch_id,
         created_at=str(new_review.created_at),
         user_name=current_user.name,
         user_avatar=current_user.avatar,
@@ -483,6 +488,7 @@ def get_my_reviews(
             text=r.text,
             photos=photos,
             venue_id=r.venue_id,
+            branch_id=r.branch_id,
             created_at=str(r.created_at),
             user_name=user.name if user else "Удалённый пользователь",
             user_avatar=user.avatar if user else None,
@@ -507,6 +513,7 @@ def get_venue_reviews(venue_id: str, db: Session = Depends(get_db)):
             text=r.text,
             photos=photos,
             venue_id=r.venue_id,
+            branch_id=r.branch_id,
             created_at=str(r.created_at),
             user_name=user.name if user else "Удалённый пользователь",
             user_avatar=user.avatar if user else None,

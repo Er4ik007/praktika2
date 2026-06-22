@@ -27,6 +27,7 @@ export const HomePage = () => {
   }, []);
 
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [venueRatings, setVenueRatings] = useState<Record<string, { avg: string; count: number }>>({});
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -45,6 +46,24 @@ export const HomePage = () => {
       }
     };
     fetchFavorites();
+
+    const fetchRatings = async () => {
+      const ratings: Record<string, { avg: string; count: number }> = {};
+      await Promise.all(FEATURED_VENUES.map(async (venue) => {
+        try {
+          const res = await fetch(`http://localhost:8000/api/reviews/${venue.id}`);
+          if (res.ok) {
+            const reviews = await res.json();
+            if (reviews.length > 0) {
+              const avg = (reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length).toFixed(1);
+              ratings[venue.id] = { avg, count: reviews.length };
+            }
+          }
+        } catch {}
+      }));
+      setVenueRatings(ratings);
+    };
+    fetchRatings();
   }, []);
 
   const toggleFavorite = useCallback(async (id: string) => {
@@ -137,6 +156,7 @@ export const HomePage = () => {
                 isFavorite={favorites.includes(venue.id)}
                 onToggleFavorite={toggleFavorite}
                 index={index}
+                liveRating={venueRatings[venue.id]}
               />
             </div>
           ))}

@@ -184,6 +184,7 @@ export const translations: Translations = {
   'profile.emptyHistory': { ru: 'История пуста', be: 'Гісторыя пустая', en: 'History is empty' },
   'profile.active': { ru: 'Активно', be: 'Актыўна', en: 'Active' },
   'profile.cancelled': { ru: 'Отменено', be: 'Адменена', en: 'Cancelled' },
+  'profile.expired': { ru: 'Просрочено', be: 'Пратэрмінавана', en: 'Expired' },
   'profile.cancelBooking': { ru: 'Отменить', be: 'Адмяніць', en: 'Cancel' },
   'profile.cancelReasonTitle': { ru: 'Отмена бронирования', be: 'Адмена браніравання', en: 'Cancel Booking' },
   'profile.cancelReasonDesc': { ru: 'Укажите причину отмены (необязательно):', be: 'Пазначце прычыну адмены (неабавязкова):', en: 'Specify the reason for cancellation (optional):' },

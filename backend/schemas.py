@@ -86,6 +86,7 @@ class ChangePassword(BaseModel):
 
 class ReviewCreate(BaseModel):
     venue_id: str
+    branch_id: Optional[str] = None
     rating: int = Field(..., ge=1, le=5)
     text: str = Field(..., min_length=1, max_length=1000)
 
@@ -95,6 +96,7 @@ class ReviewResponse(BaseModel):
     text: str
     photos: Optional[list[str]] = None
     venue_id: str
+    branch_id: Optional[str] = None
     created_at: str
     user_name: str
     user_avatar: Optional[str] = None

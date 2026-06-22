@@ -49,6 +49,7 @@ interface Review {
   text: string;
   photos: string[] | null;
   venue_id: string;
+  branch_id: string | null;
   created_at: string;
   user_name: string;
   user_avatar: string | null;
@@ -73,6 +74,7 @@ export const ProfilePage = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [selectedReasonTemplate, setSelectedReasonTemplate] = useState<string | null>(null);
+  const [venueRatings, setVenueRatings] = useState<Record<string, { avg: string; count: number }>>({});
 
   const getCurrentTheme = () => {
     const appTheme = localStorage.getItem('appTheme');
@@ -253,6 +255,23 @@ export const ProfilePage = () => {
     .then(res => res.json())
     .then(favData => {
       setFavoriteIds(favData);
+      const fetchRatings = async () => {
+        const ratings: Record<string, { avg: string; count: number }> = {};
+        await Promise.all(favData.map(async (vid: string) => {
+          try {
+            const res = await fetch(`http://localhost:8000/api/reviews/${vid}`);
+            if (res.ok) {
+              const reviews = await res.json();
+              if (reviews.length > 0) {
+                const avg = (reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length).toFixed(1);
+                ratings[vid] = { avg, count: reviews.length };
+              }
+            }
+          } catch {}
+        }));
+        setVenueRatings(ratings);
+      };
+      fetchRatings();
       return fetchBookings();
     })
     .then(() => fetchMyReviews())
@@ -544,6 +563,14 @@ export const ProfilePage = () => {
   };
 
   const favoriteVenues = venues.filter(v => favoriteIds.includes(v.id));
+
+  const isBookingExpired = (booking: Booking) => {
+    if (booking.status !== 'active') return false;
+    try {
+      const bookingDate = new Date(booking.date + 'T23:59:59');
+      return bookingDate.getTime() < Date.now();
+    } catch { return false; }
+  };
 
   if (isLoading) return <div className="d-flex justify-content-center align-items-center" style={{ height: '70vh' }}><div className="spinner-border text-danger"></div></div>;
 
@@ -846,7 +873,7 @@ export const ProfilePage = () => {
                   <div className="row g-4">
                     {favoriteVenues.map((venue, index) => (
                       <div key={venue.id} className="col-md-6">
-                        <VenueCard venue={venue} isFavorite={true} onToggleFavorite={removeFavorite} index={index} />
+                        <VenueCard venue={venue} isFavorite={true} onToggleFavorite={removeFavorite} index={index} liveRating={venueRatings[venue.id]} />
                       </div>
                     ))}
                   </div>
@@ -871,8 +898,8 @@ export const ProfilePage = () => {
                   <div className="text-center py-5"><div className="spinner-border text-danger"></div></div>
                 ) : (() => {
                   const filtered = bookingSubTab === 'active'
-                    ? bookings.filter(b => b.status === 'active')
-                    : bookings;
+                    ? bookings.filter(b => b.status === 'active' && !isBookingExpired(b))
+                    : bookings.filter(b => b.status === 'cancelled' || isBookingExpired(b));
 
                   if (filtered.length === 0) {
                     return (
@@ -891,7 +918,7 @@ export const ProfilePage = () => {
                   return (
                     <div className="d-grid gap-3">
                       {filtered.map((booking) => (
-                        <div key={booking.id} className={`card rounded-4 border-0 shadow-sm overflow-hidden ${booking.status === 'cancelled' ? 'opacity-60' : ''}`}>
+                        <div key={booking.id} className={`card rounded-4 border-0 shadow-sm overflow-hidden ${booking.status === 'cancelled' || isBookingExpired(booking) ? 'opacity-60' : ''}`}>
                           <div className="card-body p-4">
                             <div className="d-flex justify-content-between align-items-start mb-3">
                               <div>
@@ -928,11 +955,11 @@ export const ProfilePage = () => {
                                     return booking.venue_name;
                                   })()}
                                 </h5>
-                                <span className={`badge rounded-pill fw-bold ${booking.status === 'active' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}`}>
-                                  {booking.status === 'active' ? t('profile.active') : t('profile.cancelled')}
+                                <span className={`badge rounded-pill fw-bold ${isBookingExpired(booking) ? 'bg-warning-subtle text-warning' : booking.status === 'active' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary'}`}>
+                                  {isBookingExpired(booking) ? t('profile.expired') : booking.status === 'active' ? t('profile.active') : t('profile.cancelled')}
                                 </span>
                               </div>
-                              {booking.status === 'active' && (
+                              {booking.status === 'active' && !isBookingExpired(booking) && (
                                 <button
                                   onClick={() => openCancelModal(booking.id)}
                                   className="btn btn-sm btn-outline-danger fw-bold px-3 d-flex align-items-center gap-1"
@@ -997,6 +1024,21 @@ export const ProfilePage = () => {
                               <h5 className="fw-bold text-body-emphasis mb-1">
                                 {tv(`venue.name.${review.venue_id}`, review.venue_id)}
                               </h5>
+                              {(() => {
+                                const venueData = venues.find(v => v.id === review.venue_id);
+                                if (!venueData) return null;
+                                const branchIdx = review.branch_id
+                                  ? venueData.branches.findIndex(b => b.id === review.branch_id)
+                                  : 0;
+                                const branch = branchIdx >= 0 ? venueData.branches[branchIdx] : venueData.branches[0];
+                                if (!branch) return null;
+                                return (
+                                  <div className="d-flex align-items-center gap-1 mb-1">
+                                    <MapPin size={12} className="text-danger" />
+                                    <span className="text-body-secondary small">{tv(`venue.${review.venue_id}.addr${branchIdx >= 0 ? branchIdx : 0}`, branch.address)}</span>
+                                  </div>
+                                );
+                              })()}
                               <div className="d-flex align-items-center gap-2">
                                 <div className="d-flex gap-1">
                                   {[1, 2, 3, 4, 5].map(s => (
@@ -1007,14 +1049,14 @@ export const ProfilePage = () => {
                               </div>
                             </div>
                             <div className="d-flex align-items-center gap-2">
-                              <a
-                                href={`/venue/${review.venue_id}`}
+                              <button
+                                onClick={() => navigate(`/venue/${review.venue_id}${review.branch_id ? `?branch=${review.branch_id}` : ''}`)}
                                 className="btn btn-sm bg-body-tertiary rounded-circle border-0 d-inline-flex align-items-center justify-content-center text-body-secondary"
                                 style={{ width: '32px', height: '32px' }}
                                 title={t('profile.goToVenue')}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                              </a>
+                              </button>
                               <div className="position-relative">
                                 <button
                                   onClick={() => setDeleteReviewId(deleteReviewId === review.id ? null : review.id)}
