@@ -539,18 +539,21 @@ def delete_review(
 
 def send_message_email(name: str, email: str, subject: str, body: str, source: str, category: str = None):
     resend_api_key = os.getenv("RESEND_API_KEY")
+    print(f"[Resend] Ключ: {'есть' if resend_api_key else 'нет'}")
     if not resend_api_key or resend_api_key == "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
+        print("[Resend] Пропускаю отправку — нет API ключа")
         return
 
     label = "Поддержка" if source == "support" else "Контакты"
     category_line = f"Категория: {category}\n" if category else ""
+    to_email = os.getenv("SMTP_USER", "asasin.leha007@gmail.com")
 
     try:
         resend.api_key = resend_api_key
-        resend.Emails.send({
+        result = resend.Emails.send({
             "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
-            "to": [os.getenv("SMTP_USER", "asasin.leha007@gmail.com")],
-            "reply_to": email,
+            "to": [to_email],
+            "reply_to": [email],
             "subject": f"[{label}] {subject}",
             "text": (
                 f"Новое обращение ({label})\n\n"
@@ -561,8 +564,9 @@ def send_message_email(name: str, email: str, subject: str, body: str, source: s
                 f"Сообщение:\n{body}"
             )
         })
+        print(f"[Resend] Письмо отправлено: {result}")
     except Exception as e:
-        print(f"Ошибка отправки письма: {e}")
+        print(f"[Resend] ОШИБКА: {e}")
 
 
 @app.post("/api/messages/contact", response_model=schemas.MessageResponse)
