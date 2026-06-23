@@ -55,7 +55,7 @@ export const CatalogPage = () => {
   }, []);
 
   useEffect(() => {
-    document.title = "Каталог";
+    document.title = t('nav.catalog');
 
     const fetchFavorites = async () => {
       const token = localStorage.getItem('token');

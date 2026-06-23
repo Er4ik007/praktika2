@@ -30,7 +30,7 @@ export const RegisterPage = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { document.title = t('nav.register') || 'Регистрация'; }, [t]);
+  useEffect(() => { document.title = t('register.title') || 'Регистрация'; }, [t]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

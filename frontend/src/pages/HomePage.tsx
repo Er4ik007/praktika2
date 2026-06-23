@@ -23,7 +23,7 @@ export const HomePage = () => {
   const { t } = useLang();
 
   useEffect(() => {
-    document.title = "Главная";
+    document.title = t('nav.home');
   }, []);
 
   const [favorites, setFavorites] = useState<string[]>([]);
