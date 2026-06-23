@@ -9,7 +9,7 @@ import { useLang } from '../i18n/LanguageContext';
 
 const SLIDES_KEYS = [
   { titleKey: 'home.slide1.title', subtitleKey: 'home.slide1.subtitle', image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80", link: "/catalog" },
-  { titleKey: 'home.slide2.title', subtitleKey: 'home.slide2.subtitle', image: "src/images/dran.jpg", link: "/catalog?filter=belarusian" },
+  { titleKey: 'home.slide2.title', subtitleKey: 'home.slide2.subtitle', image: "/dran.jpg", link: "/catalog?filter=belarusian" },
   { titleKey: 'home.slide3.title', subtitleKey: 'home.slide3.subtitle', image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1920&q=80", link: "/catalog?filter=restaurant" },
   { titleKey: 'home.slide4.title', subtitleKey: 'home.slide4.subtitle', image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1920&q=80", link: "/catalog?filter=coffee" },
   { titleKey: 'home.slide5.title', subtitleKey: 'home.slide5.subtitle', image: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1920&q=80", link: "/catalog?filter=bar" },

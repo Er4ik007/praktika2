@@ -279,7 +279,7 @@ export const VenueDetailPage = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.96 }}
                         transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-                        className="position-absolute start-0 end-0 mt-2 border rounded-4 shadow-lg overflow-hidden branch-dropdown"
+                        className="position-absolute start-0 end-0 mt-2 border rounded-4 shadow-lg overflow-hidden branch-dropdown bg-body"
                         style={{ zIndex: 50 }}
                       >
                         <div className="py-2">
@@ -429,11 +429,11 @@ export const VenueDetailPage = () => {
         </div>
       </section>
 
-      <section id="booking" className="container pb-5" style={{ maxWidth: '1000px' }}>
+      <section id="booking" className="container pb-5 px-3 px-md-4" style={{ maxWidth: '1000px' }}>
         <BookingForm venueName={`${tv(`venue.name.${venue.id}`, venue.name)} (${tv(`venue.${venue.id}.addr${venue.branches.indexOf(activeBranch)}`, activeBranch.address)})`} venueId={venue.id} />
       </section>
 
-      <section className="container pb-5 mb-5" style={{ maxWidth: '1000px' }}>
+      <section className="container pb-5 mb-5 px-3 px-md-4" style={{ maxWidth: '1000px' }}>
         <div className="card bg-body-tertiary border-0 rounded-4 p-4 p-md-5">
           <h3 className="display-6 fw-black italic text-uppercase tracking-tighter mb-5 text-body-emphasis">{t('venue.reviews')}</h3>
 

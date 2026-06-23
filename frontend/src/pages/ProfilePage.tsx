@@ -578,7 +578,7 @@ export const ProfilePage = () => {
     <div className="container py-5 mt-5">
       <div className="row g-5">
 
-        <div className="col-lg-4" style={{ position: 'sticky', top: '90px', alignSelf: 'flex-start' }}>
+        <div className="col-lg-4" style={{ position: 'sticky', top: '90px', alignSelf: 'flex-start' }} id="profile-sidebar">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="card bg-body-tertiary border-0 rounded-4 shadow-sm p-4">
             <div className="d-flex align-items-center gap-3 mb-4 pb-4 border-bottom">
               <div className="position-relative flex-shrink-0" style={{ width: '60px', height: '60px' }}>
@@ -1176,6 +1176,9 @@ export const ProfilePage = () => {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--bs-secondary-color); border-radius: 10px; opacity: 0.5; }
         .letter-spacing-lg { letter-spacing: 0.5em; }
+        @media (max-width: 991.98px) {
+          #profile-sidebar { position: static !important; }
+        }
       `}</style>
     </div>
   );
