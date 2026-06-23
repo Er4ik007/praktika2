@@ -1,8 +1,6 @@
 import os
 import random
-import smtplib
 import json
-from email.mime.text import MIMEText
 from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware # <--- ИМПОРТИРУЕМ CORS
@@ -11,6 +9,7 @@ from database import engine, Base, get_db
 import models
 import schemas
 import auth
+import resend
 
 # Создаем таблицы
 Base.metadata.create_all(bind=engine)
@@ -200,24 +199,21 @@ def send_change_code(
     current_user.reset_code_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
     db.commit()
 
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-
-    if smtp_user and smtp_password:
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    if resend_api_key and resend_api_key != "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
         try:
-            msg = MIMEText(
-                f"Здравствуйте, {current_user.name}!\n\n"
-                f"Вы запросили смену пароля на сайте Minsk Gastro Guide.\n"
-                f"Ваш код подтверждения: {reset_code}\n\n"
-                f"Код действителен 15 минут. Если вы не запрашивали смену пароля — проигнорируйте это письмо."
-            )
-            msg['Subject'] = 'Смена пароля - Minsk Gastro Guide'
-            msg['From'] = f"Minsk Gastro Support <{smtp_user}>"
-            msg['To'] = current_user.email
-
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-                server.login(smtp_user, smtp_password)
-                server.send_message(msg)
+            resend.api_key = resend_api_key
+            resend.Emails.send({
+                "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
+                "to": [current_user.email],
+                "subject": "Смена пароля - Minsk Gastro Guide",
+                "text": (
+                    f"Здравствуйте, {current_user.name}!\n\n"
+                    f"Вы запросили смену пароля на сайте Minsk Gastro Guide.\n"
+                    f"Ваш код подтверждения: {reset_code}\n\n"
+                    f"Код действителен 15 минут. Если вы не запрашивали смену пароля — проигнорируйте это письмо."
+                )
+            })
         except Exception as e:
             print(f"Ошибка отправки письма: {e}")
             raise HTTPException(status_code=500, detail="Ошибка почтового сервера")
@@ -264,20 +260,18 @@ def forgot_password(data: schemas.ForgotPassword, db: Session = Depends(get_db))
     user.reset_code_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
     db.commit()
 
-    # 2. Отправляем письмо через Gmail
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
+    # 2. Отправляем письмо через Resend
+    resend_api_key = os.getenv("RESEND_API_KEY")
     
-    if smtp_user and smtp_password:
+    if resend_api_key and resend_api_key != "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
         try:
-            msg = MIMEText(f"Здравствуйте, {user.name}!\n\nВаш код для восстановления пароля на сайте Minsk Gastro Guide: {reset_code}\n\nКод действителен 15 минут.")
-            msg['Subject'] = 'Восстановление пароля - Minsk Gastro Guide'
-            msg['From'] = f"Minsk Gastro Support <{smtp_user}>"
-            msg['To'] = user.email
-
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-                server.login(smtp_user, smtp_password)
-                server.send_message(msg)
+            resend.api_key = resend_api_key
+            resend.Emails.send({
+                "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
+                "to": [user.email],
+                "subject": "Восстановление пароля - Minsk Gastro Guide",
+                "text": f"Здравствуйте, {user.name}!\n\nВаш код для восстановления пароля на сайте Minsk Gastro Guide: {reset_code}\n\nКод действителен 15 минут."
+            })
         except Exception as e:
             print(f"Ошибка отправки письма: {e}")
             raise HTTPException(status_code=500, detail="Ошибка почтового сервера")
@@ -544,31 +538,29 @@ def delete_review(
 # ==========================================
 
 def send_message_email(name: str, email: str, subject: str, body: str, source: str, category: str = None):
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-    if not smtp_user or not smtp_password:
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    if not resend_api_key or resend_api_key == "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
         return
 
     label = "Поддержка" if source == "support" else "Контакты"
     category_line = f"Категория: {category}\n" if category else ""
 
-    msg = MIMEText(
-        f"Новое обращение ({label})\n\n"
-        f"От: {name}\n"
-        f"Email: {email}\n"
-        f"Тема: {subject}\n"
-        f"{category_line}\n"
-        f"Сообщение:\n{body}"
-    )
-    msg['Subject'] = f"[{label}] {subject}"
-    msg['From'] = f"Minsk Gastro Guide <{smtp_user}>"
-    msg['To'] = smtp_user
-    msg['Reply-To'] = email
-
     try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(smtp_user, smtp_password)
-            server.send_message(msg)
+        resend.api_key = resend_api_key
+        resend.Emails.send({
+            "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
+            "to": [os.getenv("SMTP_USER", "asasin.leha007@gmail.com")],
+            "reply_to": email,
+            "subject": f"[{label}] {subject}",
+            "text": (
+                f"Новое обращение ({label})\n\n"
+                f"От: {name}\n"
+                f"Email: {email}\n"
+                f"Тема: {subject}\n"
+                f"{category_line}\n"
+                f"Сообщение:\n{body}"
+            )
+        })
     except Exception as e:
         print(f"Ошибка отправки письма: {e}")
 
