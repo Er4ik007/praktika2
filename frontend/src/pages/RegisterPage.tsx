@@ -140,7 +140,7 @@ export const RegisterPage = () => {
                     </button>
                     <AnimatePresence>
                       {isDropdownOpen && (
-                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="position-absolute top-100 start-0 mt-2 bg-body border rounded-3 shadow-lg z-3 custom-scrollbar" style={{ minWidth: '240px', maxHeight: '250px', overflowY: 'auto' }}>
+                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="position-absolute top-100 start-0 mt-2 bg-body border rounded-3 shadow-lg z-3 custom-scrollbar country-code-dropdown" style={{ minWidth: '240px', maxHeight: '250px', overflowY: 'auto' }}>
                           <ul className="list-unstyled mb-0 m-0 p-0">
                             {COUNTRY_CODES.map((country) => (
                               <li key={country.label}>

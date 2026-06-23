@@ -139,9 +139,9 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
   };
 
   return (
-    <section className="py-5 bg-body-tertiary rounded-4 px-3" id="booking">
+    <section className="py-5 bg-body-tertiary rounded-4 px-3 px-md-4" id="booking">
       <div className="mx-auto bg-body rounded-4 shadow-lg overflow-hidden row border" style={{ maxWidth: '900px' }}>
-        <div className="col-md-5 bg-danger p-5 text-white d-flex flex-column justify-content-center">
+        <div className="col-md-5 bg-danger p-4 p-md-5 text-white d-flex flex-column justify-content-center">
           <h2 className="display-6 fw-bold mb-4">{t('booking.title')}</h2>
           {venueName && <p className="h5 mb-4 text-white text-opacity-75">{t('booking.at')} {venueName}</p>}
           <p className="text-white text-opacity-75 mb-5 fs-5">
@@ -159,7 +159,7 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="col-md-7 p-5">
+        <form onSubmit={handleSubmit} className="col-md-7 p-4 p-md-5">
           {submitted ? (
              <AnimatePresence>
                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-100 d-flex flex-column justify-content-center align-items-center text-center py-5 text-success">
@@ -169,26 +169,26 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
                </motion.div>
              </AnimatePresence>
           ) : (
-            <div className="d-grid gap-4">
+            <div className="d-grid gap-3 gap-md-4">
               <div className="row g-3">
                 <div className="col-12">
                   <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">{t('booking.name')}</label>
-                  <input required value={formState.name} onChange={(e) => setFormState({...formState, name: e.target.value})} type="text" className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none fw-medium" placeholder="Иван Иванов" />
+                  <input required value={formState.name} onChange={(e) => setFormState({...formState, name: e.target.value})} type="text" className="form-control rounded-3 bg-body-tertiary text-body border-0 py-2 py-md-3 shadow-none fw-medium" placeholder="Иван Иванов" />
                 </div>
 
                 <div className="col-12">
                   <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">{t('booking.phone')}</label>
                   <div className={`d-flex rounded-3 position-relative bg-body-tertiary ${phoneError ? 'border border-danger' : 'border-0'}`}>
-                    <div ref={dropdownRef} className="position-relative">
-                      <button type="button" onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="btn border-0 h-100 d-flex align-items-center gap-2 px-3 text-body" style={{ borderRight: '1px solid var(--bs-border-color)' }}>
+                    <div ref={dropdownRef} className="position-relative flex-shrink-0">
+                      <button type="button" onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="btn border-0 h-100 d-flex align-items-center gap-1 gap-md-2 px-2 px-md-3 text-body" style={{ borderRight: '1px solid var(--bs-border-color)' }}>
                         <img src={`https://flagcdn.com/24x18/${selectedCountry.countryCode}.png`} alt={selectedCountry.label} className="rounded-1 shadow-sm" style={{ width: '24px', height: '18px', objectFit: 'cover' }} />
-                        <span className="fw-bold">{selectedCountry.code}</span>
-                        <ChevronDown size={14} className={`text-secondary transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        <span className="fw-bold small">{selectedCountry.code}</span>
+                        <ChevronDown size={14} className={`text-secondary transition-transform d-none d-md-inline ${isDropdownOpen ? 'rotate-180' : ''}`} />
                       </button>
 
                       <AnimatePresence>
                         {isDropdownOpen && (
-                          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="position-absolute top-100 start-0 mt-2 bg-body border rounded-3 shadow-lg z-3 custom-scrollbar" style={{ minWidth: '240px', maxHeight: '250px', overflowY: 'auto' }}>
+                          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="position-absolute top-100 start-0 mt-2 bg-body border rounded-3 shadow-lg z-3 custom-scrollbar country-code-dropdown" style={{ minWidth: '240px', maxHeight: '250px', overflowY: 'auto' }}>
                             <ul className="list-unstyled mb-0 m-0 p-0">
                               {COUNTRY_CODES.map((country) => (
                                 <li key={country.label}>
@@ -204,24 +204,24 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
                         )}
                       </AnimatePresence>
                     </div>
-                    <input required value={rawPhone} onChange={handlePhoneChange} type="tel" className="form-control bg-transparent text-body border-0 py-3 shadow-none fw-medium flex-grow-1" placeholder={selectedCountry.mask} />
+                    <input required value={rawPhone} onChange={handlePhoneChange} type="tel" className="form-control bg-transparent text-body border-0 py-2 py-md-3 shadow-none fw-medium flex-grow-1" placeholder={selectedCountry.mask} />
                   </div>
                   {phoneError && <div className="text-danger small mt-2 fw-bold">{phoneError}</div>}
                 </div>
 
                 <div className="col-sm-6">
                   <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">{t('booking.date')}</label>
-                  <input required type="date" min={today} value={formState.date} onChange={(e) => setFormState({...formState, date: e.target.value})} className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none fw-medium" />
+                  <input required type="date" min={today} value={formState.date} onChange={(e) => setFormState({...formState, date: e.target.value})} className="form-control rounded-3 bg-body-tertiary text-body border-0 py-2 py-md-3 shadow-none fw-medium" />
                 </div>
                 <div className="col-sm-6">
                   <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">{t('booking.guests')}</label>
-                  <select value={formState.guests} onChange={(e) => setFormState({...formState, guests: e.target.value})} className="form-select rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none fw-medium">
+                  <select value={formState.guests} onChange={(e) => setFormState({...formState, guests: e.target.value})} className="form-select rounded-3 bg-body-tertiary text-body border-0 py-2 py-md-3 shadow-none fw-medium">
                     <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8+</option>
                   </select>
                 </div>
                 <div className="col-12">
                   <label className="small fw-bold text-body-secondary text-uppercase mb-2 d-block">{t('booking.wishes')}</label>
-                  <textarea value={formState.message} onChange={(e) => setFormState({...formState, message: e.target.value})} className="form-control rounded-3 bg-body-tertiary text-body border-0 py-3 shadow-none h-25 fw-medium" style={{ minHeight: '80px' }} placeholder={t('booking.wishesPlaceholder')} />
+                  <textarea value={formState.message} onChange={(e) => setFormState({...formState, message: e.target.value})} className="form-control rounded-3 bg-body-tertiary text-body border-0 py-2 py-md-3 shadow-none h-25 fw-medium" style={{ minHeight: '80px' }} placeholder={t('booking.wishesPlaceholder')} />
                 </div>
               </div>
               {submitError && <div className="text-danger small fw-bold mt-2">{submitError}</div>}

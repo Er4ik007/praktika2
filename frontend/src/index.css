@@ -254,16 +254,6 @@ body {
 }
 
 /* === Универсальные стили форм и рамок для тёмных тем === */
-[data-theme="autumn"] .lang-dropdown,
-[data-theme="autumn"] .branch-dropdown { background-color: #1a1410 !important; }
-[data-theme="ocean"] .lang-dropdown,
-[data-theme="ocean"] .branch-dropdown { background-color: #0f1923 !important; }
-[data-theme="lavender"] .lang-dropdown,
-[data-theme="lavender"] .branch-dropdown { background-color: #18131f !important; }
-[data-theme="forest"] .lang-dropdown,
-[data-theme="forest"] .branch-dropdown { background-color: #111a14 !important; }
-[data-theme="waterfall"] .lang-dropdown,
-[data-theme="waterfall"] .branch-dropdown { background-color: #12102a !important; }
 [data-theme="autumn"] .form-control,
 [data-theme="autumn"] .form-select {
   background-color: rgba(26, 20, 16, 0.5) !important;
@@ -276,6 +266,9 @@ body {
 }
 [data-theme="autumn"] .bg-body-tertiary { background: rgba(26, 20, 16, 0.4) !important; }
 [data-theme="autumn"] .bg-body { background-color: transparent !important; }
+[data-theme="autumn"] .lang-dropdown,
+[data-theme="autumn"] .branch-dropdown,
+[data-theme="autumn"] .country-code-dropdown { background-color: #1a1410 !important; }
 [data-theme="autumn"] .border-bottom,
 [data-theme="autumn"] .border-top { border-color: rgba(224, 123, 57, 0.15) !important; }
 
@@ -291,6 +284,9 @@ body {
 }
 [data-theme="ocean"] .bg-body-tertiary { background: rgba(15, 25, 35, 0.4) !important; }
 [data-theme="ocean"] .bg-body { background-color: transparent !important; }
+[data-theme="ocean"] .lang-dropdown,
+[data-theme="ocean"] .branch-dropdown,
+[data-theme="ocean"] .country-code-dropdown { background-color: #0f1923 !important; }
 [data-theme="ocean"] .border-bottom,
 [data-theme="ocean"] .border-top { border-color: rgba(56, 189, 248, 0.15) !important; }
 
@@ -306,6 +302,9 @@ body {
 }
 [data-theme="lavender"] .bg-body-tertiary { background: rgba(24, 19, 31, 0.4) !important; }
 [data-theme="lavender"] .bg-body { background-color: transparent !important; }
+[data-theme="lavender"] .lang-dropdown,
+[data-theme="lavender"] .branch-dropdown,
+[data-theme="lavender"] .country-code-dropdown { background-color: #18131f !important; }
 [data-theme="lavender"] .border-bottom,
 [data-theme="lavender"] .border-top { border-color: rgba(167, 139, 250, 0.15) !important; }
 
@@ -321,6 +320,9 @@ body {
 }
 [data-theme="forest"] .bg-body-tertiary { background: rgba(17, 26, 20, 0.4) !important; }
 [data-theme="forest"] .bg-body { background-color: transparent !important; }
+[data-theme="forest"] .lang-dropdown,
+[data-theme="forest"] .branch-dropdown,
+[data-theme="forest"] .country-code-dropdown { background-color: #111a14 !important; }
 [data-theme="forest"] .border-bottom,
 [data-theme="forest"] .border-top { border-color: rgba(74, 222, 128, 0.15) !important; }
 
@@ -336,6 +338,9 @@ body {
 }
 [data-theme="waterfall"] .border-bottom,
 [data-theme="waterfall"] .border-top { border-color: rgba(192, 132, 252, 0.15) !important; }
+[data-theme="waterfall"] .lang-dropdown,
+[data-theme="waterfall"] .branch-dropdown,
+[data-theme="waterfall"] .country-code-dropdown { background-color: #12102a !important; }
 
 .text-primary-custom {
   color: var(--primary-color) !important;
