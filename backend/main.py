@@ -546,7 +546,7 @@ def send_message_email(name: str, email: str, subject: str, body: str, source: s
 
     label = "Поддержка" if source == "support" else "Контакты"
     category_line = f"Категория: {category}\n" if category else ""
-    to_email = os.getenv("SMTP_USER", "asasin.leha007@gmail.com")
+    to_email = os.getenv("RESEND_TO_EMAIL", "asasin.leha008@gmail.com")
 
     try:
         resend.api_key = resend_api_key
