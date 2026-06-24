@@ -50,8 +50,10 @@ export const AdminPage = () => {
   const [bookingDateFrom, setBookingDateFrom] = useState('');
   const [bookingDateTo, setBookingDateTo] = useState('');
   const [messageSearch, setMessageSearch] = useState('');
-  const [messageDateFrom, setMessageDateFrom] = useState('');
-  const [messageDateTo, setMessageDateTo] = useState('');
+  const [messageDate, setMessageDate] = useState('');
+
+  const [bookingSort, setBookingSort] = useState<{ key: 'id' | 'name' | 'date'; asc: boolean }>({ key: 'id', asc: false });
+  const [messageSort, setMessageSort] = useState<{ key: 'id' | 'name' | 'date'; asc: boolean }>({ key: 'id', asc: false });
 
   const token = localStorage.getItem('token');
 
@@ -179,7 +181,7 @@ export const AdminPage = () => {
     if (bookingFilter !== 'all' && b.status !== bookingFilter) return false;
     if (bookingSearch) {
       const q = bookingSearch.toLowerCase();
-      if (!b.name.toLowerCase().includes(q) && !b.phone.includes(q) && !b.venue_name.toLowerCase().includes(q)) return false;
+      if (!b.name.toLowerCase().includes(q)) return false;
     }
     if (bookingDateFrom || bookingDateTo) {
       const created = new Date(b.created_at);
@@ -191,24 +193,30 @@ export const AdminPage = () => {
       }
     }
     return true;
+  }).sort((a, b) => {
+    const dir = bookingSort.asc ? 1 : -1;
+    if (bookingSort.key === 'id') return (a.id - b.id) * dir;
+    if (bookingSort.key === 'name') return a.name.localeCompare(b.name, 'ru') * dir;
+    return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
   });
 
   const filteredMessages = messages.filter(m => {
     if (messageFilter !== 'all' && m.source !== messageFilter) return false;
     if (messageSearch) {
       const q = messageSearch.toLowerCase();
-      if (!m.name.toLowerCase().includes(q) && !m.email.toLowerCase().includes(q) && !m.subject.toLowerCase().includes(q)) return false;
+      if (!m.name.toLowerCase().includes(q) && !m.email.toLowerCase().includes(q)) return false;
     }
-    if (messageDateFrom || messageDateTo) {
+    if (messageDate) {
       const created = new Date(m.created_at);
-      if (messageDateFrom && created < new Date(messageDateFrom)) return false;
-      if (messageDateTo) {
-        const to = new Date(messageDateTo);
-        to.setHours(23, 59, 59, 999);
-        if (created > to) return false;
-      }
+      const day = new Date(messageDate);
+      if (created.toDateString() !== day.toDateString()) return false;
     }
     return true;
+  }).sort((a, b) => {
+    const dir = messageSort.asc ? 1 : -1;
+    if (messageSort.key === 'id') return (a.id - b.id) * dir;
+    if (messageSort.key === 'name') return a.name.localeCompare(b.name, 'ru') * dir;
+    return (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) * dir;
   });
 
   const tabs = [
@@ -267,31 +275,35 @@ export const AdminPage = () => {
                 </button>
               ))}
             </div>
-            <div className="d-flex gap-2 mb-3 flex-wrap">
+            <div className="d-flex gap-2 mb-3 flex-wrap align-items-center">
               <input
                 type="text"
                 value={bookingSearch}
                 onChange={e => setBookingSearch(e.target.value)}
-                placeholder={t('admin.searchNameOrPhone')}
+                placeholder={t('admin.searchByName')}
                 className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
                 style={{ maxWidth: '250px' }}
               />
-              <input
-                type="date"
-                value={bookingDateFrom}
-                onChange={e => setBookingDateFrom(e.target.value)}
-                className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
-                style={{ maxWidth: '170px' }}
-                title={t('admin.dateFrom')}
-              />
-              <input
-                type="date"
-                value={bookingDateTo}
-                onChange={e => setBookingDateTo(e.target.value)}
-                className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
-                style={{ maxWidth: '170px' }}
-                title={t('admin.dateTo')}
-              />
+              <div className="d-flex align-items-center gap-1">
+                <span className="text-body-secondary small fw-bold">{t('admin.dateFrom')}:</span>
+                <input
+                  type="date"
+                  value={bookingDateFrom}
+                  onChange={e => setBookingDateFrom(e.target.value)}
+                  className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
+                  style={{ maxWidth: '160px' }}
+                />
+              </div>
+              <div className="d-flex align-items-center gap-1">
+                <span className="text-body-secondary small fw-bold">{t('admin.dateTo')}:</span>
+                <input
+                  type="date"
+                  value={bookingDateTo}
+                  onChange={e => setBookingDateTo(e.target.value)}
+                  className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
+                  style={{ maxWidth: '160px' }}
+                />
+              </div>
               {(bookingSearch || bookingDateFrom || bookingDateTo) && (
                 <button onClick={() => { setBookingSearch(''); setBookingDateFrom(''); setBookingDateTo(''); }} className="btn btn-sm btn-outline-secondary rounded-pill">
                   {t('admin.clearFilters')}
@@ -302,14 +314,20 @@ export const AdminPage = () => {
               <table className="table table-hover align-middle">
                 <thead className="bg-body-tertiary">
                   <tr>
-                    <th className="text-body-secondary fw-bold">{t('admin.thId')}</th>
-                    <th className="text-body-secondary fw-bold">{t('admin.thName')}</th>
+                    <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setBookingSort(s => s.key === 'id' ? { key: 'id', asc: !s.asc } : { key: 'id', asc: true })}>
+                      {t('admin.thId')} {bookingSort.key === 'id' ? (bookingSort.asc ? '↑' : '↓') : ''}
+                    </th>
+                    <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setBookingSort(s => s.key === 'name' ? { key: 'name', asc: !s.asc } : { key: 'name', asc: true })}>
+                      {t('admin.thName')} {bookingSort.key === 'name' ? (bookingSort.asc ? '↑' : '↓') : ''}
+                    </th>
                     <th className="text-body-secondary fw-bold">{t('admin.thPhone')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thVenue')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thDate')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thGuests')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thStatus')}</th>
-                    <th className="text-body-secondary fw-bold">{t('admin.thCreated')}</th>
+                    <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setBookingSort(s => s.key === 'date' ? { key: 'date', asc: !s.asc } : { key: 'date', asc: false })}>
+                      {t('admin.thCreated')} {bookingSort.key === 'date' ? (bookingSort.asc ? '↑' : '↓') : ''}
+                    </th>
                     <th></th>
                   </tr>
                 </thead>
@@ -367,33 +385,27 @@ export const AdminPage = () => {
                 </button>
               ))}
             </div>
-            <div className="d-flex gap-2 mb-3 flex-wrap">
+            <div className="d-flex gap-2 mb-3 flex-wrap align-items-center">
               <input
                 type="text"
                 value={messageSearch}
                 onChange={e => setMessageSearch(e.target.value)}
-                placeholder={t('admin.searchNameOrEmail')}
+                placeholder={t('admin.searchByNameOrEmail')}
                 className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
                 style={{ maxWidth: '250px' }}
               />
-              <input
-                type="date"
-                value={messageDateFrom}
-                onChange={e => setMessageDateFrom(e.target.value)}
-                className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
-                style={{ maxWidth: '170px' }}
-                title={t('admin.dateFrom')}
-              />
-              <input
-                type="date"
-                value={messageDateTo}
-                onChange={e => setMessageDateTo(e.target.value)}
-                className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
-                style={{ maxWidth: '170px' }}
-                title={t('admin.dateTo')}
-              />
-              {(messageSearch || messageDateFrom || messageDateTo) && (
-                <button onClick={() => { setMessageSearch(''); setMessageDateFrom(''); setMessageDateTo(''); }} className="btn btn-sm btn-outline-secondary rounded-pill">
+              <div className="d-flex align-items-center gap-1">
+                <span className="text-body-secondary small fw-bold">{t('admin.dateFilter')}:</span>
+                <input
+                  type="date"
+                  value={messageDate}
+                  onChange={e => setMessageDate(e.target.value)}
+                  className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
+                  style={{ maxWidth: '160px' }}
+                />
+              </div>
+              {(messageSearch || messageDate) && (
+                <button onClick={() => { setMessageSearch(''); setMessageDate(''); }} className="btn btn-sm btn-outline-secondary rounded-pill">
                   {t('admin.clearFilters')}
                 </button>
               )}
@@ -402,13 +414,19 @@ export const AdminPage = () => {
               <table className="table table-hover align-middle">
                 <thead className="bg-body-tertiary">
                   <tr>
-                    <th className="text-body-secondary fw-bold">{t('admin.thId')}</th>
-                    <th className="text-body-secondary fw-bold">{t('admin.thName')}</th>
+                    <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setMessageSort(s => s.key === 'id' ? { key: 'id', asc: !s.asc } : { key: 'id', asc: true })}>
+                      {t('admin.thId')} {messageSort.key === 'id' ? (messageSort.asc ? '↑' : '↓') : ''}
+                    </th>
+                    <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setMessageSort(s => s.key === 'name' ? { key: 'name', asc: !s.asc } : { key: 'name', asc: true })}>
+                      {t('admin.thName')} {messageSort.key === 'name' ? (messageSort.asc ? '↑' : '↓') : ''}
+                    </th>
                     <th className="text-body-secondary fw-bold">{t('admin.thEmail')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thSubject')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thSource')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thMessage')}</th>
-                    <th className="text-body-secondary fw-bold">{t('admin.thDate')}</th>
+                    <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setMessageSort(s => s.key === 'date' ? { key: 'date', asc: !s.asc } : { key: 'date', asc: false })}>
+                      {t('admin.thDate')} {messageSort.key === 'date' ? (messageSort.asc ? '↑' : '↓') : ''}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
