@@ -14,19 +14,24 @@ import resend
 # Создаем таблицы
 Base.metadata.create_all(bind=engine)
 
-# Миграция: добавляем колонку photos если её нет
 from sqlalchemy import text
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS photos TEXT"))
         conn.execute(text("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS branch_id VARCHAR(50)"))
-        conn.execute(text("ALTER TABLE reviews DROP COLUMN IF EXISTS branch_address"))
+        try:
+            conn.execute(text("ALTER TABLE reviews DROP COLUMN IF EXISTS branch_address"))
+        except Exception:
+            pass
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_code VARCHAR(10)"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_code_expires TIMESTAMP WITH TIME ZONE"))
         conn.commit()
-except Exception:
-    pass
+except Exception as e:
+    print(f"Migration warning: {e}")
+
+# In-memory fallback для 2FA кодов (если колонки admin_code не существуют в БД)
+_admin_codes = {}  # email -> {"code": "1234", "expires": datetime}
 
 
 app = FastAPI(
@@ -74,9 +79,20 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
     # Если пользователь — администратор, отправляем 2FA код
     if db_user.is_admin:
         admin_code = str(random.randint(1000, 9999))
-        db_user.admin_code = admin_code
-        db_user.admin_code_expires = datetime.now(timezone.utc) + timedelta(minutes=10)
-        db.commit()
+        code_saved = False
+        try:
+            db_user.admin_code = admin_code
+            db_user.admin_code_expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+            db.commit()
+            code_saved = True
+        except Exception:
+            db.rollback()
+
+        if not code_saved:
+            _admin_codes[db_user.email] = {
+                "code": admin_code,
+                "expires": datetime.now(timezone.utc) + timedelta(minutes=10)
+            }
 
         resend_api_key = os.getenv("RESEND_API_KEY")
         if resend_api_key and resend_api_key != "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
@@ -573,18 +589,36 @@ def verify_admin_2fa(data: schemas.AdminVerifyCode, db: Session = Depends(get_db
     if not user or not user.is_admin:
         raise HTTPException(status_code=401, detail="Доступ запрещён")
 
-    if not user.admin_code or user.admin_code != data.code:
+    stored_code = getattr(user, 'admin_code', None)
+    expire_time = getattr(user, 'admin_code_expires', None)
+    code_source = "db"
+
+    # Fallback: проверяем in-memory store если колонки не существуют
+    if stored_code is None and data.email in _admin_codes:
+        fb = _admin_codes[data.email]
+        stored_code = fb["code"]
+        expire_time = fb["expires"]
+        code_source = "memory"
+
+    if not stored_code or stored_code != data.code:
         raise HTTPException(status_code=401, detail="Неверный код подтверждения")
 
-    expire_time = user.admin_code_expires
-    if expire_time.tzinfo is None:
-        expire_time = expire_time.replace(tzinfo=timezone.utc)
-    if expire_time < datetime.now(timezone.utc):
-        raise HTTPException(status_code=401, detail="Код просрочен. Запросите новый.")
+    if expire_time:
+        if expire_time.tzinfo is None:
+            expire_time = expire_time.replace(tzinfo=timezone.utc)
+        if expire_time < datetime.now(timezone.utc):
+            raise HTTPException(status_code=401, detail="Код просрочен. Запросите новый.")
 
-    user.admin_code = None
-    user.admin_code_expires = None
-    db.commit()
+    # Очищаем использованный код
+    if code_source == "db":
+        try:
+            user.admin_code = None
+            user.admin_code_expires = None
+            db.commit()
+        except Exception:
+            db.rollback()
+    else:
+        _admin_codes.pop(data.email, None)
 
     token = auth.create_access_token({"sub": str(user.id)})
     return {
@@ -602,9 +636,20 @@ def resend_admin_2fa(data: schemas.AdminVerifyCode, db: Session = Depends(get_db
         raise HTTPException(status_code=401, detail="Доступ запрещён")
 
     admin_code = str(random.randint(1000, 9999))
-    user.admin_code = admin_code
-    user.admin_code_expires = datetime.now(timezone.utc) + timedelta(minutes=10)
-    db.commit()
+    code_saved = False
+    try:
+        user.admin_code = admin_code
+        user.admin_code_expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+        db.commit()
+        code_saved = True
+    except Exception:
+        db.rollback()
+
+    if not code_saved:
+        _admin_codes[user.email] = {
+            "code": admin_code,
+            "expires": datetime.now(timezone.utc) + timedelta(minutes=10)
+        }
 
     resend_api_key = os.getenv("RESEND_API_KEY")
     if resend_api_key and resend_api_key != "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":

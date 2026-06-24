@@ -77,7 +77,6 @@ export const LoginPage = () => {
       localStorage.setItem('userName', data.user_name);
       if (data.is_admin) localStorage.setItem('isAdmin', 'true');
       navigate('/admin');
-      window.location.reload();
     } catch (err: any) { setError(err.message); }
     finally { setIsLoading(false); }
   };
