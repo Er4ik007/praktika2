@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Utensils, X, Menu as MenuIcon, User } from 'lucide-react';
+import { Utensils, X, Menu as MenuIcon, User, Shield } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
@@ -17,6 +17,7 @@ export const Header = () => {
   const { t } = useLang();
 
   const userName = localStorage.getItem('userName');
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
   useEffect(() => {
     const customThemes = ['autumn', 'ocean', 'lavender', 'forest', 'waterfall'];
@@ -80,6 +81,15 @@ export const Header = () => {
         <div className="d-flex align-items-center gap-2">
           <LanguageSwitcher />
 
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="d-none d-sm-flex align-items-center gap-1 btn btn-sm btn-outline-warning rounded-pill fw-bold px-3"
+            >
+              <Shield size={14} /> {t('nav.admin')}
+            </Link>
+          )}
+
           {userName ? (
             <Link
               to="/profile"
@@ -123,6 +133,15 @@ export const Header = () => {
               ))}
 
               <li className="nav-item mt-3 pt-3 border-top">
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="btn btn-warning w-100 rounded-3 py-2 fw-bold d-flex justify-content-center align-items-center gap-2 mb-2"
+                  >
+                    <Shield size={18} /> {t('nav.adminPanel')}
+                  </Link>
+                )}
                 {userName ? (
                   <Link
                     to="/profile"

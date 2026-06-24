@@ -27,9 +27,10 @@ class UserResponse(BaseModel):
     email: str
     phone: Optional[str] = None
     avatar: Optional[str] = None
+    is_admin: bool = False
 
     class Config:
-        from_attributes = True  # Позволяет Pydantic читать данные из базы SQLAlchemy
+        from_attributes = True
         
 
 # Что мы ждем от React (только ID заведения, например: {"venue_id": "zerno"})
@@ -129,3 +130,11 @@ class MessageResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class AdminVerifyCode(BaseModel):
+    email: str
+    code: str
+
+class AdminBookingStatus(BaseModel):
+    status: str = Field(..., pattern="^(active|cancelled)$")
+    reason: Optional[str] = None

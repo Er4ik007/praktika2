@@ -281,6 +281,7 @@ export const ProfilePage = () => {
     .catch(() => {
       localStorage.removeItem('token');
       localStorage.removeItem('userName');
+      localStorage.removeItem('isAdmin');
       navigate('/login');
     });
   }, [navigate]);
@@ -298,6 +299,7 @@ export const ProfilePage = () => {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('userName');
+    localStorage.removeItem('isAdmin');
     navigate('/');
     window.location.reload();
   };

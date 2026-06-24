@@ -58,6 +58,16 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     return user # Возвращаем объект пользователя (со всеми его данными)
 
 
+# === ОХРАННИК ДЛЯ АДМИНИСТРАТОРОВ ===
+def get_current_admin(current_user: models.User = Depends(get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ запрещён. Требуются права администратора."
+        )
+    return current_user
+
+
 # === ОХРАННИК С ОПЦИОНАЛЬНЫМ ТОКЕНОМ ===
 def get_current_user_optional(request: Request, db: Session = Depends(get_db)):
     auth_header = request.headers.get("Authorization", "")

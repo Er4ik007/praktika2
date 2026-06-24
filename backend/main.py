@@ -21,6 +21,9 @@ try:
         conn.execute(text("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS photos TEXT"))
         conn.execute(text("ALTER TABLE reviews ADD COLUMN IF NOT EXISTS branch_id VARCHAR(50)"))
         conn.execute(text("ALTER TABLE reviews DROP COLUMN IF EXISTS branch_address"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_code VARCHAR(10)"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_code_expires TIMESTAMP WITH TIME ZONE"))
         conn.commit()
 except Exception:
     pass
@@ -68,11 +71,38 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
     if not db_user or not auth.verify_password(user.password, db_user.password_hash):
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
     
+    # Если пользователь — администратор, отправляем 2FA код
+    if db_user.is_admin:
+        admin_code = str(random.randint(1000, 9999))
+        db_user.admin_code = admin_code
+        db_user.admin_code_expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+        db.commit()
+
+        resend_api_key = os.getenv("RESEND_API_KEY")
+        if resend_api_key and resend_api_key != "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
+            try:
+                resend.api_key = resend_api_key
+                resend.Emails.send({
+                    "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
+                    "to": [db_user.email],
+                    "subject": "Код подтверждения входа — Minsk Gastro Guide",
+                    "text": (
+                        f"Здравствуйте, {db_user.name}!\n\n"
+                        f"Код для входа в панель администратора: {admin_code}\n\n"
+                        f"Код действителен 10 минут. Если вы не запрашивали вход — проигнорируйте это письмо."
+                    )
+                })
+            except Exception as e:
+                print(f"Ошибка отправки 2FA кода: {e}")
+
+        return {"requires_2fa": True, "email": db_user.email}
+    
     token = auth.create_access_token({"sub": str(db_user.id)})
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user_name": db_user.name
+        "user_name": db_user.name,
+        "is_admin": False
     }
     
     # === НОВЫЙ МАРШРУТ: ПОЛУЧЕНИЕ ПРОФИЛЯ ===
@@ -531,6 +561,172 @@ def delete_review(
     db.delete(review)
     db.commit()
     return {"message": "Отзыв удален"}
+
+
+# ==========================================
+# АДМИН: 2FA ПОДТВЕРЖДЕНИЕ ВХОДА
+# ==========================================
+
+@app.post("/api/admin/verify-2fa")
+def verify_admin_2fa(data: schemas.AdminVerifyCode, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=401, detail="Доступ запрещён")
+
+    if not user.admin_code or user.admin_code != data.code:
+        raise HTTPException(status_code=401, detail="Неверный код подтверждения")
+
+    expire_time = user.admin_code_expires
+    if expire_time.tzinfo is None:
+        expire_time = expire_time.replace(tzinfo=timezone.utc)
+    if expire_time < datetime.now(timezone.utc):
+        raise HTTPException(status_code=401, detail="Код просрочен. Запросите новый.")
+
+    user.admin_code = None
+    user.admin_code_expires = None
+    db.commit()
+
+    token = auth.create_access_token({"sub": str(user.id)})
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_name": user.name,
+        "is_admin": True
+    }
+
+
+@app.post("/api/admin/send-2fa-code")
+def resend_admin_2fa(data: schemas.AdminVerifyCode, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+    if not user or not user.is_admin:
+        raise HTTPException(status_code=401, detail="Доступ запрещён")
+
+    admin_code = str(random.randint(1000, 9999))
+    user.admin_code = admin_code
+    user.admin_code_expires = datetime.now(timezone.utc) + timedelta(minutes=10)
+    db.commit()
+
+    resend_api_key = os.getenv("RESEND_API_KEY")
+    if resend_api_key and resend_api_key != "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
+        try:
+            resend.api_key = resend_api_key
+            resend.Emails.send({
+                "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
+                "to": [user.email],
+                "subject": "Новый код подтверждения — Minsk Gastro Guide",
+                "text": (
+                    f"Здравствуйте, {user.name}!\n\n"
+                    f"Ваш новый код для входа: {admin_code}\n\n"
+                    f"Код действителен 10 минут."
+                )
+            })
+        except Exception as e:
+            print(f"Ошибка отправки 2FA кода: {e}")
+
+    return {"message": "Код отправлен на почту"}
+
+
+# ==========================================
+# АДМИН: ПАНЕЛЬ УПРАВЛЕНИЯ
+# ==========================================
+
+@app.get("/api/admin/bookings")
+def get_all_bookings(
+    db: Session = Depends(get_db),
+    current_admin: models.User = Depends(auth.get_current_admin)
+):
+    bookings = db.query(models.Booking).order_by(models.Booking.created_at.desc()).all()
+    return [
+        {
+            "id": b.id,
+            "venue_id": b.venue_id,
+            "venue_name": b.venue_name,
+            "name": b.name,
+            "date": b.date,
+            "guests": b.guests,
+            "phone": b.phone,
+            "message": b.message,
+            "cancel_reason": b.cancel_reason,
+            "status": b.status,
+            "created_at": str(b.created_at)
+        }
+        for b in bookings
+    ]
+
+
+@app.patch("/api/admin/bookings/{booking_id}/status")
+def update_booking_status(
+    booking_id: int,
+    data: schemas.AdminBookingStatus,
+    db: Session = Depends(get_db),
+    current_admin: models.User = Depends(auth.get_current_admin)
+):
+    booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Бронирование не найдено")
+
+    booking.status = data.status
+    if data.reason:
+        booking.cancel_reason = data.reason
+    db.commit()
+    return {"message": "Статус обновлён", "id": booking.id}
+
+
+@app.get("/api/admin/messages")
+def get_all_messages(
+    db: Session = Depends(get_db),
+    current_admin: models.User = Depends(auth.get_current_admin)
+):
+    messages = db.query(models.Message).order_by(models.Message.created_at.desc()).all()
+    return [
+        {
+            "id": m.id,
+            "name": m.name,
+            "email": m.email,
+            "subject": m.subject,
+            "message": m.message,
+            "source": m.source,
+            "category": m.category,
+            "created_at": str(m.created_at)
+        }
+        for m in messages
+    ]
+
+
+@app.get("/api/admin/export/bookings")
+def export_bookings_csv(
+    db: Session = Depends(get_db),
+    current_admin: models.User = Depends(auth.get_current_admin)
+):
+    import csv
+    import io
+
+    bookings = db.query(models.Booking).order_by(models.Booking.created_at.desc()).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "ID", "Имя", "Телефон", "Заведение", "Филиал (ID)",
+        "Дата", "Гости", "Пожелания", "Статус",
+        "Причина отмены", "Дата создания"
+    ])
+
+    for b in bookings:
+        writer.writerow([
+            b.id, b.name, b.phone, b.venue_name, b.venue_id,
+            b.date, b.guests, b.message or "", b.status,
+            b.cancel_reason or "", str(b.created_at)
+        ])
+
+    csv_content = output.getvalue()
+    output.close()
+
+    from fastapi.responses import Response
+    return Response(
+        content=csv_content.encode("utf-8-sig"),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=bookings_report.csv"}
+    )
 
 
 # ==========================================

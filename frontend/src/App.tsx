@@ -6,6 +6,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { CosmicBackground } from './components/CosmicBackground';
 import { LangProvider, useLang } from './i18n/LanguageContext';
+import { AdminRoute } from './components/AdminRoute';
 
 
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
@@ -19,6 +20,7 @@ const VenueDetailPage = lazy(() => import('./pages/VenueDetailPage').then(m => (
 const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
+const AdminPage = lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -55,6 +57,7 @@ function AppContent() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
               <Route path="/support" element={<SupportPage />} />
+              <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
               <Route path="*" element={<NotFoundPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />

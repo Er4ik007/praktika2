@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from database import Base
@@ -19,6 +19,11 @@ class User(Base):
     # НОВЫЕ ПОЛЯ ДЛЯ ВОССТАНОВЛЕНИЯ ПАРОЛЯ
     reset_code = Column(String(10), nullable=True)
     reset_code_expires = Column(DateTime(timezone=True), nullable=True)
+
+    # ПОЛЯ ДЛЯ АДМИНИСТРАТОРА
+    is_admin = Column(Boolean, default=False, nullable=False)
+    admin_code = Column(String(10), nullable=True)
+    admin_code_expires = Column(DateTime(timezone=True), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

@@ -19,7 +19,19 @@ export const LoginPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const [is2faMode, setIs2faMode] = useState(false);
+  const [twoFaEmail, setTwoFaEmail] = useState('');
+  const [twoFaCode, setTwoFaCode] = useState('');
+  const [twoFaSuccess, setTwoFaSuccess] = useState('');
+  const [twoFaResendCooldown, setTwoFaResendCooldown] = useState(0);
+
   useEffect(() => { document.title = t('nav.login'); }, [t]);
+
+  useEffect(() => {
+    if (twoFaResendCooldown <= 0) return;
+    const timer = setTimeout(() => setTwoFaResendCooldown(prev => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [twoFaResendCooldown]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,12 +45,56 @@ export const LoginPage = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Неверный email или пароль');
 
+      if (data.requires_2fa) {
+        setIs2faMode(true);
+        setTwoFaEmail(data.email);
+        setTwoFaResendCooldown(60);
+        return;
+      }
+
       localStorage.setItem('token', data.access_token);
       localStorage.setItem('userName', data.user_name);
+      if (data.is_admin) localStorage.setItem('isAdmin', 'true');
       navigate('/');
       window.location.reload();
     } catch (err: any) { setError(err.message); }
     finally { setIsLoading(false); }
+  };
+
+  const handle2faVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true); setError(''); setTwoFaSuccess('');
+    try {
+      const res = await fetch('https://praktika2-vkkr.onrender.com/api/admin/verify-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: twoFaEmail, code: twoFaCode })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Неверный код');
+
+      localStorage.setItem('token', data.access_token);
+      localStorage.setItem('userName', data.user_name);
+      if (data.is_admin) localStorage.setItem('isAdmin', 'true');
+      navigate('/admin');
+      window.location.reload();
+    } catch (err: any) { setError(err.message); }
+    finally { setIsLoading(false); }
+  };
+
+  const handle2faResend = async () => {
+    if (twoFaResendCooldown > 0) return;
+    setError(''); setTwoFaSuccess('');
+    try {
+      const res = await fetch('https://praktika2-vkkr.onrender.com/api/admin/send-2fa-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: twoFaEmail, code: '' })
+      });
+      if (!res.ok) throw new Error(t('admin.2fa.sendError'));
+      setTwoFaResendCooldown(60);
+      setTwoFaSuccess(t('admin.2fa.newCodeSent'));
+    } catch (err: any) { setError(err.message); }
   };
 
   const handleForgotSubmit = async (e: React.FormEvent) => {
@@ -91,7 +147,41 @@ export const LoginPage = () => {
         className="card bg-body-tertiary border-0 rounded-4 shadow-lg p-4 p-sm-5 w-100" style={{ maxWidth: '450px' }}
       >
         <AnimatePresence mode="wait">
-          {isForgotMode ? (
+          {is2faMode ? (
+            <motion.div key="2fa" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <div className="text-center mb-4">
+                <KeyRound className="text-danger mb-3" size={40} />
+                <h1 className="h3 fw-black text-body-emphasis uppercase tracking-tighter">{t('admin.2fa.title')}</h1>
+                <p className="text-body-secondary small">
+                  {t('admin.2fa.sentTo')} {twoFaEmail}
+                </p>
+              </div>
+
+              {error && <div className="alert alert-danger small fw-bold text-center border-0 rounded-3 mb-4">{error}</div>}
+              {twoFaSuccess && <div className="alert alert-success small fw-bold text-center border-0 rounded-3 mb-4">{twoFaSuccess}</div>}
+
+              <form onSubmit={handle2faVerify} className="d-grid gap-3">
+                <div>
+                  <label className="text-body-secondary small fw-bold text-uppercase tracking-widest mb-2">{t('common.confirmCode')}</label>
+                  <input required type="text" maxLength={4} value={twoFaCode} onChange={e => setTwoFaCode(e.target.value)} className="form-control rounded-3 bg-body border-0 py-3 px-4 shadow-none fw-black text-center letter-spacing-lg" placeholder="0000" autoFocus />
+                </div>
+                <button type="submit" disabled={isLoading} className="btn btn-primary-custom w-100 py-3 mt-2 d-flex justify-content-center gap-2">
+                  {isLoading ? <span className="spinner-border spinner-border-sm"></span> : t('admin.2fa.verify')}
+                </button>
+              </form>
+
+              <div className="text-center mt-4 pt-3 border-top">
+                <button onClick={handle2faResend} disabled={twoFaResendCooldown > 0} className="btn btn-link text-body-secondary fw-bold small text-decoration-none hover-underline" style={{fontSize: '0.75rem'}}>
+                  {twoFaResendCooldown > 0 ? `${t('admin.2fa.resendIn')} (${twoFaResendCooldown}с)` : t('admin.2fa.resend')}
+                </button>
+              </div>
+              <div className="text-center mt-2">
+                <button onClick={() => { setIs2faMode(false); setTwoFaCode(''); setError(''); setTwoFaSuccess(''); }} className="btn btn-link text-body-secondary fw-bold small text-decoration-none hover-underline" style={{fontSize: '0.75rem'}}>
+                  {t('login.forgot.backToLogin')}
+                </button>
+              </div>
+            </motion.div>
+          ) : isForgotMode ? (
             <motion.div key="forgot" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div className="text-center mb-4">
                 <KeyRound className="text-danger mb-3" size={40} />
