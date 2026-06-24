@@ -743,34 +743,146 @@ def export_bookings_csv(
     db: Session = Depends(get_db),
     current_admin: models.User = Depends(auth.get_current_admin)
 ):
-    import csv
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from fastapi.responses import Response
     import io
 
     bookings = db.query(models.Booking).order_by(models.Booking.created_at.desc()).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow([
-        "ID", "Имя", "Телефон", "Заведение", "Филиал (ID)",
-        "Дата", "Гости", "Пожелания", "Статус",
-        "Причина отмены", "Дата создания"
-    ])
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Бронирования"
 
-    for b in bookings:
-        writer.writerow([
-            b.id, b.name, b.phone, b.venue_name, b.venue_id,
-            b.date, b.guests, b.message or "", b.status,
-            b.cancel_reason or "", str(b.created_at)
-        ])
+    headers = ["ID", "Имя", "Телефон", "Заведение", "Филиал (ID)", "Дата", "Гости", "Пожелания", "Статус", "Причина отмены", "Дата создания"]
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill(start_color="2D2D2D", end_color="2D2D2D", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    thin_border = Border(
+        left=Side(style='thin', color='CCCCCC'),
+        right=Side(style='thin', color='CCCCCC'),
+        top=Side(style='thin', color='CCCCCC'),
+        bottom=Side(style='thin', color='CCCCCC')
+    )
 
-    csv_content = output.getvalue()
-    output.close()
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
 
-    from fastapi.responses import Response
+    active_fill = PatternFill(start_color="E8F5E9", end_color="E8F5E9", fill_type="solid")
+    cancelled_fill = PatternFill(start_color="FFEBEE", end_color="FFEBEE", fill_type="solid")
+    status_font_active = Font(color="2E7D32", bold=True)
+    status_font_cancelled = Font(color="C62828", bold=True)
+
+    for row_idx, b in enumerate(bookings, 2):
+        status_display = "Активно" if b.status == "active" else "Отменено"
+        created_display = b.created_at.strftime("%d.%m.%Y %H:%M") if b.created_at else ""
+
+        values = [b.id, b.name, b.phone, b.venue_name, b.venue_id, b.date, b.guests, b.message or "", status_display, b.cancel_reason or "", created_display]
+
+        row_fill = active_fill if b.status == "active" else cancelled_fill
+
+        for col, val in enumerate(values, 1):
+            cell = ws.cell(row=row_idx, column=col, value=val)
+            cell.border = thin_border
+            cell.alignment = Alignment(vertical="center", wrap_text=(col in [8, 10]))
+
+            if col == 9:
+                cell.fill = row_fill
+                cell.font = status_font_active if b.status == "active" else status_font_cancelled
+
+    col_widths = [6, 20, 18, 25, 15, 14, 8, 30, 12, 25, 18]
+    for i, width in enumerate(col_widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=i).column_letter].width = width
+
+    ws.auto_filter.ref = ws.dimensions
+    ws.freeze_panes = "A2"
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
     return Response(
-        content=csv_content.encode("utf-8-sig"),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=bookings_report.csv"}
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=bookings_report.xlsx"}
+    )
+
+
+@app.get("/api/admin/export/messages")
+def export_messages_csv(
+    db: Session = Depends(get_db),
+    current_admin: models.User = Depends(auth.get_current_admin)
+):
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from fastapi.responses import Response
+    import io
+
+    messages = db.query(models.Message).order_by(models.Message.created_at.desc()).all()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Обращения"
+
+    headers = ["ID", "Имя", "Email", "Тема", "Сообщение", "Источник", "Категория", "Дата"]
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill(start_color="2D2D2D", end_color="2D2D2D", fill_type="solid")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    thin_border = Border(
+        left=Side(style='thin', color='CCCCCC'),
+        right=Side(style='thin', color='CCCCCC'),
+        top=Side(style='thin', color='CCCCCC'),
+        bottom=Side(style='thin', color='CCCCCC')
+    )
+
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+        cell.border = thin_border
+
+    contact_fill = PatternFill(start_color="E3F2FD", end_color="E3F2FD", fill_type="solid")
+    support_fill = PatternFill(start_color="FFF3E0", end_color="FFF3E0", fill_type="solid")
+    source_font_contact = Font(color="1565C0", bold=True)
+    source_font_support = Font(color="E65100", bold=True)
+
+    for row_idx, m in enumerate(messages, 2):
+        source_display = "Контакты" if m.source == "contact" else "Поддержка"
+        created_display = m.created_at.strftime("%d.%m.%Y %H:%M") if m.created_at else ""
+
+        values = [m.id, m.name, m.email, m.subject, m.message, source_display, m.category or "", created_display]
+
+        row_fill = contact_fill if m.source == "contact" else support_fill
+
+        for col, val in enumerate(values, 1):
+            cell = ws.cell(row=row_idx, column=col, value=val)
+            cell.border = thin_border
+            cell.alignment = Alignment(vertical="center", wrap_text=(col in [4, 5]))
+
+            if col == 6:
+                cell.fill = row_fill
+                cell.font = source_font_contact if m.source == "contact" else source_font_support
+
+    col_widths = [6, 20, 25, 30, 40, 14, 18, 18]
+    for i, width in enumerate(col_widths, 1):
+        ws.column_dimensions[ws.cell(row=1, column=i).column_letter].width = width
+
+    ws.auto_filter.ref = ws.dimensions
+    ws.freeze_panes = "A2"
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return Response(
+        content=output.getvalue(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=messages_report.xlsx"}
     )
 
 

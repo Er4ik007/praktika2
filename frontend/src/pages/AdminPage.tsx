@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Shield, Download, X, Filter } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
+import { venues } from '../data';
+import { translations } from '../i18n/translations';
 
 interface Booking {
   id: number;
@@ -33,7 +35,7 @@ const API = 'https://praktika2-vkkr.onrender.com';
 
 export const AdminPage = () => {
   const navigate = useNavigate();
-  const { t } = useLang();
+  const { t, tv } = useLang();
   const [activeTab, setActiveTab] = useState<'bookings' | 'messages' | 'export'>('bookings');
 
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -45,6 +47,38 @@ export const AdminPage = () => {
   const [cancelling, setCancelling] = useState(false);
 
   const token = localStorage.getItem('token');
+
+  const translateVenueName = (booking: Booking) => {
+    const translatedName = tv(`venue.name.${booking.venue_id}`, '');
+    if (translatedName) {
+      const addrMatch = booking.venue_name.match(/\((.+)\)$/);
+      if (addrMatch) {
+        const venue = venues.find(v => v.id === booking.venue_id);
+        let branchIdx = -1;
+        if (venue) {
+          for (let bi = 0; bi < venue.branches.length; bi++) {
+            const addrKey = `venue.${booking.venue_id}.addr${bi}`;
+            const addrEntry = translations[addrKey];
+            if (addrEntry) {
+              const allAddrs = Object.values(addrEntry) as string[];
+              if (allAddrs.some(a => booking.venue_name.includes(a))) {
+                branchIdx = bi;
+                break;
+              }
+            }
+            if (booking.venue_name.includes(venue.branches[bi].address)) {
+              branchIdx = bi;
+              break;
+            }
+          }
+        }
+        const translatedAddr = branchIdx >= 0 ? tv(`venue.${booking.venue_id}.addr${branchIdx}`, addrMatch[1]) : addrMatch[1];
+        return `${translatedName} (${translatedAddr})`;
+      }
+      return translatedName;
+    }
+    return booking.venue_name;
+  };
 
   const fetchBookings = async () => {
     try {
@@ -112,7 +146,23 @@ export const AdminPage = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'bookings_report.csv';
+      a.download = 'bookings_report.xlsx';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) { alert(t('admin.exportError')); }
+  };
+
+  const handleExportMessages = async () => {
+    try {
+      const res = await fetch(`${API}/api/admin/export/messages`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'messages_report.xlsx';
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) { alert(t('admin.exportError')); }
@@ -129,14 +179,14 @@ export const AdminPage = () => {
 
   if (isLoading) {
     return (
-      <div className="container d-flex justify-content-center align-items-center" style={{ minHeight: '60vh', paddingTop: '100px' }}>
+      <div className="container d-flex justify-content-center align-items-center" style={{ minHeight: '60vh', paddingTop: '120px' }}>
         <div className="spinner-border text-danger"></div>
       </div>
     );
   }
 
   return (
-    <div className="container py-4" style={{ paddingTop: '100px !important', minHeight: '80vh' }}>
+    <div className="container" style={{ paddingTop: '120px', paddingBottom: '2rem', minHeight: '80vh' }}>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <div className="d-flex align-items-center gap-3 mb-4">
           <Shield className="text-danger" size={32} />
@@ -200,7 +250,7 @@ export const AdminPage = () => {
                       <td className="fw-bold">#{b.id}</td>
                       <td>{b.name}</td>
                       <td>{b.phone}</td>
-                      <td>{b.venue_name}</td>
+                      <td>{translateVenueName(b)}</td>
                       <td>{b.date}</td>
                       <td>{b.guests}</td>
                       <td>
@@ -286,18 +336,32 @@ export const AdminPage = () => {
         )}
 
         {activeTab === 'export' && (
-          <div className="text-center py-5">
-            <div className="card bg-body-tertiary border-0 rounded-4 shadow-sm p-5 mx-auto" style={{ maxWidth: '500px' }}>
-              <Download className="text-danger mb-3" size={48} />
-              <h3 className="fw-black text-body-emphasis mb-2">{t('admin.exportTitle')}</h3>
-              <p className="text-body-secondary mb-4">
+          <div className="d-flex flex-column align-items-center py-5 gap-4">
+            <div className="card bg-body-tertiary border-0 rounded-4 shadow-sm p-5 w-100" style={{ maxWidth: '500px' }}>
+              <Download className="text-danger mb-3 mx-auto" size={48} />
+              <h3 className="fw-black text-body-emphasis mb-2 text-center">{t('admin.exportTitle')}</h3>
+              <p className="text-body-secondary mb-4 text-center">
                 {t('admin.exportDesc')}
               </p>
-              <button onClick={handleExport} className="btn btn-danger btn-lg rounded-pill fw-bold px-5 py-3 d-inline-flex align-items-center gap-2">
+              <button onClick={handleExport} className="btn btn-danger btn-lg rounded-pill fw-bold px-5 py-3 d-inline-flex align-items-center justify-content-center gap-2">
                 <Download size={20} /> {t('admin.exportBtn')}
               </button>
-              <p className="text-body-secondary small mt-3 mb-0">
+              <p className="text-body-secondary small mt-3 mb-0 text-center">
                 {bookings.length} {t('admin.exportStats')}
+              </p>
+            </div>
+
+            <div className="card bg-body-tertiary border-0 rounded-4 shadow-sm p-5 w-100" style={{ maxWidth: '500px' }}>
+              <Download className="text-primary mb-3 mx-auto" size={48} />
+              <h3 className="fw-black text-body-emphasis mb-2 text-center">{t('admin.exportMessagesTitle')}</h3>
+              <p className="text-body-secondary mb-4 text-center">
+                {t('admin.exportMessagesDesc')}
+              </p>
+              <button onClick={handleExportMessages} className="btn btn-primary btn-lg rounded-pill fw-bold px-5 py-3 d-inline-flex align-items-center justify-content-center gap-2">
+                <Download size={20} /> {t('admin.exportMessagesBtn')}
+              </button>
+              <p className="text-body-secondary small mt-3 mb-0 text-center">
+                {messages.length} {t('admin.exportMessagesStats')}
               </p>
             </div>
           </div>
