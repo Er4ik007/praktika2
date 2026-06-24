@@ -81,7 +81,7 @@ export const VenueCard = React.memo(({ venue, isFavorite, onToggleFavorite, live
           </button>
           <div className="position-absolute top-0 end-0 m-3 bg-body px-2 py-1 rounded-pill d-flex align-items-center gap-1 small fw-bold text-body-emphasis shadow-sm">
             <Star size={14} className="text-warning fill-warning" style={{ fill: '#ffc107' }} />
-            {liveRating ? liveRating.avg : '0'}
+            {liveRating ? liveRating.avg : venue.rating.toFixed(1)}
           </div>
           <div className="position-absolute bottom-0 start-0 m-3 d-flex gap-1">
             {[...Array(4)].map((_, i) => (
