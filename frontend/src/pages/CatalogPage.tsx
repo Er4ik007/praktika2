@@ -21,28 +21,7 @@ export const CatalogPage = () => {
 
   const [favorites, setFavorites] = useState<string[]>([]);
   const [maxPrice, setMaxPrice] = useState<number>(4);
-  const [venueRatings, setVenueRatings] = useState<Record<string, { avg: string; count: number }>>({});
   const sliderRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const fetchAllRatings = async () => {
-      const ratings: Record<string, { avg: string; count: number }> = {};
-      await Promise.all(venues.map(async (venue) => {
-        try {
-          const res = await fetch(`https://praktika2-vkkr.onrender.com/api/reviews/${venue.id}`);
-          if (res.ok) {
-            const reviews = await res.json();
-            if (reviews.length > 0) {
-              const avg = (reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length).toFixed(1);
-              ratings[venue.id] = { avg, count: reviews.length };
-            }
-          }
-        } catch {}
-      }));
-      setVenueRatings(ratings);
-    };
-    fetchAllRatings();
-  }, []);
 
   useEffect(() => {
     if ($ && sliderRef.current) {
@@ -186,7 +165,7 @@ export const CatalogPage = () => {
           {filteredVenues.length > 0 ? (
             filteredVenues.map((venue: Venue, index: number) => (
               <div key={venue.id} className="col-md-6 col-lg-4">
-                <VenueCard venue={venue} isFavorite={favorites.includes(venue.id)} onToggleFavorite={toggleFavorite} index={index} liveRating={venueRatings[venue.id]} />
+                <VenueCard venue={venue} isFavorite={favorites.includes(venue.id)} onToggleFavorite={toggleFavorite} index={index} />
               </div>
             ))
           ) : (

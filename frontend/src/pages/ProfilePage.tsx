@@ -74,7 +74,6 @@ export const ProfilePage = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [selectedReasonTemplate, setSelectedReasonTemplate] = useState<string | null>(null);
-  const [venueRatings, setVenueRatings] = useState<Record<string, { avg: string; count: number }>>({});
 
   const getCurrentTheme = () => {
     const appTheme = localStorage.getItem('appTheme');
@@ -255,23 +254,6 @@ export const ProfilePage = () => {
     .then(res => res.json())
     .then(favData => {
       setFavoriteIds(favData);
-      const fetchRatings = async () => {
-        const ratings: Record<string, { avg: string; count: number }> = {};
-        await Promise.all(favData.map(async (vid: string) => {
-          try {
-            const res = await fetch(`https://praktika2-vkkr.onrender.com/api/reviews/${vid}`);
-            if (res.ok) {
-              const reviews = await res.json();
-              if (reviews.length > 0) {
-                const avg = (reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length).toFixed(1);
-                ratings[vid] = { avg, count: reviews.length };
-              }
-            }
-          } catch {}
-        }));
-        setVenueRatings(ratings);
-      };
-      fetchRatings();
       return fetchBookings();
     })
     .then(() => fetchMyReviews())
@@ -875,7 +857,7 @@ export const ProfilePage = () => {
                   <div className="row g-4">
                     {favoriteVenues.map((venue, index) => (
                       <div key={venue.id} className="col-md-6">
-                        <VenueCard venue={venue} isFavorite={true} onToggleFavorite={removeFavorite} index={index} liveRating={venueRatings[venue.id]} />
+                        <VenueCard venue={venue} isFavorite={true} onToggleFavorite={removeFavorite} index={index} />
                       </div>
                     ))}
                   </div>

@@ -7,6 +7,7 @@ import { Footer } from './components/Footer';
 import { CosmicBackground } from './components/CosmicBackground';
 import { LangProvider, useLang } from './i18n/LanguageContext';
 import { AdminRoute } from './components/AdminRoute';
+import { RatingsProvider } from './contexts/RatingsContext';
 
 
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })));
@@ -79,7 +80,9 @@ export default function App() {
   return (
     <Router>
       <LangProvider>
-        <AppContent />
+        <RatingsProvider>
+          <AppContent />
+        </RatingsProvider>
       </LangProvider>
     </Router>
   );

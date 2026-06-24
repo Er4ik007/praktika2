@@ -4,16 +4,18 @@ import { Star, MapPin, Utensils, Coffee, Wine, ChevronRight } from 'lucide-react
 import { Link } from 'react-router-dom';
 import { Venue } from '../data';
 import { useLang } from '../i18n/LanguageContext';
+import { useRatings } from '../contexts/RatingsContext';
 
 interface VenueCardProps {
   venue: Venue;
   isFavorite: boolean;
   onToggleFavorite: (id: string) => void;
   index: number;
-  liveRating?: { avg: string; count: number };
 }
 
-export const VenueCard = React.memo(({ venue, isFavorite, onToggleFavorite, liveRating }: VenueCardProps) => {
+export const VenueCard = React.memo(({ venue, isFavorite, onToggleFavorite }: VenueCardProps) => {
+  const ratings = useRatings();
+  const liveRating = ratings[venue.id];
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
   const { t, tv } = useLang();

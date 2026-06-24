@@ -46,6 +46,13 @@ export const AdminPage = () => {
   const [cancelModal, setCancelModal] = useState<{ bookingId: number; reason: string } | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
+  const [bookingSearch, setBookingSearch] = useState('');
+  const [bookingDateFrom, setBookingDateFrom] = useState('');
+  const [bookingDateTo, setBookingDateTo] = useState('');
+  const [messageSearch, setMessageSearch] = useState('');
+  const [messageDateFrom, setMessageDateFrom] = useState('');
+  const [messageDateTo, setMessageDateTo] = useState('');
+
   const token = localStorage.getItem('token');
 
   const translateVenueName = (booking: Booking) => {
@@ -168,8 +175,41 @@ export const AdminPage = () => {
     } catch (err) { alert(t('admin.exportError')); }
   };
 
-  const filteredBookings = bookingFilter === 'all' ? bookings : bookings.filter(b => b.status === bookingFilter);
-  const filteredMessages = messageFilter === 'all' ? messages : messages.filter(m => m.source === messageFilter);
+  const filteredBookings = bookings.filter(b => {
+    if (bookingFilter !== 'all' && b.status !== bookingFilter) return false;
+    if (bookingSearch) {
+      const q = bookingSearch.toLowerCase();
+      if (!b.name.toLowerCase().includes(q) && !b.phone.includes(q) && !b.venue_name.toLowerCase().includes(q)) return false;
+    }
+    if (bookingDateFrom || bookingDateTo) {
+      const created = new Date(b.created_at);
+      if (bookingDateFrom && created < new Date(bookingDateFrom)) return false;
+      if (bookingDateTo) {
+        const to = new Date(bookingDateTo);
+        to.setHours(23, 59, 59, 999);
+        if (created > to) return false;
+      }
+    }
+    return true;
+  });
+
+  const filteredMessages = messages.filter(m => {
+    if (messageFilter !== 'all' && m.source !== messageFilter) return false;
+    if (messageSearch) {
+      const q = messageSearch.toLowerCase();
+      if (!m.name.toLowerCase().includes(q) && !m.email.toLowerCase().includes(q) && !m.subject.toLowerCase().includes(q)) return false;
+    }
+    if (messageDateFrom || messageDateTo) {
+      const created = new Date(m.created_at);
+      if (messageDateFrom && created < new Date(messageDateFrom)) return false;
+      if (messageDateTo) {
+        const to = new Date(messageDateTo);
+        to.setHours(23, 59, 59, 999);
+        if (created > to) return false;
+      }
+    }
+    return true;
+  });
 
   const tabs = [
     { key: 'bookings' as const, label: t('admin.bookings'), count: bookings.length },
@@ -211,7 +251,7 @@ export const AdminPage = () => {
 
         {activeTab === 'bookings' && (
           <div>
-            <div className="d-flex align-items-center gap-2 mb-3">
+            <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
               <Filter size={16} className="text-body-secondary" />
               {([
                 { key: 'all' as const, label: t('admin.filterAll') },
@@ -226,6 +266,37 @@ export const AdminPage = () => {
                   {f.label}
                 </button>
               ))}
+            </div>
+            <div className="d-flex gap-2 mb-3 flex-wrap">
+              <input
+                type="text"
+                value={bookingSearch}
+                onChange={e => setBookingSearch(e.target.value)}
+                placeholder={t('admin.searchNameOrPhone')}
+                className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
+                style={{ maxWidth: '250px' }}
+              />
+              <input
+                type="date"
+                value={bookingDateFrom}
+                onChange={e => setBookingDateFrom(e.target.value)}
+                className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
+                style={{ maxWidth: '170px' }}
+                title={t('admin.dateFrom')}
+              />
+              <input
+                type="date"
+                value={bookingDateTo}
+                onChange={e => setBookingDateTo(e.target.value)}
+                className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
+                style={{ maxWidth: '170px' }}
+                title={t('admin.dateTo')}
+              />
+              {(bookingSearch || bookingDateFrom || bookingDateTo) && (
+                <button onClick={() => { setBookingSearch(''); setBookingDateFrom(''); setBookingDateTo(''); }} className="btn btn-sm btn-outline-secondary rounded-pill">
+                  {t('admin.clearFilters')}
+                </button>
+              )}
             </div>
             <div className="table-responsive">
               <table className="table table-hover align-middle">
@@ -280,7 +351,7 @@ export const AdminPage = () => {
 
         {activeTab === 'messages' && (
           <div>
-            <div className="d-flex align-items-center gap-2 mb-3">
+            <div className="d-flex align-items-center gap-2 mb-3 flex-wrap">
               <Filter size={16} className="text-body-secondary" />
               {([
                 { key: 'all' as const, label: t('admin.filterAll') },
@@ -295,6 +366,37 @@ export const AdminPage = () => {
                   {f.label}
                 </button>
               ))}
+            </div>
+            <div className="d-flex gap-2 mb-3 flex-wrap">
+              <input
+                type="text"
+                value={messageSearch}
+                onChange={e => setMessageSearch(e.target.value)}
+                placeholder={t('admin.searchNameOrEmail')}
+                className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
+                style={{ maxWidth: '250px' }}
+              />
+              <input
+                type="date"
+                value={messageDateFrom}
+                onChange={e => setMessageDateFrom(e.target.value)}
+                className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
+                style={{ maxWidth: '170px' }}
+                title={t('admin.dateFrom')}
+              />
+              <input
+                type="date"
+                value={messageDateTo}
+                onChange={e => setMessageDateTo(e.target.value)}
+                className="form-control form-control-sm rounded-pill bg-body border px-3 py-2"
+                style={{ maxWidth: '170px' }}
+                title={t('admin.dateTo')}
+              />
+              {(messageSearch || messageDateFrom || messageDateTo) && (
+                <button onClick={() => { setMessageSearch(''); setMessageDateFrom(''); setMessageDateTo(''); }} className="btn btn-sm btn-outline-secondary rounded-pill">
+                  {t('admin.clearFilters')}
+                </button>
+              )}
             </div>
             <div className="table-responsive">
               <table className="table table-hover align-middle">
