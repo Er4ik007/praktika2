@@ -5,6 +5,7 @@ import { Star, MapPin, ChevronLeft, ChevronRight, ChevronDown, CreditCard, Clock
 import { venues } from '../data';
 import { BookingForm } from '../components/BookingForm';
 import { useLang } from '../i18n/LanguageContext';
+import { useRatings } from '../contexts/RatingsContext';
 
 interface Review {
   id: number;
@@ -25,6 +26,8 @@ export const VenueDetailPage = () => {
   const [searchParams] = useSearchParams();
   const venue = venues.find(v => v.id === id);
   const { t, tv } = useLang();
+  const cachedRatings = useRatings();
+  const cachedRating = cachedRatings[venue?.id || ''];
 
   const [activeBranchId, setActiveBranchId] = useState<string>('');
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -238,8 +241,8 @@ export const VenueDetailPage = () => {
               <div className="d-flex flex-wrap gap-3 mb-4">
                 <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill">
                   <Star size={18} className="text-warning fill-warning" />
-                  <span className="fw-black text-body-emphasis">{avgRating || venue.rating}</span>
-                  <span className="text-body-secondary small">({filteredReviews.length})</span>
+                  <span className="fw-black text-body-emphasis">{avgRating || cachedRating?.avg || '0'}</span>
+                  <span className="text-body-secondary small">({filteredReviews.length || cachedRating?.count || 0})</span>
                 </div>
                 <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill fw-bold">
                   <CreditCard size={18} className="text-body-secondary" />

@@ -315,10 +315,10 @@ export const AdminPage = () => {
                 <thead className="bg-body-tertiary">
                   <tr>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setBookingSort(s => s.key === 'id' ? { key: 'id', asc: !s.asc } : { key: 'id', asc: true })}>
-                      {t('admin.thId')} {bookingSort.key === 'id' ? (bookingSort.asc ? '↑' : '↓') : ''}
+                      {t('admin.thId')} <span className={bookingSort.key === 'id' ? 'text-danger' : 'opacity-30'}>{bookingSort.key === 'id' && bookingSort.asc ? '↑' : '↓'}</span>
                     </th>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setBookingSort(s => s.key === 'name' ? { key: 'name', asc: !s.asc } : { key: 'name', asc: true })}>
-                      {t('admin.thName')} {bookingSort.key === 'name' ? (bookingSort.asc ? '↑' : '↓') : ''}
+                      {t('admin.thName')} <span className={bookingSort.key === 'name' ? 'text-danger' : 'opacity-30'}>{bookingSort.key === 'name' && bookingSort.asc ? '↑' : '↓'}</span>
                     </th>
                     <th className="text-body-secondary fw-bold">{t('admin.thPhone')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thVenue')}</th>
@@ -326,7 +326,7 @@ export const AdminPage = () => {
                     <th className="text-body-secondary fw-bold">{t('admin.thGuests')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thStatus')}</th>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setBookingSort(s => s.key === 'date' ? { key: 'date', asc: !s.asc } : { key: 'date', asc: false })}>
-                      {t('admin.thCreated')} {bookingSort.key === 'date' ? (bookingSort.asc ? '↑' : '↓') : ''}
+                      {t('admin.thCreated')} <span className={bookingSort.key === 'date' ? 'text-danger' : 'opacity-30'}>{bookingSort.key === 'date' && bookingSort.asc ? '↑' : '↓'}</span>
                     </th>
                     <th></th>
                   </tr>
@@ -415,17 +415,17 @@ export const AdminPage = () => {
                 <thead className="bg-body-tertiary">
                   <tr>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setMessageSort(s => s.key === 'id' ? { key: 'id', asc: !s.asc } : { key: 'id', asc: true })}>
-                      {t('admin.thId')} {messageSort.key === 'id' ? (messageSort.asc ? '↑' : '↓') : ''}
+                      {t('admin.thId')} <span className={messageSort.key === 'id' ? 'text-danger' : 'opacity-30'}>{messageSort.key === 'id' && messageSort.asc ? '↑' : '↓'}</span>
                     </th>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setMessageSort(s => s.key === 'name' ? { key: 'name', asc: !s.asc } : { key: 'name', asc: true })}>
-                      {t('admin.thName')} {messageSort.key === 'name' ? (messageSort.asc ? '↑' : '↓') : ''}
+                      {t('admin.thName')} <span className={messageSort.key === 'name' ? 'text-danger' : 'opacity-30'}>{messageSort.key === 'name' && messageSort.asc ? '↑' : '↓'}</span>
                     </th>
                     <th className="text-body-secondary fw-bold">{t('admin.thEmail')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thSubject')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thSource')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thMessage')}</th>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setMessageSort(s => s.key === 'date' ? { key: 'date', asc: !s.asc } : { key: 'date', asc: false })}>
-                      {t('admin.thDate')} {messageSort.key === 'date' ? (messageSort.asc ? '↑' : '↓') : ''}
+                      {t('admin.thDate')} <span className={messageSort.key === 'date' ? 'text-danger' : 'opacity-30'}>{messageSort.key === 'date' && messageSort.asc ? '↑' : '↓'}</span>
                     </th>
                   </tr>
                 </thead>
