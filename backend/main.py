@@ -2,6 +2,7 @@ import os
 import random
 import json
 import base64
+import secrets
 from datetime import datetime, timedelta, timezone
 from email.mime.text import MIMEText
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
@@ -16,7 +17,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
 
-def send_gmail(to: str, subject: str, body: str, reply_to: str = None):
+def send_gmail(to: str, subject: str, body: str, reply_to: str = None, content_type: str = "plain"):
     client_id = os.getenv("GMAIL_CLIENT_ID")
     client_secret = os.getenv("GMAIL_CLIENT_SECRET")
     refresh_token = os.getenv("GMAIL_REFRESH_TOKEN")
@@ -36,7 +37,7 @@ def send_gmail(to: str, subject: str, body: str, reply_to: str = None):
     creds.refresh(Request())
     service = build("gmail", "v1", credentials=creds)
 
-    message = MIMEText(body, "plain", "utf-8")
+    message = MIMEText(body, content_type, "utf-8")
     message["to"] = to
     message["from"] = sender
     message["subject"] = subject
@@ -61,6 +62,8 @@ try:
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_code VARCHAR(10)"))
         conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_code_expires TIMESTAMP WITH TIME ZONE"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT TRUE"))
+        conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token VARCHAR(64)"))
         conn.commit()
 except Exception as e:
     print(f"Migration warning: {e}")
@@ -97,12 +100,38 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Пользователь с таким email уже существует")
     
     hashed_pwd = auth.hash_password(user.password)
-    new_user = models.User(name=user.name, email=user.email, password_hash=hashed_pwd, phone=user.phone)
+    verification_token = secrets.token_urlsafe(32)
+    new_user = models.User(
+        name=user.name, email=user.email, password_hash=hashed_pwd,
+        phone=user.phone, email_verified=False, verification_token=verification_token
+    )
     
     db.add(new_user)
     db.commit()
-    db.refresh(new_user) 
-    
+    db.refresh(new_user)
+
+    verify_url = f"https://praktika2-eta.vercel.app/verify-email?token={verification_token}"
+    html_body = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px; text-align: center;">
+      <h2 style="color: #1a1a1a; margin-bottom: 8px;">Подтвердите ваш email</h2>
+      <p style="color: #666; font-size: 16px; margin-bottom: 24px;">
+        Здравствуйте, {user.name}! Нажмите кнопку ниже, чтобы подтвердить адрес электронной почты и активировать аккаунт.
+      </p>
+      <a href="{verify_url}" style="display: inline-block; background-color: #ef4444; color: #ffffff; text-decoration: none; padding: 14px 40px; border-radius: 50px; font-weight: bold; font-size: 16px;">
+        Подтвердить email
+      </a>
+      <p style="color: #999; font-size: 13px; margin-top: 24px;">
+        Если вы не регистрировались на Minsk Gastro Guide — просто проигнорируйте это письмо.
+      </p>
+    </div>
+    """
+    send_gmail(
+        to=user.email,
+        subject="Подтвердите email — Minsk Gastro Guide",
+        body=html_body,
+        content_type="html"
+    )
+
     return new_user 
 
 @app.post("/api/login")
@@ -110,6 +139,9 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
     if not db_user or not auth.verify_password(user.password, db_user.password_hash):
         raise HTTPException(status_code=401, detail="Неверный email или пароль")
+    
+    if not db_user.email_verified:
+        raise HTTPException(status_code=403, detail="Подтвердите ваш email перед входом")
     
     # Если пользователь — администратор, отправляем 2FA код
     if db_user.is_admin:
@@ -148,6 +180,16 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
         "user_name": db_user.name,
         "is_admin": False
     }
+
+@app.post("/api/verify-email")
+def verify_email(payload: schemas.VerifyEmailRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.verification_token == payload.token).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Неверный или использованный токен")
+    user.email_verified = True
+    user.verification_token = None
+    db.commit()
+    return {"message": "Email подтверждён"}
     
     # === НОВЫЙ МАРШРУТ: ПОЛУЧЕНИЕ ПРОФИЛЯ ===
 # Обрати внимание на Depends(auth.get_current_user) - сюда нельзя без токена!

@@ -28,6 +28,7 @@ class UserResponse(BaseModel):
     phone: Optional[str] = None
     avatar: Optional[str] = None
     is_admin: bool = False
+    email_verified: bool = True
 
     class Config:
         from_attributes = True
@@ -138,3 +139,6 @@ class AdminVerifyCode(BaseModel):
 class AdminBookingStatus(BaseModel):
     status: str = Field(..., pattern="^(active|cancelled)$")
     reason: Optional[str] = None
+
+class VerifyEmailRequest(BaseModel):
+    token: str

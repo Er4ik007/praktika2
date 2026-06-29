@@ -24,6 +24,10 @@ class User(Base):
     is_admin = Column(Boolean, default=False, nullable=False)
     admin_code = Column(String(10), nullable=True)
     admin_code_expires = Column(DateTime(timezone=True), nullable=True)
+
+    # ПОДТВЕРЖДЕНИЕ EMAIL
+    email_verified = Column(Boolean, default=False, nullable=False)
+    verification_token = Column(String(64), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

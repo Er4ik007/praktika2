@@ -129,6 +129,16 @@ export const translations: Translations = {
   'register.success': { ru: 'Регистрация успешна!', be: 'Рэгістрацыя паспяховая!', en: 'Registration successful!' },
   'register.successGo': { ru: 'Войти', be: 'Увайсці', en: 'Sign in' },
 
+  // Verify email
+  'verify.checkEmail': { ru: 'Проверьте вашу почту!', be: 'Праверце вашу пошту!', en: 'Check your email!' },
+  'verify.checkEmailDesc': { ru: 'Мы отправили ссылку для подтверждения на указанный email.', be: 'Мы адправілі спасылку для пацверджання на ўказаны email.', en: 'We sent a confirmation link to the email you provided.' },
+  'verify.title': { ru: 'Подтверждение email', be: 'Пацверджанне email', en: 'Email verification' },
+  'verify.loading': { ru: 'Проверяем ссылку...', be: 'Правяраем спасылку...', en: 'Verifying link...' },
+  'verify.success': { ru: 'Email подтверждён!', be: 'Email пацверджаны!', en: 'Email verified!' },
+  'verify.successDesc': { ru: 'Теперь вы можете войти в аккаунт.', be: 'Цяпер вы можаце ўвайсці ў акаўнт.', en: 'You can now sign in to your account.' },
+  'verify.error': { ru: 'Ошибка подтверждения', be: 'Памылка пацверджання', en: 'Verification error' },
+  'verify.expired': { ru: 'Ссылка устарела. Зарегистрируйтесь снова.', be: 'Спасылка састарэла. Зарэгіструйцеся зноў.', en: 'Link expired. Please register again.' },
+
   // Profile page
   'profile.favorites': { ru: 'Мое Избранное', be: 'Маё Абранае', en: 'My Favorites' },
   'profile.bookings': { ru: 'Мои бронирования', be: 'Мае браніраванні', en: 'My Bookings' },

@@ -22,6 +22,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage').then(m => ({ default: m
 const RegisterPage = lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })));
+const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage').then(m => ({ default: m.VerifyEmailPage })));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -62,6 +63,7 @@ function AppContent() {
               <Route path="*" element={<NotFoundPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
             </Routes>
           </motion.div>
         </AnimatePresence>

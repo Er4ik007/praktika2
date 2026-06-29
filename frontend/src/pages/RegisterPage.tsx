@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import { CheckCircle, Eye, EyeOff, ChevronDown, MailCheck } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
 
 const COUNTRY_CODES = [
@@ -107,8 +107,9 @@ export const RegisterPage = () => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card bg-body-tertiary border-0 rounded-4 shadow-lg p-4 p-sm-5 w-100" style={{ maxWidth: '500px' }}>
         {submitted ? (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-4">
-            <CheckCircle className="text-success mb-3" size={60} />
-            <h2 className="h4 fw-bold text-body-emphasis mb-3">{t('register.success')}</h2>
+            <MailCheck className="text-success mb-3" size={60} />
+            <h2 className="h4 fw-bold text-body-emphasis mb-3">{t('verify.checkEmail')}</h2>
+            <p className="text-body-secondary small mb-4">{t('verify.checkEmailDesc')}</p>
             <Link to="/login" className="btn btn-primary-custom rounded-pill px-5 py-2">{t('register.successGo')}</Link>
           </motion.div>
         ) : (
