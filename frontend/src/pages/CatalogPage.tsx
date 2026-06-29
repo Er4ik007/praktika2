@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Search, Filter, Utensils, Coffee, Wine, ChefHat } from 'lucide-react';
@@ -7,8 +7,6 @@ import { VenueCard } from '../components/VenueCard';
 import { useLang } from '../i18n/LanguageContext';
 import { translations, Lang } from '../i18n/translations';
 
-declare global { interface Window { $: any; } }
-const $ = window.$ || (window as any).jQuery;
 
 export const CatalogPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,17 +19,6 @@ export const CatalogPage = () => {
 
   const [favorites, setFavorites] = useState<string[]>([]);
   const [maxPrice, setMaxPrice] = useState<number>(4);
-  const sliderRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if ($ && sliderRef.current) {
-      $(sliderRef.current).slider({
-        range: "min", value: maxPrice, min: 1, max: 4, step: 1,
-        slide: function (_event: any, ui: any) { setMaxPrice(ui.value); }
-      });
-    }
-    return () => { if ($ && sliderRef.current) { try { $(sliderRef.current).slider("destroy"); } catch (e) {} } };
-  }, []);
 
   useEffect(() => {
     document.title = t('nav.catalog');
@@ -127,7 +114,7 @@ export const CatalogPage = () => {
             <div className="bg-body-tertiary px-4 py-2 rounded-pill d-flex align-items-center gap-3">
               <span className="small fw-bold text-body-secondary text-nowrap">{t('catalog.priceRange')}</span>
               <div className="fw-bold text-danger text-nowrap" style={{ width: '40px' }}>{'$'.repeat(maxPrice)}</div>
-              <div ref={sliderRef} style={{ width: '100px' }} className="my-1"></div>
+              <input type="range" min={1} max={4} step={1} value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className="price-slider" style={{ '--progress': `${((maxPrice - 1) / 3) * 100}%` } as React.CSSProperties} />
             </div>
             <div className="position-relative">
               <Search className="position-absolute start-0 top-50 translate-middle-y ms-3 text-body-secondary" size={18} />
@@ -176,7 +163,57 @@ export const CatalogPage = () => {
           )}
         </AnimatePresence>
       </div>
-      <style>{`.fw-black { font-weight: 900; } .ui-widget-content { background: var(--bs-secondary-bg); border: none; height: 6px; border-radius: 4px; } .ui-widget-header { background: #ef4444; border-radius: 4px; } .ui-slider .ui-slider-handle { width: 16px; height: 16px; background: #fff; border: 2px solid #ef4444; border-radius: 50%; top: -5px; cursor: pointer; outline: none; } .ui-slider .ui-slider-handle:hover { transform: scale(1.2); }`}</style>
+      <style>{`
+        .fw-black { font-weight: 900; }
+        .price-slider {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 100px;
+          height: 6px;
+          border-radius: 999px;
+          background: linear-gradient(to right, #ef4444 0%, #ef4444 var(--progress, 100%), var(--bs-secondary-bg) var(--progress, 100%), var(--bs-secondary-bg) 100%);
+          outline: none;
+          cursor: pointer;
+        }
+        .price-slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: #fff;
+          border: 2.5px solid #ef4444;
+          box-shadow: 0 2px 6px rgba(239,68,68,0.35);
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .price-slider::-webkit-slider-thumb:hover {
+          transform: scale(1.25);
+          box-shadow: 0 2px 10px rgba(239,68,68,0.5);
+        }
+        .price-slider::-webkit-slider-thumb:active {
+          transform: scale(1.1);
+          box-shadow: 0 1px 6px rgba(239,68,68,0.4);
+        }
+        .price-slider::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: #fff;
+          border: 2.5px solid #ef4444;
+          box-shadow: 0 2px 6px rgba(239,68,68,0.35);
+          cursor: grab;
+        }
+        .price-slider::-moz-range-track {
+          height: 6px;
+          border-radius: 999px;
+          background: var(--bs-secondary-bg);
+        }
+        .price-slider::-moz-range-progress {
+          height: 6px;
+          border-radius: 999px;
+          background: #ef4444;
+        }
+      `}</style>
     </motion.div>
   );
 };
