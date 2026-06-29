@@ -67,7 +67,7 @@ export const ContactPage = () => {
               </div>
               <div>
                 <h4 className="fw-bold text-body text-uppercase small tracking-widest mb-1">Email</h4>
-                <p className="text-secondary fw-medium mb-0">asasin.leha007@gmail.com</p>
+                <p className="text-secondary fw-medium mb-0">asasin.leha008@gmail.com</p>
               </div>
             </div>
             <div className="d-flex align-items-start gap-4">
