@@ -1001,64 +1001,62 @@ export const ProfilePage = () => {
                 ) : (
                   <div className="d-grid gap-3">
                     {myReviews.map(review => (
-                      <div key={review.id} className="card rounded-4 border-0 shadow-sm overflow-visible">
+                      <div key={review.id} className="card rounded-4 border-0 shadow-sm position-relative">
                         <div className="card-body p-4">
-                          <div className="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                              <h5 className="fw-bold text-body-emphasis mb-1">
-                                {tv(`venue.name.${review.venue_id}`, review.venue_id)}
-                              </h5>
-                              {(() => {
-                                const venueData = venues.find(v => v.id === review.venue_id);
-                                if (!venueData) return null;
-                                const branchIdx = review.branch_id
-                                  ? venueData.branches.findIndex(b => b.id === review.branch_id)
-                                  : 0;
-                                const branch = branchIdx >= 0 ? venueData.branches[branchIdx] : venueData.branches[0];
-                                if (!branch) return null;
-                                return (
-                                  <div className="d-flex align-items-center gap-1 mb-1">
-                                    <MapPin size={12} className="text-danger" />
-                                    <span className="text-body-secondary small">{tv(`venue.${review.venue_id}.addr${branchIdx >= 0 ? branchIdx : 0}`, branch.address)}</span>
-                                  </div>
-                                );
-                              })()}
-                              <div className="d-flex align-items-center gap-2">
-                                <div className="d-flex gap-1">
-                                  {[1, 2, 3, 4, 5].map(s => (
-                                    <Star key={s} size={14} className={s <= review.rating ? 'text-warning fill-warning' : 'text-body-secondary'} />
-                                  ))}
-                                </div>
-                                <span className="text-body-secondary small">{new Date(review.created_at).toLocaleDateString()}</span>
-                              </div>
-                            </div>
-                            <div className="d-flex align-items-center gap-2">
+                          <div className="d-flex align-items-center gap-2 position-absolute" style={{ top: '16px', right: '16px', zIndex: 10 }}>
+                            <button
+                              onClick={() => navigate(`/venue/${review.venue_id}${review.branch_id ? `?branch=${review.branch_id}` : ''}`)}
+                              className="btn btn-sm bg-body-tertiary rounded-circle border-0 d-inline-flex align-items-center justify-content-center text-body-secondary"
+                              style={{ width: '32px', height: '32px' }}
+                              title={t('profile.goToVenue')}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            </button>
+                            <div className="position-relative">
                               <button
-                                onClick={() => navigate(`/venue/${review.venue_id}${review.branch_id ? `?branch=${review.branch_id}` : ''}`)}
-                                className="btn btn-sm bg-body-tertiary rounded-circle border-0 d-inline-flex align-items-center justify-content-center text-body-secondary"
+                                onClick={() => setDeleteReviewId(deleteReviewId === review.id ? null : review.id)}
+                                className="btn btn-sm bg-body-tertiary rounded-circle border-0 d-inline-flex align-items-center justify-content-center"
                                 style={{ width: '32px', height: '32px' }}
-                                title={t('profile.goToVenue')}
                               >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                <Trash2 size={14} className="text-body-secondary" />
                               </button>
-                              <div className="position-relative">
-                                <button
-                                  onClick={() => setDeleteReviewId(deleteReviewId === review.id ? null : review.id)}
-                                  className="btn btn-sm bg-body-tertiary rounded-circle border-0 d-inline-flex align-items-center justify-content-center"
-                                  style={{ width: '32px', height: '32px' }}
-                                >
-                                  <Trash2 size={14} className="text-body-secondary" />
-                                </button>
-                                {deleteReviewId === review.id && (
-                                  <div className="position-absolute end-0 mt-1 bg-body-tertiary border rounded-3 shadow-lg p-3" style={{ zIndex: 1050, minWidth: '160px' }}>
-                                    <p className="small fw-bold text-body-emphasis mb-2">{t('review.confirmDelete')}</p>
-                                    <div className="d-flex gap-2">
-                                      <button onClick={() => handleDeleteMyReview(review.id)} className="btn btn-sm btn-danger fw-bold flex-grow-1">{t('review.delete')}</button>
-                                      <button onClick={() => setDeleteReviewId(null)} className="btn btn-sm bg-body text-body-secondary fw-bold flex-grow-1 border">{t('review.cancel')}</button>
-                                    </div>
+                              {deleteReviewId === review.id && (
+                                <div className="position-absolute end-0 mt-1 bg-body-tertiary border rounded-3 shadow-lg p-3" style={{ zIndex: 1050, minWidth: '160px' }}>
+                                  <p className="small fw-bold text-body-emphasis mb-2">{t('review.confirmDelete')}</p>
+                                  <div className="d-flex gap-2">
+                                    <button onClick={() => handleDeleteMyReview(review.id)} className="btn btn-sm btn-danger fw-bold flex-grow-1">{t('review.delete')}</button>
+                                    <button onClick={() => setDeleteReviewId(null)} className="btn btn-sm bg-body text-body-secondary fw-bold flex-grow-1 border">{t('review.cancel')}</button>
                                   </div>
-                                )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="pe-5">
+                            <h5 className="fw-bold text-body-emphasis mb-1">
+                              {tv(`venue.name.${review.venue_id}`, review.venue_id)}
+                            </h5>
+                            {(() => {
+                              const venueData = venues.find(v => v.id === review.venue_id);
+                              if (!venueData) return null;
+                              const branchIdx = review.branch_id
+                                ? venueData.branches.findIndex(b => b.id === review.branch_id)
+                                : 0;
+                              const branch = branchIdx >= 0 ? venueData.branches[branchIdx] : venueData.branches[0];
+                              if (!branch) return null;
+                              return (
+                                <div className="d-flex align-items-center gap-1 mb-1">
+                                  <MapPin size={12} className="text-danger" />
+                                  <span className="text-body-secondary small">{tv(`venue.${review.venue_id}.addr${branchIdx >= 0 ? branchIdx : 0}`, branch.address)}</span>
+                                </div>
+                              );
+                            })()}
+                            <div className="d-flex align-items-center gap-2">
+                              <div className="d-flex gap-1">
+                                {[1, 2, 3, 4, 5].map(s => (
+                                  <Star key={s} size={14} className={s <= review.rating ? 'text-warning fill-warning' : 'text-body-secondary'} />
+                                ))}
                               </div>
+                              <span className="text-body-secondary small">{new Date(review.created_at).toLocaleDateString()}</span>
                             </div>
                           </div>
                           <p className="text-body-secondary mb-0">{review.text}</p>

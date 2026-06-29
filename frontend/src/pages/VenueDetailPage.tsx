@@ -532,60 +532,58 @@ export const VenueDetailPage = () => {
           ) : (
             <div className="d-grid gap-3">
               {filteredReviews.map(review => (
-                <div key={review.id} className="bg-body rounded-4 p-4 border">
-                  <div className="d-flex justify-content-between align-items-start mb-3">
-                    <div className="d-flex align-items-center gap-3">
-                      {review.user_avatar ? (
-                        <img src={review.user_avatar} alt="" className="rounded-circle" style={{ width: '44px', height: '44px', objectFit: 'cover' }} />
-                      ) : (
-                        <div className="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center fw-bold" style={{ width: '44px', height: '44px' }}>
-                          {review.user_name.charAt(0).toUpperCase()}
+                <div key={review.id} className="bg-body rounded-4 p-4 border position-relative">
+                  {String(currentUserId) === String(review.user_id) && (
+                    <div className="position-absolute" style={{ top: '16px', right: '16px', zIndex: 10 }}>
+                      <button
+                        onClick={() => setDeleteReviewId(deleteReviewId === review.id ? null : review.id)}
+                        className="btn btn-sm bg-body-tertiary rounded-circle border-0 p-0 d-flex align-items-center justify-content-center"
+                        style={{ width: '32px', height: '32px' }}
+                      >
+                        <Trash2 size={14} className="text-body-secondary" />
+                      </button>
+                      {deleteReviewId === review.id && (
+                        <div className="position-absolute end-0 mt-1 bg-body-tertiary border rounded-3 shadow-lg p-3" style={{ zIndex: 100, minWidth: '160px' }}>
+                          <p className="small fw-bold text-body-emphasis mb-2">{t('review.confirmDelete')}</p>
+                          <div className="d-flex gap-2">
+                            <button onClick={() => handleDeleteReview(review.id)} className="btn btn-sm btn-danger fw-bold flex-grow-1">{t('review.delete')}</button>
+                            <button onClick={() => setDeleteReviewId(null)} className="btn btn-sm bg-body text-body-secondary fw-bold flex-grow-1 border">{t('review.cancel')}</button>
+                          </div>
                         </div>
                       )}
-                      <div>
-                        <div className="fw-bold text-body-emphasis">{review.user_name}</div>
-                        <div className="d-flex align-items-center gap-2">
-                          <div className="d-flex gap-1">
-                            {[1, 2, 3, 4, 5].map(s => (
-                              <Star key={s} size={14} fill={s <= review.rating ? '#facc15' : 'none'} strokeWidth={s <= review.rating ? 0 : 1.5} className={s <= review.rating ? 'text-warning' : 'text-body-secondary'} />
-                            ))}
-                          </div>
-                          <span className="text-body-secondary small">{formatDate(review.created_at)}</span>
-                        </div>
-                        {review.branch_id && venue && (() => {
-                          const branchIdx = venue.branches.findIndex(b => b.id === review.branch_id);
-                          const branch = branchIdx >= 0 ? venue.branches[branchIdx] : null;
-                          return branch ? (
-                            <div className="d-flex align-items-center gap-1 mt-1">
-                              <MapPin size={12} className="text-danger" />
-                              <span className="text-body-secondary small">{tv(`venue.${venue.id}.addr${branchIdx}`, branch.address)}</span>
-                            </div>
-                          ) : null;
-                        })()}
-                      </div>
                     </div>
-                    {String(currentUserId) === String(review.user_id) && (
-                      <div className="position-relative">
-                        <button
-                          onClick={() => setDeleteReviewId(deleteReviewId === review.id ? null : review.id)}
-                          className="btn btn-sm bg-body-tertiary rounded-circle border-0 p-0 d-flex align-items-center justify-content-center"
-                          style={{ width: '32px', height: '32px' }}
-                        >
-                          <Trash2 size={14} className="text-body-secondary" />
-                        </button>
-                        {deleteReviewId === review.id && (
-                          <div className="position-absolute end-0 mt-1 bg-body-tertiary border rounded-3 shadow-lg p-3" style={{ zIndex: 100, minWidth: '160px' }}>
-                            <p className="small fw-bold text-body-emphasis mb-2">{t('review.confirmDelete')}</p>
-                            <div className="d-flex gap-2">
-                              <button onClick={() => handleDeleteReview(review.id)} className="btn btn-sm btn-danger fw-bold flex-grow-1">{t('review.delete')}</button>
-                              <button onClick={() => setDeleteReviewId(null)} className="btn btn-sm bg-body text-body-secondary fw-bold flex-grow-1 border">{t('review.cancel')}</button>
-                            </div>
-                          </div>
-                        )}
+                  )}
+                  <div className="d-flex align-items-center gap-3">
+                    {review.user_avatar ? (
+                      <img src={review.user_avatar} alt="" className="rounded-circle" style={{ width: '44px', height: '44px', objectFit: 'cover' }} />
+                    ) : (
+                      <div className="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center fw-bold" style={{ width: '44px', height: '44px' }}>
+                        {review.user_name.charAt(0).toUpperCase()}
                       </div>
                     )}
-                  </div>
-                  <p className="text-body-secondary mb-3">{review.text}</p>
+                    <div>
+                      <div className="fw-bold text-body-emphasis">{review.user_name}</div>
+                      <div className="d-flex align-items-center gap-2">
+                        <div className="d-flex gap-1">
+                          {[1, 2, 3, 4, 5].map(s => (
+                            <Star key={s} size={14} fill={s <= review.rating ? '#facc15' : 'none'} strokeWidth={s <= review.rating ? 0 : 1.5} className={s <= review.rating ? 'text-warning' : 'text-body-secondary'} />
+                          ))}
+                        </div>
+                        <span className="text-body-secondary small">{formatDate(review.created_at)}</span>
+                      </div>
+                      {review.branch_id && venue && (() => {
+                        const branchIdx = venue.branches.findIndex(b => b.id === review.branch_id);
+                        const branch = branchIdx >= 0 ? venue.branches[branchIdx] : null;
+                        return branch ? (
+                          <div className="d-flex align-items-center gap-1 mt-1">
+                            <MapPin size={12} className="text-danger" />
+                            <span className="text-body-secondary small">{tv(`venue.${venue.id}.addr${branchIdx}`, branch.address)}</span>
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                    </div>
+                    <p className="text-body-secondary mb-3">{review.text}</p>
                   {review.photos && review.photos.length > 0 && (
                     <div className="d-flex gap-2 flex-wrap">
                       {review.photos.map((photo, idx) => (
