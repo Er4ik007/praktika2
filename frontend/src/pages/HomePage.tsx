@@ -174,7 +174,7 @@ export const HomePage = () => {
             </div>
 
             <div className="col-lg-7 position-relative ms-auto">
-              <div className="position-absolute inset-0 d-flex justify-content-center align-items-center" style={{ zIndex: 0, pointerEvents: 'none' }}>
+              <div className="position-absolute inset-0 d-none d-md-flex justify-content-center align-items-center" style={{ zIndex: 0, pointerEvents: 'none' }}>
                 <motion.div
                   animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0], opacity: [0.3, 0.5, 0.3] }}
                   transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -196,7 +196,7 @@ export const HomePage = () => {
                 />
               </div>
 
-              <div className="position-relative" style={{ zIndex: 1, minHeight: '550px' }}>
+              <div className="position-relative d-none d-md-block" style={{ zIndex: 1, minHeight: '550px' }}>
                 <Minsk3DWidget />
               </div>
             </div>
