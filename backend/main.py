@@ -1,15 +1,50 @@
 import os
 import random
 import json
+import base64
 from datetime import datetime, timedelta, timezone
+from email.mime.text import MIMEText
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware # <--- ИМПОРТИРУЕМ CORS
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db
 import models
 import schemas
 import auth
-import resend
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+
+
+def send_gmail(to: str, subject: str, body: str, reply_to: str = None):
+    client_id = os.getenv("GMAIL_CLIENT_ID")
+    client_secret = os.getenv("GMAIL_CLIENT_SECRET")
+    refresh_token = os.getenv("GMAIL_REFRESH_TOKEN")
+    sender = os.getenv("GMAIL_SENDER")
+
+    if not all([client_id, client_secret, refresh_token, sender]):
+        print("[Gmail] Пропускаю — не настроены GMAIL_* переменные")
+        return
+
+    creds = Credentials(
+        token=None,
+        refresh_token=refresh_token,
+        token_uri="https://oauth2.googleapis.com/token",
+        client_id=client_id,
+        client_secret=client_secret,
+    )
+    creds.refresh(Request())
+    service = build("gmail", "v1", credentials=creds)
+
+    message = MIMEText(body, "plain", "utf-8")
+    message["to"] = to
+    message["from"] = sender
+    message["subject"] = subject
+    if reply_to:
+        message["Reply-To"] = reply_to
+
+    raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    service.users().messages().send(userId="me", body={"raw": raw}).execute()
 
 # Создаем таблицы
 Base.metadata.create_all(bind=engine)
@@ -94,22 +129,15 @@ def login_user(user: schemas.UserLogin, db: Session = Depends(get_db)):
                 "expires": datetime.now(timezone.utc) + timedelta(minutes=10)
             }
 
-        resend_api_key = os.getenv("RESEND_API_KEY")
-        if resend_api_key and resend_api_key != "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
-            try:
-                resend.api_key = resend_api_key
-                resend.Emails.send({
-                    "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
-                    "to": [db_user.email],
-                    "subject": "Код подтверждения входа — Minsk Gastro Guide",
-                    "text": (
-                        f"Здравствуйте, {db_user.name}!\n\n"
-                        f"Код для входа в панель администратора: {admin_code}\n\n"
-                        f"Код действителен 10 минут. Если вы не запрашивали вход — проигнорируйте это письмо."
-                    )
-                })
-            except Exception as e:
-                print(f"Ошибка отправки 2FA кода: {e}")
+        send_gmail(
+            to=db_user.email,
+            subject="Код подтверждения входа — Minsk Gastro Guide",
+            body=(
+                f"Здравствуйте, {db_user.name}!\n\n"
+                f"Код для входа в панель администратора: {admin_code}\n\n"
+                f"Код действителен 10 минут. Если вы не запрашивали вход — проигнорируйте это письмо."
+            )
+        )
 
         return {"requires_2fa": True, "email": db_user.email}
     
@@ -245,24 +273,16 @@ def send_change_code(
     current_user.reset_code_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
     db.commit()
 
-    resend_api_key = os.getenv("RESEND_API_KEY")
-    if resend_api_key and resend_api_key != "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
-        try:
-            resend.api_key = resend_api_key
-            resend.Emails.send({
-                "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
-                "to": [current_user.email],
-                "subject": "Смена пароля - Minsk Gastro Guide",
-                "text": (
-                    f"Здравствуйте, {current_user.name}!\n\n"
-                    f"Вы запросили смену пароля на сайте Minsk Gastro Guide.\n"
-                    f"Ваш код подтверждения: {reset_code}\n\n"
-                    f"Код действителен 15 минут. Если вы не запрашивали смену пароля — проигнорируйте это письмо."
-                )
-            })
-        except Exception as e:
-            print(f"Ошибка отправки письма: {e}")
-            raise HTTPException(status_code=500, detail="Ошибка почтового сервера")
+    send_gmail(
+        to=current_user.email,
+        subject="Смена пароля - Minsk Gastro Guide",
+        body=(
+            f"Здравствуйте, {current_user.name}!\n\n"
+            f"Вы запросили смену пароля на сайте Minsk Gastro Guide.\n"
+            f"Ваш код подтверждения: {reset_code}\n\n"
+            f"Код действителен 15 минут. Если вы не запрашивали смену пароля — проигнорируйте это письмо."
+        )
+    )
 
     return {"message": "Код подтверждения отправлен на почту"}
 
@@ -306,21 +326,11 @@ def forgot_password(data: schemas.ForgotPassword, db: Session = Depends(get_db))
     user.reset_code_expires = datetime.now(timezone.utc) + timedelta(minutes=15)
     db.commit()
 
-    # 2. Отправляем письмо через Resend
-    resend_api_key = os.getenv("RESEND_API_KEY")
-    
-    if resend_api_key and resend_api_key != "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
-        try:
-            resend.api_key = resend_api_key
-            resend.Emails.send({
-                "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
-                "to": [user.email],
-                "subject": "Восстановление пароля - Minsk Gastro Guide",
-                "text": f"Здравствуйте, {user.name}!\n\nВаш код для восстановления пароля на сайте Minsk Gastro Guide: {reset_code}\n\nКод действителен 15 минут."
-            })
-        except Exception as e:
-            print(f"Ошибка отправки письма: {e}")
-            raise HTTPException(status_code=500, detail="Ошибка почтового сервера")
+    send_gmail(
+        to=user.email,
+        subject="Восстановление пароля - Minsk Gastro Guide",
+        body=f"Здравствуйте, {user.name}!\n\nВаш код для восстановления пароля на сайте Minsk Gastro Guide: {reset_code}\n\nКод действителен 15 минут."
+    )
 
     return {"message": "Код отправлен на почту"}
 
@@ -651,22 +661,15 @@ def resend_admin_2fa(data: schemas.AdminVerifyCode, db: Session = Depends(get_db
             "expires": datetime.now(timezone.utc) + timedelta(minutes=10)
         }
 
-    resend_api_key = os.getenv("RESEND_API_KEY")
-    if resend_api_key and resend_api_key != "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
-        try:
-            resend.api_key = resend_api_key
-            resend.Emails.send({
-                "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
-                "to": [user.email],
-                "subject": "Новый код подтверждения — Minsk Gastro Guide",
-                "text": (
-                    f"Здравствуйте, {user.name}!\n\n"
-                    f"Ваш новый код для входа: {admin_code}\n\n"
-                    f"Код действителен 10 минут."
-                )
-            })
-        except Exception as e:
-            print(f"Ошибка отправки 2FA кода: {e}")
+    send_gmail(
+        to=user.email,
+        subject="Новый код подтверждения — Minsk Gastro Guide",
+        body=(
+            f"Здравствуйте, {user.name}!\n\n"
+            f"Ваш новый код для входа: {admin_code}\n\n"
+            f"Код действителен 10 минут."
+        )
+    )
 
     return {"message": "Код отправлен на почту"}
 
@@ -891,35 +894,27 @@ def export_messages_csv(
 # ==========================================
 
 def send_message_email(name: str, email: str, subject: str, body: str, source: str, category: str = None):
-    resend_api_key = os.getenv("RESEND_API_KEY")
-    print(f"[Resend] Ключ: {'есть' if resend_api_key else 'нет'}")
-    if not resend_api_key or resend_api_key == "re_СЮДА_ВСТАВЬ_СВОЙ_КЛЮЧ":
-        print("[Resend] Пропускаю отправку — нет API ключа")
-        return
-
     label = "Поддержка" if source == "support" else "Контакты"
     category_line = f"Категория: {category}\n" if category else ""
-    to_email = os.getenv("RESEND_TO_EMAIL", "asasin.leha008@gmail.com")
+    to_email = os.getenv("GMAIL_SENDER", "asasin.leha008@gmail.com")
 
     try:
-        resend.api_key = resend_api_key
-        result = resend.Emails.send({
-            "from": os.getenv("RESEND_FROM_EMAIL", "Minsk Gastro Guide <onboarding@resend.dev>"),
-            "to": [to_email],
-            "reply_to": [email],
-            "subject": f"[{label}] {subject}",
-            "text": (
+        send_gmail(
+            to=to_email,
+            subject=f"[{label}] {subject}",
+            body=(
                 f"Новое обращение ({label})\n\n"
                 f"От: {name}\n"
                 f"Email: {email}\n"
                 f"Тема: {subject}\n"
                 f"{category_line}\n"
                 f"Сообщение:\n{body}"
-            )
-        })
-        print(f"[Resend] Письмо отправлено: {result}")
+            ),
+            reply_to=email
+        )
+        print(f"[Gmail] Письмо отправлено: [{label}] {subject}")
     except Exception as e:
-        print(f"[Resend] ОШИБКА: {e}")
+        print(f"[Gmail] ОШИБКА: {e}")
 
 
 @app.post("/api/messages/contact", response_model=schemas.MessageResponse)
