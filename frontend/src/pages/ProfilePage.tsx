@@ -240,7 +240,7 @@ export const ProfilePage = () => {
   }, []);
 
   useEffect(() => {
-    document.title = "Личный кабинет";
+    document.title = t('nav.profile');
     const token = localStorage.getItem('token');
     if (!token) { navigate('/login'); return; }
 

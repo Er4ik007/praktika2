@@ -109,6 +109,8 @@ export const AdminPage = () => {
     } catch { navigate('/404'); }
   };
 
+  useEffect(() => { document.title = t('nav.admin'); }, [t]);
+
   useEffect(() => {
     Promise.all([fetchBookings(), fetchMessages()]).finally(() => setIsLoading(false));
   }, []);
