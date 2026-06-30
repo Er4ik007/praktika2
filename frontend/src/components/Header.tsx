@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Utensils, X, Menu as MenuIcon, User, Shield } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { API_BASE } from '../config';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -37,7 +38,7 @@ export const Header = () => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token || !userName) return;
-    fetch('https://praktika2-vkkr.onrender.com/api/users/me', {
+    fetch(`${API_BASE}/api/users/me`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => res.ok ? res.json() : null)

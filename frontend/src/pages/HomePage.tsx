@@ -6,6 +6,7 @@ import { venues, Venue } from '../data';
 import { VenueCard } from '../components/VenueCard';
 import { Minsk3DWidget } from '../components/Minsk3DWidget';
 import { useLang } from '../i18n/LanguageContext';
+import { API_BASE } from '../config';
 
 const SLIDES_KEYS = [
   { titleKey: 'home.slide1.title', subtitleKey: 'home.slide1.subtitle', image: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1920&q=80", link: "/catalog" },
@@ -33,7 +34,7 @@ export const HomePage = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
       try {
-        const res = await fetch('https://praktika2-vkkr.onrender.com/api/favorites', {
+        const res = await fetch(`${API_BASE}/api/favorites`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -56,7 +57,7 @@ export const HomePage = () => {
     const isNowFavorite = !favorites.includes(id);
     setFavorites(prev => isNowFavorite ? [...prev, id] : prev.filter(fid => fid !== id));
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/favorites/toggle', {
+      const res = await fetch(`${API_BASE}/api/favorites/toggle`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

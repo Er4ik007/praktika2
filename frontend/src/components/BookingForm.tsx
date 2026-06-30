@@ -2,6 +2,7 @@ import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, MapPin, Star, ChevronRight, ChevronDown } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
+import { API_BASE } from '../config';
 
 const COUNTRY_CODES = [
   { code: '+375', countryCode: 'by', label: 'Беларусь', mask: '(XX) XXX-XX-XX', regex: /^\(\d{2}\) \d{3}-\d{2}-\d{2}$/ },
@@ -45,7 +46,7 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
       const token = localStorage.getItem('token');
       if (!token) return;
       try {
-        const res = await fetch('https://praktika2-vkkr.onrender.com/api/users/me', {
+        const res = await fetch(`${API_BASE}/api/users/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -103,7 +104,7 @@ export const BookingForm = ({ venueName, venueId }: { venueName?: string; venueI
     const fullPhone = `${selectedCountry.code} ${rawPhone}`;
 
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/bookings', {
+      const res = await fetch(`${API_BASE}/api/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

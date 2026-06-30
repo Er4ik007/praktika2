@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
+import { API_BASE } from '../config';
 
 export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
@@ -13,7 +14,7 @@ export const AdminRoute = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
-    fetch('https://praktika2-vkkr.onrender.com/api/users/me', {
+    fetch(`${API_BASE}/api/users/me`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {

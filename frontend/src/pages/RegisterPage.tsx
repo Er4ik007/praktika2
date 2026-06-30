@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, Eye, EyeOff, ChevronDown, MailCheck } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
+import { API_BASE } from '../config';
 
 const COUNTRY_CODES = [
   { code: '+375', countryCode: 'by', label: 'Беларусь', mask: '(XX) XXX-XX-XX', regex: /^\(\d{2}\) \d{3}-\d{2}-\d{2}$/ },
@@ -86,7 +87,7 @@ export const RegisterPage = () => {
     };
 
     try {
-      const response = await fetch('https://praktika2-vkkr.onrender.com/api/register', {
+      const response = await fetch(`${API_BASE}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(finalData)

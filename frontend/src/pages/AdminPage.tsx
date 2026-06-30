@@ -31,7 +31,8 @@ interface Message {
   created_at: string;
 }
 
-const API = 'https://praktika2-vkkr.onrender.com';
+import { API_BASE } from '../config';
+const API = API_BASE;
 
 export const AdminPage = () => {
   const navigate = useNavigate();

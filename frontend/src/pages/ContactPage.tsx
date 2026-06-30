@@ -2,6 +2,7 @@ import React, { useState, FormEvent, useEffect } from 'react';
 import { MapPin, Phone, Mail, Instagram, Send } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLang } from '../i18n/LanguageContext';
+import { API_BASE } from '../config';
 
 export const ContactPage = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
@@ -22,7 +23,7 @@ export const ContactPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await fetch('https://praktika2-vkkr.onrender.com/api/messages/contact', {
+      await fetch(`${API_BASE}/api/messages/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

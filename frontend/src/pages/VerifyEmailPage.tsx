@@ -3,6 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { MailCheck, AlertCircle } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
+import { API_BASE } from '../config';
 
 export const VerifyEmailPage = () => {
   const [searchParams] = useSearchParams();
@@ -19,7 +20,7 @@ export const VerifyEmailPage = () => {
       return;
     }
 
-    fetch('https://praktika2-vkkr.onrender.com/api/verify-email', {
+    fetch(`${API_BASE}/api/verify-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token })

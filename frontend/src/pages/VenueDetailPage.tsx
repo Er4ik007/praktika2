@@ -6,6 +6,7 @@ import { venues } from '../data';
 import { BookingForm } from '../components/BookingForm';
 import { useLang } from '../i18n/LanguageContext';
 import { useRatings } from '../contexts/RatingsContext';
+import { API_BASE } from '../config';
 
 interface Review {
   id: number;
@@ -63,7 +64,7 @@ export const VenueDetailPage = () => {
 
   useEffect(() => {
     if (id) {
-      fetch(`https://praktika2-vkkr.onrender.com/api/reviews/${id}`)
+      fetch(`${API_BASE}/api/reviews/${id}`)
         .then(res => res.json())
         .then(data => { setReviews(data); setReviewsLoading(false); })
         .catch(() => setReviewsLoading(false));
@@ -133,7 +134,7 @@ export const VenueDetailPage = () => {
     setReviewError('');
 
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/reviews', {
+      const res = await fetch(`${API_BASE}/api/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ venue_id: id, branch_id: activeBranch.id, rating: newReviewRating, text: newReviewText })
@@ -144,7 +145,7 @@ export const VenueDetailPage = () => {
       if (reviewFiles.length > 0) {
         const formData = new FormData();
         reviewFiles.forEach(f => formData.append('files', f));
-        const photoRes = await fetch(`https://praktika2-vkkr.onrender.com/api/reviews/photos?review_id=${data.id}`, {
+        const photoRes = await fetch(`${API_BASE}/api/reviews/photos?review_id=${data.id}`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData
@@ -172,7 +173,7 @@ export const VenueDetailPage = () => {
   const handleDeleteReview = async (reviewId: number) => {
     if (!token) return;
     try {
-      const res = await fetch(`https://praktika2-vkkr.onrender.com/api/reviews/${reviewId}`, {
+      const res = await fetch(`${API_BASE}/api/reviews/${reviewId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

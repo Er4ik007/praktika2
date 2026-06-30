@@ -1,3 +1,4 @@
+import os
 import bcrypt
 import jwt
 from datetime import datetime, timedelta
@@ -8,8 +9,10 @@ from sqlalchemy.orm import Session
 import models
 from database import get_db
 
-# СЕКРЕТНЫЙ КЛЮЧ
-SECRET_KEY = "super_secret_minsk_gastro_key_12345"
+# СЕКРЕТНЫЙ КЛЮЧ — читаем из .env, НЕ хардкодим!
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("Не найдена переменная JWT_SECRET_KEY в файле .env")
 ALGORITHM = "HS256"
 
 # Указываем FastAPI, где находится URL для получения токена

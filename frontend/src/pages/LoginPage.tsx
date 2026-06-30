@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Utensils, Eye, EyeOff, KeyRound, MailCheck } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
+import { API_BASE } from '../config';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true); setError('');
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/login', {
+      const res = await fetch(`${API_BASE}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -65,7 +66,7 @@ export const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true); setError(''); setTwoFaSuccess('');
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/admin/verify-2fa', {
+      const res = await fetch(`${API_BASE}/api/admin/verify-2fa`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: twoFaEmail, code: twoFaCode })
@@ -85,7 +86,7 @@ export const LoginPage = () => {
     if (twoFaResendCooldown > 0) return;
     setError(''); setTwoFaSuccess('');
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/admin/send-2fa-code', {
+      const res = await fetch(`${API_BASE}/api/admin/send-2fa-code`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: twoFaEmail, code: '' })
@@ -100,7 +101,7 @@ export const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true); setError('');
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/forgot-password', {
+      const res = await fetch(`${API_BASE}/api/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail })
@@ -120,7 +121,7 @@ export const LoginPage = () => {
       return;
     }
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/reset-password', {
+      const res = await fetch(`${API_BASE}/api/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail, code: resetCode, new_password: newPassword })

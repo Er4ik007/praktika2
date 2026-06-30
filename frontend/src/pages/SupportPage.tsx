@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Send, MessageSquare, LifeBuoy } from 'lucide-react';
 import { useLang } from '../i18n/LanguageContext';
+import { API_BASE } from '../config';
 
 export const SupportPage = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export const SupportPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await fetch('https://praktika2-vkkr.onrender.com/api/messages/support', {
+      await fetch(`${API_BASE}/api/messages/support`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

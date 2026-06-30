@@ -65,7 +65,7 @@ class Review(Base):
     branch_id = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="reviews")
 
 # ==========================================
@@ -78,7 +78,7 @@ class Booking(Base):
     venue_id = Column(String(50), nullable=False)
     venue_name = Column(String(100), nullable=False)
     name = Column(String(100), nullable=False)
-    date = Column(String(50), nullable=False)
+    date = Column(DateTime(timezone=True), nullable=False)
     guests = Column(String(10), nullable=False)
     phone = Column(String(20), nullable=False)
     message = Column(Text, nullable=True)
@@ -87,7 +87,7 @@ class Booking(Base):
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     user = relationship("User", back_populates="bookings")
 
 # ==========================================

@@ -6,6 +6,7 @@ import { venues, Venue } from '../data';
 import { VenueCard } from '../components/VenueCard';
 import { useLang } from '../i18n/LanguageContext';
 import { translations, Lang } from '../i18n/translations';
+import { API_BASE } from '../config';
 
 
 export const CatalogPage = () => {
@@ -27,7 +28,7 @@ export const CatalogPage = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
       try {
-        const res = await fetch('https://praktika2-vkkr.onrender.com/api/favorites', {
+        const res = await fetch(`${API_BASE}/api/favorites`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -63,7 +64,7 @@ export const CatalogPage = () => {
     setFavorites(prev => isNowFavorite ? [...prev, id] : prev.filter(fid => fid !== id));
 
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/favorites/toggle', {
+      const res = await fetch(`${API_BASE}/api/favorites/toggle`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

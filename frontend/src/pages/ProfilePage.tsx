@@ -6,6 +6,7 @@ import { venues } from '../data';
 import { VenueCard } from '../components/VenueCard';
 import { useLang } from '../i18n/LanguageContext';
 import { translations } from '../i18n/translations';
+import { API_BASE } from '../config';
 
 const COUNTRY_CODES = [
   { code: '+375', countryCode: 'by', label: 'Беларусь', mask: '(XX) XXX-XX-XX', regex: /^\(\d{2}\) \d{3}-\d{2}-\d{2}$/ },
@@ -148,7 +149,7 @@ export const ProfilePage = () => {
     if (!token) return;
     setBookingsLoading(true);
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/bookings', {
+      const res = await fetch(`${API_BASE}/api/bookings`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -163,7 +164,7 @@ export const ProfilePage = () => {
     const token = localStorage.getItem('token');
     if (!token) return Promise.resolve();
     setMyReviewsLoading(true);
-    return fetch('https://praktika2-vkkr.onrender.com/api/reviews/my', {
+    return fetch(`${API_BASE}/api/reviews/my`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => {
@@ -179,7 +180,7 @@ export const ProfilePage = () => {
     const token = localStorage.getItem('token');
     if (!token) return;
     try {
-      const res = await fetch(`https://praktika2-vkkr.onrender.com/api/reviews/${reviewId}`, {
+      const res = await fetch(`${API_BASE}/api/reviews/${reviewId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -195,7 +196,7 @@ export const ProfilePage = () => {
     if (!token) return;
     setCancellingId(bookingId);
     try {
-      const res = await fetch(`https://praktika2-vkkr.onrender.com/api/bookings/${bookingId}/cancel`, {
+      const res = await fetch(`${API_BASE}/api/bookings/${bookingId}/cancel`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -244,12 +245,12 @@ export const ProfilePage = () => {
     const token = localStorage.getItem('token');
     if (!token) { navigate('/login'); return; }
 
-    fetch('https://praktika2-vkkr.onrender.com/api/users/me', { headers: { 'Authorization': `Bearer ${token}` } })
+    fetch(`${API_BASE}/api/users/me`, { headers: { 'Authorization': `Bearer ${token}` } })
     .then(res => { if (!res.ok) throw new Error('Auth Error'); return res.json(); })
     .then(data => {
       setUserData(data);
       setEditName(data.name);
-      return fetch('https://praktika2-vkkr.onrender.com/api/favorites', { headers: { 'Authorization': `Bearer ${token}` } });
+      return fetch(`${API_BASE}/api/favorites`, { headers: { 'Authorization': `Bearer ${token}` } });
     })
     .then(res => res.json())
     .then(favData => {
@@ -315,7 +316,7 @@ export const ProfilePage = () => {
     setIsSaving(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/users/me', {
+      const res = await fetch(`${API_BASE}/api/users/me`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ name: editName })
@@ -342,7 +343,7 @@ export const ProfilePage = () => {
     const finalPhone = rawPhone.length > 0 ? `${selectedCountry.code} ${rawPhone}` : null;
 
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/users/me', {
+      const res = await fetch(`${API_BASE}/api/users/me`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ phone: finalPhone })
@@ -362,7 +363,7 @@ export const ProfilePage = () => {
   const handleDeleteAccount = async () => {
     const token = localStorage.getItem('token');
     try {
-      await fetch('https://praktika2-vkkr.onrender.com/api/users/me', {
+      await fetch(`${API_BASE}/api/users/me`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -377,7 +378,7 @@ export const ProfilePage = () => {
     if (!token) return;
     setFavoriteIds(prev => prev.filter(fid => fid !== id));
     try {
-      await fetch('https://praktika2-vkkr.onrender.com/api/favorites/toggle', {
+      await fetch(`${API_BASE}/api/favorites/toggle`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ venue_id: id })
@@ -409,7 +410,7 @@ export const ProfilePage = () => {
     formData.append('file', file);
 
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/users/avatar', {
+      const res = await fetch(`${API_BASE}/api/users/avatar`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
@@ -429,7 +430,7 @@ export const ProfilePage = () => {
     const token = localStorage.getItem('token');
     setIsUploadingAvatar(true);
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/users/avatar', {
+      const res = await fetch(`${API_BASE}/api/users/avatar`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -466,7 +467,7 @@ export const ProfilePage = () => {
       const formData = new FormData();
       formData.append('file', file);
       try {
-        const res = await fetch('https://praktika2-vkkr.onrender.com/api/users/avatar', {
+        const res = await fetch(`${API_BASE}/api/users/avatar`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData
@@ -488,7 +489,7 @@ export const ProfilePage = () => {
     setPasswordError('');
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/send-change-code', {
+      const res = await fetch(`${API_BASE}/api/send-change-code`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -516,7 +517,7 @@ export const ProfilePage = () => {
     setIsChangingPassword(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('https://praktika2-vkkr.onrender.com/api/change-password', {
+      const res = await fetch(`${API_BASE}/api/change-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ code: changeCode, new_password: newPassword })

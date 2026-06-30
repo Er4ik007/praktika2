@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { venues } from '../data';
+import { API_BASE } from '../config';
 
 interface RatingsMap {
   [venueId: string]: { avg: string; count: number };
@@ -18,7 +19,7 @@ export const RatingsProvider = ({ children }: { children: React.ReactNode }) => 
       await Promise.all(
         venues.map(async (venue) => {
           try {
-            const res = await fetch(`https://praktika2-vkkr.onrender.com/api/reviews/${venue.id}`);
+            const res = await fetch(`${API_BASE}/api/reviews/${venue.id}`);
             if (res.ok) {
               const reviews = await res.json();
               if (reviews.length > 0) {

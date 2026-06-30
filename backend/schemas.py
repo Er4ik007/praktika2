@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
+from datetime import datetime
 
 # Схема: что мы ОЖИДАЕМ получить от Реакта при РЕГИСТРАЦИИ
 class UserCreate(BaseModel):
@@ -51,6 +52,14 @@ class BookingCreate(BaseModel):
     guests: str
     phone: str
     message: Optional[str] = None
+
+    def parse_date(self) -> datetime:
+        for fmt in ("%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(self.date, fmt)
+            except ValueError:
+                continue
+        raise ValueError(f"Не удалось распарсить дату: {self.date}")
 
 class CancelBooking(BaseModel):
     reason: Optional[str] = None
@@ -142,3 +151,11 @@ class AdminBookingStatus(BaseModel):
 
 class VerifyEmailRequest(BaseModel):
     token: str
+
+
+class PaginatedResponse(BaseModel):
+    items: list
+    total: int
+    page: int
+    per_page: int
+    pages: int
