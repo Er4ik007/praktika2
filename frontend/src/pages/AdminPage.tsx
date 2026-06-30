@@ -96,7 +96,8 @@ export const AdminPage = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error();
-      setBookings(await res.json());
+      const data = await res.json();
+      setBookings(data.items || data);
     } catch { navigate('/404'); }
   };
 
@@ -106,7 +107,8 @@ export const AdminPage = () => {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error();
-      setMessages(await res.json());
+      const data = await res.json();
+      setMessages(data.items || data);
     } catch { navigate('/404'); }
   };
 
