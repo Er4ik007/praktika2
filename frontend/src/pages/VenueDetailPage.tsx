@@ -210,9 +210,14 @@ export const VenueDetailPage = () => {
 
   const filteredReviews = reviews.filter(r => r.branch_id === activeBranch.id);
 
-  const avgRating = filteredReviews.length > 0
+  const branchAvgRating = filteredReviews.length > 0
     ? (filteredReviews.reduce((sum, r) => sum + r.rating, 0) / filteredReviews.length).toFixed(1)
     : null;
+
+  const overallAvgRating = cachedRating?.avg || null;
+  const overallCount = cachedRating?.count || 0;
+
+  const hasMultipleBranches = venue.branches.length > 1;
 
   return (
     <div className="pt-5">
@@ -240,20 +245,27 @@ export const VenueDetailPage = () => {
               <h1 className="display-4 fw-black mb-4 text-body-emphasis tracking-tighter">{tv(`venue.name.${venue.id}`, venue.name)}</h1>
 
               <div className="d-flex flex-wrap gap-3 mb-4">
-                <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill">
-                  <Star size={18} className="text-warning fill-warning" />
-                  <span className="fw-black text-body-emphasis">{avgRating || cachedRating?.avg || '0'}</span>
-                  <span className="text-body-secondary small">({filteredReviews.length || cachedRating?.count || 0})</span>
-                  {venue.branches.length > 1 && (
-                    <span className="text-body-secondary small fw-bold">— общая</span>
-                  )}
-                </div>
-                {venue.branches.length > 1 && cachedRating?.branches?.[activeBranch.id] && (
+                {hasMultipleBranches && overallAvgRating && (
                   <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill">
-                    <Star size={18} className="text-danger fill-danger" />
-                    <span className="fw-black text-body-emphasis">{cachedRating.branches[activeBranch.id].avg}</span>
-                    <span className="text-body-secondary small">({cachedRating.branches[activeBranch.id].count})</span>
+                    <Star size={18} className="text-warning" fill="#ffc107" />
+                    <span className="fw-black text-body-emphasis">{overallAvgRating}</span>
+                    <span className="text-body-secondary small">({overallCount})</span>
+                    <span className="text-body-secondary small fw-bold">— общая</span>
+                  </div>
+                )}
+                {hasMultipleBranches && branchAvgRating && (
+                  <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill">
+                    <Star size={18} className="text-danger" fill="#ef4444" />
+                    <span className="fw-black text-body-emphasis">{branchAvgRating}</span>
+                    <span className="text-body-secondary small">({filteredReviews.length})</span>
                     <span className="text-body-secondary small fw-bold">— этот адрес</span>
+                  </div>
+                )}
+                {!hasMultipleBranches && (
+                  <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill">
+                    <Star size={18} className="text-warning" fill="#ffc107" />
+                    <span className="fw-black text-body-emphasis">{overallAvgRating || branchAvgRating || '0'}</span>
+                    <span className="text-body-secondary small">({overallCount || filteredReviews.length || 0})</span>
                   </div>
                 )}
                 <div className="d-flex align-items-center gap-2 bg-body-tertiary px-3 py-2 rounded-pill fw-bold">
