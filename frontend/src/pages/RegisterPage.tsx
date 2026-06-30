@@ -93,6 +93,7 @@ export const RegisterPage = () => {
         body: JSON.stringify(finalData)
       });
 
+      if (response.status === 429) throw new Error('Слишком много запросов. Подождите минуту и попробуйте снова.');
       const data = await response.json();
       if (!response.ok) throw new Error(data.detail || 'Ошибка при регистрации');
       setSubmitted(true);

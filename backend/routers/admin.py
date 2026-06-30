@@ -214,16 +214,34 @@ def export_bookings_csv(
 
     active_fill = PatternFill(start_color="E8F5E9", end_color="E8F5E9", fill_type="solid")
     cancelled_fill = PatternFill(start_color="FFEBEE", end_color="FFEBEE", fill_type="solid")
+    expired_fill = PatternFill(start_color="FFF3E0", end_color="FFF3E0", fill_type="solid")
     status_font_active = Font(color="2E7D32", bold=True)
     status_font_cancelled = Font(color="C62828", bold=True)
+    status_font_expired = Font(color="E65100", bold=True)
 
     for row_idx, b in enumerate(bookings, 2):
-        status_display = "Активно" if b.status == "active" else "Отменено"
+        now = datetime.now(timezone.utc)
+        booking_date = b.date
+        if booking_date.tzinfo is None:
+            booking_date = booking_date.replace(tzinfo=timezone.utc)
+        is_expired = b.status == "active" and booking_date < now
+
+        if is_expired:
+            status_display = "Просрочено"
+        elif b.status == "active":
+            status_display = "Активно"
+        else:
+            status_display = "Отменено"
         created_display = b.created_at.strftime("%d.%m.%Y %H:%M") if b.created_at else ""
 
         values = [b.id, b.name, b.phone, b.venue_name, b.venue_id, str(b.date), b.guests, b.message or "", status_display, b.cancel_reason or "", created_display]
 
-        row_fill = active_fill if b.status == "active" else cancelled_fill
+        if is_expired:
+            row_fill = expired_fill
+        elif b.status == "active":
+            row_fill = active_fill
+        else:
+            row_fill = cancelled_fill
 
         for col, val in enumerate(values, 1):
             cell = ws.cell(row=row_idx, column=col, value=val)
@@ -232,7 +250,12 @@ def export_bookings_csv(
 
             if col == 9:
                 cell.fill = row_fill
-                cell.font = status_font_active if b.status == "active" else status_font_cancelled
+                if is_expired:
+                    cell.font = status_font_expired
+                elif b.status == "active":
+                    cell.font = status_font_active
+                else:
+                    cell.font = status_font_cancelled
 
     col_widths = [6, 20, 18, 25, 15, 14, 8, 30, 12, 25, 18]
     for i, width in enumerate(col_widths, 1):

@@ -43,6 +43,7 @@ export const LoginPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
+      if (res.status === 429) throw new Error('Слишком много попыток. Подождите минуту и попробуйте снова.');
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Неверный email или пароль');
 
@@ -71,6 +72,7 @@ export const LoginPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: twoFaEmail, code: twoFaCode })
       });
+      if (res.status === 429) throw new Error('Слишком много попыток. Подождите минуту и попробуйте снова.');
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Неверный код');
 
@@ -106,6 +108,7 @@ export const LoginPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail })
       });
+      if (res.status === 429) throw new Error('Слишком много запросов. Подождите минуту и попробуйте снова.');
       if (!res.ok) throw new Error('Ошибка сервера');
       setResetStep(2);
     } catch (err: any) { setError(err.message); }
@@ -126,6 +129,7 @@ export const LoginPage = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: resetEmail, code: resetCode, new_password: newPassword })
       });
+      if (res.status === 429) throw new Error('Слишком много запросов. Подождите минуту и попробуйте снова.');
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Неверный код');
 
