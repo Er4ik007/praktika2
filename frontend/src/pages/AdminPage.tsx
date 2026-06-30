@@ -41,7 +41,7 @@ export const AdminPage = () => {
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [bookingFilter, setBookingFilter] = useState<'all' | 'active' | 'cancelled'>('all');
+  const [bookingFilter, setBookingFilter] = useState<'all' | 'active' | 'cancelled' | 'expired'>('all');
   const [messageFilter, setMessageFilter] = useState<'all' | 'contact' | 'support'>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [cancelModal, setCancelModal] = useState<{ bookingId: number; reason: string } | null>(null);
@@ -57,6 +57,16 @@ export const AdminPage = () => {
   const [messageSort, setMessageSort] = useState<{ key: 'id' | 'name' | 'date'; asc: boolean }>({ key: 'id', asc: false });
 
   const token = localStorage.getItem('token');
+
+  const isBookingExpired = (booking: Booking) => {
+    if (booking.status !== 'active') return false;
+    try {
+      const bookingDate = new Date(booking.date);
+      const endOfDay = new Date(bookingDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      return endOfDay.getTime() < Date.now();
+    } catch { return false; }
+  };
 
   const translateVenueName = (booking: Booking) => {
     const translatedName = tv(`venue.name.${booking.venue_id}`, '');
@@ -183,7 +193,9 @@ export const AdminPage = () => {
   };
 
   const filteredBookings = bookings.filter(b => {
-    if (bookingFilter !== 'all' && b.status !== bookingFilter) return false;
+    if (bookingFilter === 'active' && (b.status !== 'active' || isBookingExpired(b))) return false;
+    if (bookingFilter === 'cancelled' && b.status !== 'cancelled') return false;
+    if (bookingFilter === 'expired' && !isBookingExpired(b)) return false;
     if (bookingSearch) {
       const q = bookingSearch.toLowerCase();
       if (!b.name.toLowerCase().includes(q)) return false;
@@ -270,6 +282,7 @@ export const AdminPage = () => {
                 { key: 'all' as const, label: t('admin.filterAll') },
                 { key: 'active' as const, label: t('admin.filterActive') },
                 { key: 'cancelled' as const, label: t('admin.filterCancelled') },
+                { key: 'expired' as const, label: t('admin.filterExpired') || 'Истекшие' },
               ]).map(f => (
                 <button
                   key={f.key}
@@ -320,10 +333,10 @@ export const AdminPage = () => {
                 <thead className="bg-body-tertiary">
                   <tr>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setBookingSort(s => s.key === 'id' ? { key: 'id', asc: !s.asc } : { key: 'id', asc: true })}>
-                      {t('admin.thId')} <span className={bookingSort.key === 'id' ? 'text-danger' : 'opacity-30'}>{bookingSort.key === 'id' && bookingSort.asc ? '↑' : '↓'}</span>
+                      <span className="d-inline-flex align-items-center gap-1">{t('admin.thId')} <span className={bookingSort.key === 'id' ? 'text-danger' : 'opacity-30'}>{bookingSort.key === 'id' && bookingSort.asc ? '↑' : '↓'}</span></span>
                     </th>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setBookingSort(s => s.key === 'name' ? { key: 'name', asc: !s.asc } : { key: 'name', asc: true })}>
-                      {t('admin.thName')} <span className={bookingSort.key === 'name' ? 'text-danger' : 'opacity-30'}>{bookingSort.key === 'name' && bookingSort.asc ? '↑' : '↓'}</span>
+                      <span className="d-inline-flex align-items-center gap-1">{t('admin.thName')} <span className={bookingSort.key === 'name' ? 'text-danger' : 'opacity-30'}>{bookingSort.key === 'name' && bookingSort.asc ? '↑' : '↓'}</span></span>
                     </th>
                     <th className="text-body-secondary fw-bold">{t('admin.thPhone')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thVenue')}</th>
@@ -331,7 +344,7 @@ export const AdminPage = () => {
                     <th className="text-body-secondary fw-bold">{t('admin.thGuests')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thStatus')}</th>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setBookingSort(s => s.key === 'date' ? { key: 'date', asc: !s.asc } : { key: 'date', asc: false })}>
-                      {t('admin.thCreated')} <span className={bookingSort.key === 'date' ? 'text-danger' : 'opacity-30'}>{bookingSort.key === 'date' && bookingSort.asc ? '↑' : '↓'}</span>
+                      <span className="d-inline-flex align-items-center gap-1">{t('admin.thCreated')} <span className={bookingSort.key === 'date' ? 'text-danger' : 'opacity-30'}>{bookingSort.key === 'date' && bookingSort.asc ? '↑' : '↓'}</span></span>
                     </th>
                     <th></th>
                   </tr>
@@ -348,16 +361,18 @@ export const AdminPage = () => {
                       <td>{b.date}</td>
                       <td>{b.guests}</td>
                       <td>
-                        <span className={`badge rounded-pill ${b.status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
-                          {b.status === 'active' ? t('admin.statusActive') : t('admin.statusCancelled')}
+                        <span className={`badge rounded-pill ${isBookingExpired(b) ? 'bg-warning' : b.status === 'active' ? 'bg-success' : 'bg-secondary'}`}>
+                          {isBookingExpired(b) ? (t('admin.statusExpired') || 'Истекло') : b.status === 'active' ? t('admin.statusActive') : t('admin.statusCancelled')}
                         </span>
                       </td>
                       <td className="text-body-secondary small">{new Date(b.created_at).toLocaleDateString('ru-RU')}</td>
                       <td>
-                        {b.status === 'active' ? (
+                        {b.status === 'active' && !isBookingExpired(b) ? (
                           <button onClick={() => setCancelModal({ bookingId: b.id, reason: '' })} className="btn btn-sm btn-outline-danger rounded-pill">
                             {t('admin.cancel')}
                           </button>
+                        ) : isBookingExpired(b) ? (
+                          <span className="text-body-secondary small">—</span>
                         ) : (
                           <button onClick={() => handleRestoreBooking(b.id)} className="btn btn-sm btn-outline-success rounded-pill">
                             {t('admin.restore')}
@@ -420,17 +435,17 @@ export const AdminPage = () => {
                 <thead className="bg-body-tertiary">
                   <tr>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setMessageSort(s => s.key === 'id' ? { key: 'id', asc: !s.asc } : { key: 'id', asc: true })}>
-                      {t('admin.thId')} <span className={messageSort.key === 'id' ? 'text-danger' : 'opacity-30'}>{messageSort.key === 'id' && messageSort.asc ? '↑' : '↓'}</span>
+                      <span className="d-inline-flex align-items-center gap-1">{t('admin.thId')} <span className={messageSort.key === 'id' ? 'text-danger' : 'opacity-30'}>{messageSort.key === 'id' && messageSort.asc ? '↑' : '↓'}</span></span>
                     </th>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setMessageSort(s => s.key === 'name' ? { key: 'name', asc: !s.asc } : { key: 'name', asc: true })}>
-                      {t('admin.thName')} <span className={messageSort.key === 'name' ? 'text-danger' : 'opacity-30'}>{messageSort.key === 'name' && messageSort.asc ? '↑' : '↓'}</span>
+                      <span className="d-inline-flex align-items-center gap-1">{t('admin.thName')} <span className={messageSort.key === 'name' ? 'text-danger' : 'opacity-30'}>{messageSort.key === 'name' && messageSort.asc ? '↑' : '↓'}</span></span>
                     </th>
                     <th className="text-body-secondary fw-bold">{t('admin.thEmail')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thSubject')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thSource')}</th>
                     <th className="text-body-secondary fw-bold">{t('admin.thMessage')}</th>
                     <th className="text-body-secondary fw-bold user-select-none" style={{ cursor: 'pointer' }} onClick={() => setMessageSort(s => s.key === 'date' ? { key: 'date', asc: !s.asc } : { key: 'date', asc: false })}>
-                      {t('admin.thDate')} <span className={messageSort.key === 'date' ? 'text-danger' : 'opacity-30'}>{messageSort.key === 'date' && messageSort.asc ? '↑' : '↓'}</span>
+                      <span className="d-inline-flex align-items-center gap-1">{t('admin.thDate')} <span className={messageSort.key === 'date' ? 'text-danger' : 'opacity-30'}>{messageSort.key === 'date' && messageSort.asc ? '↑' : '↓'}</span></span>
                     </th>
                   </tr>
                 </thead>

@@ -552,8 +552,10 @@ export const ProfilePage = () => {
   const isBookingExpired = (booking: Booking) => {
     if (booking.status !== 'active') return false;
     try {
-      const bookingDate = new Date(booking.date + 'T23:59:59');
-      return bookingDate.getTime() < Date.now();
+      const bookingDate = new Date(booking.date);
+      const endOfDay = new Date(bookingDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      return endOfDay.getTime() < Date.now();
     } catch { return false; }
   };
 
