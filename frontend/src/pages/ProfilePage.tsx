@@ -949,9 +949,9 @@ export const ProfilePage = () => {
                               {booking.status === 'active' && !isBookingExpired(booking) && (
                                 <button
                                   onClick={() => openCancelModal(booking.id)}
-                                  className="btn btn-sm btn-outline-danger fw-bold px-3 d-flex align-items-center gap-1"
+                                  className="btn btn-sm btn-outline-danger fw-bold px-2 px-sm-3 d-flex align-items-center gap-1"
                                 >
-                                  <X size={14} /> {t('profile.cancelBooking')}
+                                  <X size={14} /> <span className="d-none d-sm-inline">{t('profile.cancelBooking')}</span>
                                 </button>
                               )}
                             </div>
